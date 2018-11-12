@@ -1,0 +1,303 @@
+# line comment
+
+# The syntax is still in flux be here is what I have so far
+print('Hello World')
+
+# ERROR: Int moogles # Initialize an Integer, must be assigned a value before it can be used
+const constant_here = 5
+number = 23 # Type Inference
+
+# Decimal will be used by default (as soon as a decimal standard is implimented)
+decimal_number=1.2+2.4 # Spaces are generally insignificant, but encouraged for readability
+# If a floating point number is desired then one could include the Float type identifier
+
+question = 'what\'s going on' # Escaping
+
+print(question)
+
+# ERROR: Str something # Initialize a String
+
+things = [1, 2, 3] # Array, homogeneous
+# ERROR: other_things = (1, 'Hello') # List, non-homogeneous
+# NOT IMPLEMENTED YET: stuff = {first_name: 'Samus', 'last_name': 'Aran'} # Dictionary, key strings don't have to be in quotes
+# NOT IMPLEMENTED: Int[] other_stuff = [] # Empty Array of Ints
+
+if number > 23
+	print('greater than 23')
+else if number == 23
+	print('equals 23')
+else
+	print('less than 23')
+
+#  NOT IMPLEMENTED: if something is not number \ # Continuing statement onto next line
+#		and true # Indentaion is with tabs only
+#	print('They are not the same')
+
+for x in 0..40 # For loop using a range
+	print(x * 2)
+
+for item in things # Iterate over objects
+	print(item)
+
+while number > 1
+	number -= 1
+	print(number)
+
+# ERROR: if 2 in things
+# 	print('yes')
+# if 2 not in things
+#	print('no')
+
+moogles = 3
+
+switch moogles
+	case 1
+		print('One Moogle')
+	case 2
+		print('Two Moogles')
+		break
+	default
+		print(moogles)
+		print("Lots of Moogles")
+	case 3
+		print('Three Moogles')
+
+# Function Return notation
+def fib(Int n) -> Int
+	a = 0
+	b = 1
+	for _ in 0..n
+		prev_a = a
+		a = b
+		b = prev_a + b
+	return a
+
+def fib_rec(Int n) -> Int
+	if n == 0
+		return 0
+	if n == 1
+		return 1
+	return fib_rec(n - 1) + fib_rec(n - 2)
+
+def factorial(Int n) -> Int
+	if n <= 1
+		return 1
+	return n * factorial(n - 1)
+
+
+print(fib(2))
+print(fib_rec(2))
+print(factorial(2))
+
+# Assign anonymous function to a variable
+# ERROR: myfunc = def (Int x, Int y) -> Int
+#	if x > y
+#		return x + y
+#	else
+#		return x * y
+#
+#print(myfunc(2, 3))
+
+def bar(Int x=4, Int y=5) -> Int
+	return x * y
+
+baz = bar
+print(baz())
+
+def foo(Int x) -> Int
+	return baz(x) + x
+
+
+print(foo(2))
+
+print('🍌')
+print('夜のコンサートは最高でした。') # I have no idea what this says
+
+
+# Type Aliasing
+#TODO: type FInt = Func[Int] -> Int
+# All types (including structs and classes) should start with a capital
+
+#def do_stuff(Int x, FInt callback) -> Int
+#	x **= 2
+#	x = callback(x)
+#	return x
+#
+#num = do_stuff(3,
+#	def (Int y) -> Int
+#		y += 7
+#		return y
+#)
+#print(
+#	num
+#)
+
+# TODO: Closure
+#def start_at(Int x) -> FInt
+#	def increment_by(Int y) -> Int
+#		return x + y
+#	return increment_by
+#
+#start_at_5 = start_at(5)
+#start_at_27 = start_at(27)
+#print(start_at_5(4))
+#print(start_at_27(15))
+
+Int num = 1.0::Int # Casting a Decimal to Int #TODO: Maybe change to Int(1.0) kind of syntax
+
+print(num)
+
+# User input
+#TODO: Int age = input('How old are you?')
+
+# TODO: String Interpolation
+#Int age = 5
+#print('Wow! You are {age} years old?!')
+
+# TODO: Enum Colors(
+#	GREEN,
+#	RED,
+#	BLUE,
+#	YELLOW
+#)
+
+Struct Circle
+	Int radius
+	Int x
+	Int y
+
+Circle cir = {radius=5, x=2, y=4}
+print(cir.radius)
+
+#TODO: abstract class Vehicle
+	# Constructor
+#	new(Str make, Int year, Str color)
+#		this.year = year
+#		this.make # Automtically assigns make from argument if they have the same name
+#		this._color = color
+#		Str this._fav_color
+#
+# Inheritance
+#class Car(Vehicle)
+#	new(Str make, Int year, color='green', hatchback=false)
+#		# Design by Contract
+#		require year < 10
+#		this.hatchback
+#		super.Vehicle(make, year, color)
+#
+#	void print_year()
+#		print('This car was made in {this.year}')
+#
+#class Person
+#	new(Str name, Int age)
+#		this.name
+#		this.age
+#frank = Person('Frank', 30)
+#print(frank.age)
+
+garry = true
+larry = false
+num = 8
+
+if num == 8
+	num += 2
+else if garry
+	num -= 1
+else
+	num *= 4
+
+print(num)
+print(garry)
+print(larry)
+
+def is_less_than_5(Int x) -> Bool
+	if x >= 5
+		return false
+	else
+		return true
+
+print(is_less_than_5(3))
+print(is_less_than_5(5))
+print(is_less_than_5(7))
+
+# TODO: Testing scope
+#def do_stuff(Int y) -> void
+#	print(y)
+#
+#def square(Int x) -> Int
+#	do_stuff(x)
+#	return x ** 2
+#
+#print(square(5))
+#
+#def greet_name(Str name) -> void
+#	print('Hello ' + name)
+#
+#greet_name('Anthony')
+
+#ERROR: If I define another x var, it's gonna give me an llvm error
+#x = 0
+#TODO: while x < 10
+#TODO: if x == 1
+#    	break
+#   x += 1
+
+#y = 10
+#ERROR: Casting not implemented for all
+#for x in 0..y
+#	print(x::Str)
+
+things = [3, 2, 1]
+print(things[1 + 1])
+
+#Error: Dec a
+b = 3
+
+def four() -> Int
+	return 2 + 2
+
+Bool yes = true
+f = four()
+Float g = 7.5
+h = 5
+no = false
+
+if no
+	g = 2.6
+	if yes and no
+		h += h
+else if yes
+	g = 3.6
+else
+	g = 7.6
+
+if yes
+	#ERROR: Operands must be the same type for different kinds of numbers
+	g += 7.0
+
+print(g)
+
+first_name = 'Cid'
+last_name = 'Fabool'
+#ERROR: Operands for strings 
+#full_name = first_name + ' ' + last_name
+# ERROR: Operands for assignment
+#a = 2 * g
+d = 0
+#c = a::Int ** b
+
+
+def kupo(Int first, Int second) -> Int
+	# Nested function
+	def mog() -> Int
+		return 54
+	if first < second
+		return first + second
+	else
+		return mog()
+
+e = kupo(2, 3)
+f = kupo(3, 2)
+
+print(e)
+print(f)
