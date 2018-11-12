@@ -15,8 +15,9 @@
 - [ ] Change variable declaration from 'Type var = val' to 'var: Type = val'
 - [ ] Change casting syntax
 - [ ] Allow more operators on different types such as strings
-- [ ] Change types to lowercase
+- [x] Change types to lowercase
 - [x] Change power operator from '**' to '^'
+- [ ] Allow change of type for any type variables
 
 ## Features
 - [ ] Implement Null

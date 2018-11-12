@@ -50,27 +50,27 @@ GREATER_THAN_OR_EQUAL_TO = '>='
 DECORATOR = '@'  # TODO
 
 # Types
-ANY = 'Any'
-INT = 'Int'
-INT8 = 'Int8'
-INT16 = 'Int16'
-INT32 = 'Int32'
-INT64 = 'Int64'  # same as int but doesn't automatically promote to larger integer type upon overflow
-INT128 = 'Int128'
-DEC = 'Dec'
-FLOAT = 'Float'
-COMPLEX = 'Complex'  # TODO
-STR = 'Str'
-BOOL = 'Bool'
-BYTES = 'Bytes'  # TODO
-ARRAY = 'Array'
-LIST = 'List'
-SET = 'Set'  # TODO
-DICT = 'Dict'
-ENUM = 'Enum'  # TODO
-FUNC = 'Func'
-STRUCT = 'Struct'
-CLASS = 'Class'
+ANY = 'any'
+INT = 'int'
+INT8 = 'int8'
+INT16 = 'int16'
+INT32 = 'int32'
+INT64 = 'int64'  # same as int but doesn't automatically promote to larger integer type upon overflow
+INT128 = 'int128'
+DEC = 'dec'
+FLOAT = 'float'
+COMPLEX = 'complex'  # TODO
+STR = 'str'
+BOOL = 'bool'
+BYTES = 'bytes'  # TODO
+ARRAY = 'array'
+LIST = 'list'
+SET = 'set'  # TODO
+DICT = 'dict'
+ENUM = 'enum'  # TODO
+FUNC = 'func'
+STRUCT = 'struct'
+CLASS = 'class'
 
 # Contstants
 TRUE = 'true'
@@ -108,7 +108,6 @@ AS = 'as'  # TODO
 PASS = 'pass'
 VOID = 'void'
 ALIAS = 'alias'
-ENSURE = 'ensure'  # TODO
 OVERRIDE = 'override'  # TODO
 ABSTRACT = 'abstract'  # TODO
 ASSERT = 'assert'  # TODO
