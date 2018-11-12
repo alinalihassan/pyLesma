@@ -16,6 +16,7 @@
 - [ ] Change casting syntax
 - [ ] Allow more operators on different types such as strings
 - [ ] Change types to lowercase
+- [x] Change power operator from '**' to '^'
 
 ## Features
 - [ ] Implement Null
