@@ -18,6 +18,7 @@
 - [x] Change types to lowercase
 - [x] Change power operator from '**' to '^'
 - [ ] Allow change of type for any type variables
+- [ ] Improve warning messages
 
 ## Features
 - [ ] Implement Null
