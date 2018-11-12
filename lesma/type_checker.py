@@ -317,7 +317,7 @@ class Preprocessor(NodeVisitor):
 				if infered_type is not func_type:
 					warnings.warn('file={} line={}: The actual return type does not match the declared return type: {}'.format(self.file_name, node.line_num, func_name))
 					self.warnings = True
-		elif func_type != VOID:
+		elif func_type is not None:
 			warnings.warn('file={} line={}: No return value was specified for function: {}'.format(self.file_name, node.line_num, func_name))
 			self.warnings = True
 		func_symbol = FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults)

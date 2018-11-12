@@ -6,7 +6,7 @@
 - [ ] Fix constant declaration not allowing types
 - [ ] Fix Type declaration not expecting square brackets (arrays)
 - [ ] Fix input
-- [ ] Fix void function asking for return
+- [x] Fix void function asking for return
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
