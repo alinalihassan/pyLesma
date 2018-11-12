@@ -7,12 +7,13 @@
 - [ ] Fix Type declaration not expecting square brackets (arrays)
 - [ ] Fix input
 - [x] Fix void function asking for return
+- [x] Fix uninitialized variable declaration
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
 - [ ] Allow any type for range (currently only int)
 - [ ] Allow any type for casting
-- [ ] Change variable declaration from 'Type var = val' to 'var: Type = val'
+- [x] Change variable declaration from 'Type var = val' to 'var: Type = val'
 - [ ] Change casting syntax
 - [ ] Allow more operators on different types such as strings
 - [x] Change types to lowercase

@@ -20,7 +20,6 @@ class Parser(object):
 	def next_token(self):
 		token = self.current_token
 		self.current_token = self.lexer.get_next_token()
-		# print(self.current_token)
 		return token
 
 	def eat_type(self, *token_type):
@@ -82,9 +81,10 @@ class Parser(object):
 		return ClassDeclaration(class_name.value, base=base, constructor=constructor, methods=methods, class_fields=class_fields, instance_fields=instance_fields)
 
 	def variable_declaration(self):
-		type_node = self.type_spec()
 		var_node = Var(self.current_token.value, self.line_num)
 		self.eat_type(NAME)
+		self.eat_value(COLON)
+		type_node = self.type_spec()
 		var = VarDecl(var_node, type_node, self.line_num)
 		if self.current_token.value == ASSIGN:
 			var = self.variable_declaration_assignment(var)
@@ -284,12 +284,12 @@ class Parser(object):
 			node = self.switch_statement()
 		elif self.current_token.value == RETURN:
 			node = self.return_statement()
-		elif self.current_token.value in self.user_types:
-			node = self.variable_declaration()
 		elif self.current_token.type == NAME:
 			if self.preview().value == DOT:
 				node = self.property_or_method(self.next_token())
-			else:
+			elif self.preview().value == COLON:
+				node = self.variable_declaration()
+			else :
 				node = self.name_statement()
 		elif self.current_token.value == DEF:
 			node = self.function_declaration()
@@ -298,8 +298,6 @@ class Parser(object):
 		elif self.current_token.type == TYPE:
 			if self.current_token.value == STRUCT:
 				node = self.struct_declaration()
-			else:
-				node = self.variable_declaration()
 		elif self.current_token.value == CLASS:
 			node = self.class_declaration()
 		elif self.current_token.value == EOF:
@@ -414,6 +412,7 @@ class Parser(object):
 
 	def name_statement(self):
 		token = self.next_token()
+		print(token)
 		if self.current_token.value == LPAREN:
 			node = self.function_call(token)
 		elif self.current_token.value == LSQUAREBRACKET:

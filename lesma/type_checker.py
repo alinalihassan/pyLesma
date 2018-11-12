@@ -408,9 +408,9 @@ class Preprocessor(NodeVisitor):
 		pass
 
 	def visit_vardecl(self, node):
-		type_name = node.type_node.value
+		type_name = node.type.value
 		type_symbol = self.search_scopes(type_name)
-		var_name = node.var_node.value
+		var_name = node.value.value
 		var_symbol = VarSymbol(var_name, type_symbol)
 		self.define(var_symbol.name, var_symbol)
 

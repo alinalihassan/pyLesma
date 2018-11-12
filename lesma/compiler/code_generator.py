@@ -139,9 +139,9 @@ class CodeGenerator(NodeVisitor):
 		raise NotImplementedError
 
 	def visit_vardecl(self, node):
-		var_addr = self.allocate(type_map[node.type_node.value], name=node.var_node.value)
-		self.define(node.var_node.value, var_addr)
-		self.store(self.visit(node.var_node), node.var_node.value)
+		var_addr = self.allocate(type_map[node.type.value], name=node.value.value)
+		self.define(node.value.value, var_addr)
+		self.store(self.visit(node.value), node.value.value)
 
 	@staticmethod
 	def visit_type(node):
