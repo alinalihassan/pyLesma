@@ -1,19 +1,12 @@
-from ctypes import CFUNCTYPE
-from ctypes import c_void_p
+from ctypes import CFUNCTYPE, c_void_p
 from decimal import Decimal
-from time import sleep
-from time import time
+from time import time, sleep
 import llvmlite.binding as llvm
 from llvmlite import ir
 from lesma.grammar import *
-from lesma.ast import CollectionAccess
-from lesma.ast import DotAccess
-from lesma.ast import Input
-from lesma.ast import StructLiteral
-from lesma.ast import VarDecl
-from lesma.compiler import RET_VAR
+from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl
+from lesma.compiler import RET_VAR, type_map
 from lesma.compiler.operations import operations
-from lesma.compiler import type_map
 from lesma.compiler.builtins import define_builtins
 from lesma.visitor import NodeVisitor
 
