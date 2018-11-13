@@ -8,3 +8,5 @@ __pycache__/
 
 ### Binaries and output folder
 out/
+
+\.vscode/
