@@ -2,6 +2,8 @@ from ctypes import CFUNCTYPE, c_void_p
 from decimal import Decimal
 from time import time, sleep
 import llvmlite.binding as llvm
+import os
+import subprocess
 from llvmlite import ir
 from lesma.grammar import *
 from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl
@@ -688,12 +690,9 @@ class CodeGenerator(NodeVisitor):
 	def generate_code(self, node):
 		return self.visit(node)
 
-	def evaluate(self, optimize=True, ir_dump=False, only_main=False):
+	def evaluate(self, optimize=True, ir_dump=False, timer=False):
 		if ir_dump and not optimize:
-			if only_main:
-				print('define void @"main"(){}'.format(str(self.module).split('define void @"main"()')[1]))
-			else:
-				print(str(self.module))
+			print(str(self.module))
 		llvmmod = llvm.parse_assembly(str(self.module))
 		if optimize:
 			pmb = llvm.create_pass_manager_builder()
@@ -710,11 +709,10 @@ class CodeGenerator(NodeVisitor):
 			start_time = time()
 			fptr()
 			end_time = time()
-			print('\n{:f} sec'.format(end_time - start_time))
+			if timer:
+				print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
-	def compile(self, filename, optimize=True, run=False):
-		import os
-		import subprocess
+	def compile(self, filename, optimize=True, run=False, output=None, emit_llvm=False, timer=False):
 		program_string = llvm.parse_assembly(str(self.module))
 		if optimize:
 			pmb = llvm.create_pass_manager_builder()
@@ -728,19 +726,21 @@ class CodeGenerator(NodeVisitor):
 		program_string = program_string.replace('local_unnamed_addr', '')
 		program_string = program_string.replace('@llvm.memset.p0i8.i64(i8* nocapture writeonly', '@llvm.memset.p0i8.i64(i8* nocapture')
 		
-		if not os.path.exists(cwd + '/out'):
-			os.makedirs(cwd + '/out')
+		if output is None:
+			output = os.path.splitext(filename)[0]
+
+		with open(output + '.ll', 'w') as out:
+			out.write(program_string)
 		
-		with open(cwd + '/out/' + filename + '.ll', 'w') as output:
-			output.write(program_string)
-		
-		if os.name != 'nt':
-			os.popen('clang out/{0}.ll -o out/{0}'.format(filename))
-			if run:
-				sleep(.1)
-				start_time = time()
-				output = subprocess.run('out/{}'.format(filename), stdout=subprocess.PIPE)
-				end_time = time()
-				print("Result:\n")
-				print(output.stdout.decode('utf-8'))
+		os.popen('clang {0}.ll -o {0}'.format(output))
+		if run:
+			sleep(.1)
+			start_time = time()
+			process = subprocess.run('{}'.format(output), stdout=subprocess.PIPE)
+			end_time = time()
+			if timer:
 				print('Runtime: {:f} sec'.format(end_time - start_time))
+
+		if not emit_llvm:
+			sleep(.1)
+			os.remove(output + '.ll')

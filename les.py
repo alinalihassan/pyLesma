@@ -1,20 +1,75 @@
+"""Lesma programming language
+
+usage:
+    lesma compile [-lto FILE] <file> 
+    lesma run [-t] <file>
+    lesma [-hv]
+
+options:
+    -h, --help                  shows the help
+    -v, --version               shows the version
+    -l, --llvm                  Emit llvm code
+    -o FILE, --output FILE      Output file
+    -t, --timer                 Time the execution
+"""
+
 from lesma.lexer import Lexer
 from lesma.parser import Parser
 from lesma.type_checker import Preprocessor
 from lesma.compiler.code_generator import CodeGenerator
+from lesma.utils import error
+import os
+from docopt import docopt
+
+def _run(args):
+    file = args['<file>']
+    timer = args['--timer']
+
+    if not os.path.isfile(file):
+        error(file + "is not a valid file")
+        return
+
+    code = open(file).read()
+    lexer = Lexer(code, file)
+    parser = Parser(lexer)
+    t = parser.parse()
+    symtab_builder = Preprocessor(parser.file_name)
+    symtab_builder.check(t)
+    if not symtab_builder.warnings:
+        generator = CodeGenerator(parser.file_name)
+        generator.generate_code(t)
+        generator.evaluate(True, False, timer)
 
 
-file = 'test.les'
-code = open(file).read()
-lexer = Lexer(code, file)
-parser = Parser(lexer)
-t = parser.parse()
-symtab_builder = Preprocessor(parser.file_name)
-symtab_builder.check(t)
-if not symtab_builder.warnings:
-    generator = CodeGenerator(parser.file_name)
-    generator.generate_code(t)
-    # generator.evaluate(False, True, False)
-    generator.compile(file[:-4], False, True)
-else:
-    print('Did not run')
+def _compile(args):
+    file = args['<file>']
+    o = args['--output']
+    emit_llvm = args['--llvm']
+    timer = args['--timer']
+
+    if not os.path.isfile(file):
+        error(file + "is not a valid file")
+        return
+
+    file = os.path.abspath(file)
+    code = open(file).read()
+    lexer = Lexer(code, file)
+    parser = Parser(lexer)
+    t = parser.parse()
+    symtab_builder = Preprocessor(parser.file_name)
+    symtab_builder.check(t)
+    if not symtab_builder.warnings:
+        generator = CodeGenerator(parser.file_name)
+        generator.generate_code(t)
+        generator.compile(file, True, False, o, emit_llvm, timer)
+
+
+if __name__ == "__main__":
+    args = docopt(__doc__, version='v0.1.0')
+    
+    if args['compile']:
+        _compile(args)
+    elif args['run']:
+        _run(args)
+    else:
+        exit(__doc__)
