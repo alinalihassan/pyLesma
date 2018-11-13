@@ -370,7 +370,7 @@ class Preprocessor(NodeVisitor):
             func.accessed = True
             return func.type
 
-    def visit_methodcall(self, node):  # Not done here!
+    def visit_methodcall(self, node):  # TODO: Not done here!
         method_name = node.name
         obj = self.search_scopes(node.obj)
         method = self.search_scopes(method_name)

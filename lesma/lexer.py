@@ -266,9 +266,9 @@ class Lexer(object):
         yield token
 
 
-# if __name__ == '__main__':
-file = 'test.les'
-lexer = Lexer(open(file).read(), file)
-for t in lexer.analyze():
-    print(t)
+if __name__ == '__main__':
+    file = 'test.les'
+    lexer = Lexer(open(file).read(), file)
+    for t in lexer.analyze():
+        print(t)
 
