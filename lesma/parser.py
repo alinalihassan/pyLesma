@@ -116,7 +116,6 @@ class Parser(object):
             if self.current_token.value == COLON:
                 self.eat_value(COLON)
                 param_type = self.type_spec()
-                print(param_type)
             else:
                 param_type = self.variable(self.current_token)
 
@@ -414,7 +413,6 @@ class Parser(object):
 
     def name_statement(self):
         token = self.next_token()
-        print(token)
         if self.current_token.value == LPAREN:
             node = self.function_call(token)
         elif self.current_token.value == LSQUAREBRACKET:
@@ -568,9 +566,18 @@ class Parser(object):
         if token.value == ASSIGN:
             right = self.expr()
             node = Assign(left, token.value, right, self.line_num)
-        elif token.value in ARITHMETIC_ASSIGNMENT_OP:
+        # elif token.value in ARITHMETIC_ASSIGNMENT_OP:
+        #     right = self.expr()
+        #     node = OpAssign(left, token.value, right, self.line_num)
+        elif token.value == COLON:
+            # Ignore, since we automatically resolve the type
+            token = self.next_token() # Eat colon
+            if token.type != TYPE:
+                raise SyntaxError('Invalid variable type: {}'.format(token.value))
+            self.next_token() # Eat type
+
             right = self.expr()
-            node = OpAssign(left, token.value, right, self.line_num)
+            node = Assign(left, token.value, right, self.line_num)
         else:
             raise SyntaxError('Unknown assignment operator: {}'.format(token.value))
         return node
