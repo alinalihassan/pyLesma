@@ -3,7 +3,7 @@
 # The syntax is still in flux be here is what I have so far
 print('Hello World')
 
-# ERROR: Int moogles # Initialize an Integer, must be assigned a value before it can be used
+moogles: int # Initialize an Integer, must be assigned a value before it can be used
 const constant_here = 5
 number = 23 # Type Inference
 
@@ -15,7 +15,7 @@ question = 'what\'s going on' # Escaping
 
 print(question)
 
-# ERROR: Str something # Initialize a String
+something: str # Initialize a String
 
 things = [1, 2, 3] # Array, homogeneous
 # ERROR: other_things = (1, 'Hello') # List, non-homogeneous

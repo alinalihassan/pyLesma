@@ -6,7 +6,7 @@ import os
 import subprocess
 from llvmlite import ir
 from lesma.grammar import *
-from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl
+from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl, Str
 from lesma.compiler import RET_VAR, type_map
 from lesma.compiler.operations import operations
 from lesma.compiler.builtins import define_builtins
@@ -519,9 +519,14 @@ class CodeGenerator(NodeVisitor):
 		self.call('print', [array])
 
 	def visit_input(self, node):
-		var_ptr = self.alloc_and_store(self.stringz(node.value.value), ir.ArrayType(type_map[INT8], len(node.value.value) + 1))
-		var_ptr_gep = self.gep(var_ptr, [self.const(0), self.const(0)])
-		self.call('puts', [var_ptr_gep])
+		# Print text if it exists
+		if isinstance(node.value, Str):
+			stringz = self.stringz(node.value.value)
+			str_ptr = self.alloc_and_store(stringz, ir.ArrayType(stringz.type.element, stringz.type.count))
+			str_ptr = self.gep(str_ptr, [self.const(0), self.const(0)])
+			str_ptr = self.builder.bitcast(str_ptr, type_map[INT].as_pointer())
+			self.call('puts', [str_ptr])
+		
 		percent_d = self.stringz('%d')
 		percent_ptr = self.alloc_and_store(percent_d, ir.ArrayType(percent_d.type.element, percent_d.type.count))
 		percent_ptr_gep = self.gep(percent_ptr, [self.const(0), self.const(0)])
