@@ -2,12 +2,13 @@
 
 ## Fixes
 - [ ] Fix **break** and **continue** not branching if the parent block is not the loop
-- [ ] Fix initialization without variable
+- [x] Fix initialization without variable
 - [ ] Fix constant declaration not allowing types
 - [ ] Fix Type declaration not expecting square brackets (arrays)
 - [ ] Fix input
 - [x] Fix void function asking for return
 - [x] Fix uninitialized variable declaration
+- [x] Fix numbers being unsigned integers
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
@@ -33,3 +34,4 @@
 - [ ] Implement Closure
 - [ ] Implement string interpolation
 - [ ] Implement Enums
+- [ ] Implement unsigned numbers
