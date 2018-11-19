@@ -21,9 +21,9 @@ from lesma.utils import error
 import os
 from docopt import docopt
 
-def _run(args):
-    file = args['<file>']
-    timer = args['--timer']
+def _run(arg_list):
+    file = arg_list['<file>']
+    timer = arg_list['--timer']
 
     if not os.path.isfile(file):
         error(file + "is not a valid file")
@@ -41,11 +41,11 @@ def _run(args):
         generator.evaluate(True, False, timer)
 
 
-def _compile(args):
-    file = args['<file>']
-    o = args['--output']
-    emit_llvm = args['--llvm']
-    timer = args['--timer']
+def _compile(arg_list):
+    file = arg_list['<file>']
+    o = arg_list['--output']
+    emit_llvm = arg_list['--llvm']
+    timer = arg_list['--timer']
 
     if not os.path.isfile(file):
         error(file + "is not a valid file")
@@ -65,11 +65,11 @@ def _compile(args):
 
 
 if __name__ == "__main__":
-    args = docopt(__doc__, version='v0.1.0')
+    arg_list = docopt(__doc__, version='v0.1.0')
     
-    if args['compile']:
-        _compile(args)
-    elif args['run']:
-        _run(args)
+    if arg_list['compile']:
+        _compile(arg_list)
+    elif arg_list['run']:
+        _run(arg_list)
     else:
         exit(__doc__)
