@@ -163,7 +163,7 @@ class CodeGenerator(NodeVisitor):
 		self.position_at_end(end_block)
 
 	def visit_else(self, _):
-		return self.builder.icmp_unsigned(EQUALS, self.const(1), self.const(1), 'cmptmp')
+		return self.builder.icmp_signed(EQUALS, self.const(1), self.const(1), 'cmptmp')
 
 	def visit_while(self, node):
 		cond_block = self.add_block('while.cond')
@@ -207,7 +207,7 @@ class CodeGenerator(NodeVisitor):
 		self.branch(zero_length_block)
 
 		self.position_at_end(zero_length_block)
-		cond = self.builder.icmp_unsigned(LESS_THAN, zero, stop)
+		cond = self.builder.icmp_signed(LESS_THAN, zero, stop)
 		self.cbranch(cond, non_zero_length_block, end_block)
 
 		self.position_at_end(non_zero_length_block)
@@ -218,7 +218,7 @@ class CodeGenerator(NodeVisitor):
 		self.branch(cond_block)
 
 		self.position_at_end(cond_block)
-		cond = self.builder.icmp_unsigned(LESS_THAN, self.load(position), stop)
+		cond = self.builder.icmp_signed(LESS_THAN, self.load(position), stop)
 		self.cbranch(cond, body_block, end_block)
 
 		self.position_at_end(body_block)
@@ -284,14 +284,18 @@ class CodeGenerator(NodeVisitor):
 		return
 
 	def visit_unaryop(self, node):
-		op = node.op.value
+		op = node.op
 		expr = self.visit(node.expr)
-		if op == PLUS:
-			return expr
-		elif op == MINUS:
-			return self.builder.neg(expr)
+		res = expr
+		if op == MINUS:
+			if isinstance(expr.type, ir.IntType):
+				res = self.builder.neg(expr)
+			elif isinstance(expr.type, (ir.FloatType, ir.DoubleType)):
+				res = self.builder.fsub(ir.Constant(ir.DoubleType(), 0), expr)
 		elif op == NOT:
-			return self.builder.not_(expr)
+			if isinstance(expr.type, ir.IntType):
+				res = self.builder.not_(expr)
+		return res
 
 	def visit_range(self, node):
 		start = self.visit(node.left)
@@ -493,16 +497,10 @@ class CodeGenerator(NodeVisitor):
 				self.call('bool_to_str', [array, val])
 				val = array
 			else:
-				array = self.create_array(INT)
-				self.call('int_to_str', [array, val])
-				val = array
+				self.print_num("%d", val)
+				return
 		elif isinstance(val.type, (ir.FloatType, ir.DoubleType)):
-			percent_g = self.stringz('%g')
-			percent_g = self.alloc_and_store(percent_g, ir.ArrayType(percent_g.type.element, percent_g.type.count))
-			percent_g = self.gep(percent_g, [self.const(0), self.const(0)])
-			percent_g = self.builder.bitcast(percent_g, type_map[INT8].as_pointer())
-			self.call('printf', [percent_g, val])
-			self.call('putchar', [ir.Constant(type_map[INT], 10)])
+			self.print_num("%g", val)
 			return
 		self.call('print', [val])
 
@@ -513,10 +511,13 @@ class CodeGenerator(NodeVisitor):
 		str_ptr = self.builder.bitcast(str_ptr, type_map[INT].as_pointer())
 		self.call('puts', [str_ptr])
 
-	def print_int(self, integer):
-		array = self.create_array(INT)
-		self.call('int_to_str', [array, integer])
-		self.call('print', [array])
+	def print_num(self, format, num):
+		percent_d = self.stringz(format)
+		percent_d = self.alloc_and_store(percent_d, ir.ArrayType(percent_d.type.element, percent_d.type.count))
+		percent_d = self.gep(percent_d, [self.const(0), self.const(0)])
+		percent_d = self.builder.bitcast(percent_d, type_map[INT8].as_pointer())
+		self.call('printf', [percent_d, num])
+		self.call('putchar', [ir.Constant(type_map[INT], 10)])
 
 	def visit_input(self, node):
 		# Print text if it exists
