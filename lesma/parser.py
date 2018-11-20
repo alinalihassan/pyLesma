@@ -110,6 +110,7 @@ class Parser(object):
         params = OrderedDict()
         param_defaults = {}
         vararg = None
+        return_void = False
         while self.current_token.value != RPAREN:
             param_name = self.current_token.value
             self.eat_type(NAME)
@@ -135,12 +136,20 @@ class Parser(object):
                 if self.current_token.value != RPAREN:
                     self.eat_value(COMMA)
         self.eat_value(RPAREN)
-        self.eat_value(ARROW)
-        if self.current_token.value == VOID:
+
+        try: # No arrow, void by default
+            self.eat_value(ARROW)
+        except SyntaxError:
             return_type = Void()
-            self.next_token()
-        else:
-            return_type = self.type_spec()
+            return_void = True
+        
+        if return_void != True:
+            if self.current_token.value == VOID:
+                return_type = Void()
+                self.next_token()
+            else:
+                return_type = self.type_spec()
+
         self.eat_type(NEWLINE)
         self.indent_level += 1
         stmts = self.compound_statement()
