@@ -220,20 +220,19 @@ print(is_less_than_5(3))
 print(is_less_than_5(5))
 print(is_less_than_5(7))
 
-# TODO: Testing scope
-#def do_stuff(Int y) -> void
-#	print(y)
-#
-#def square(Int x) -> Int
-#	do_stuff(x)
-#	return x ** 2
-#
-#print(square(5))
-#
-#def greet_name(Str name) -> void
-#	print('Hello ' + name)
-#
-#greet_name('Anthony')
+def do_stuff(y: int) -> void
+	print(y)
+
+def square(x: int) -> Int
+	do_stuff(x)
+	return x ^ 2
+
+print(square(5))
+
+def greet_name(name: str)
+	print(name)
+
+greet_name('Anthony')
 
 #ERROR: If I define another x var, it's gonna give me an llvm error
 #x = 0
@@ -249,9 +248,6 @@ print(is_less_than_5(7))
 
 things = [3, 2, 1]
 print(things[1 + 1])
-
-#Error: Dec a
-b = 3
 
 def four() -> Int
 	return 2 + 2
