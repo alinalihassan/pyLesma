@@ -11,6 +11,7 @@ from lesma.compiler import RET_VAR, type_map
 from lesma.compiler.operations import operations
 from lesma.compiler.builtins import define_builtins
 from lesma.visitor import NodeVisitor
+from lesma.utils import *
 
 
 class CodeGenerator(NodeVisitor):
@@ -420,6 +421,7 @@ class CodeGenerator(NodeVisitor):
                 res = self.load(temp)
             else:
                 raise NotImplementedError()
+        
         if collection_access:
             self.call('dyn_array_set', [var_name, key, res])
         else:
@@ -726,7 +728,7 @@ class CodeGenerator(NodeVisitor):
             pm = llvm.create_module_pass_manager()
             pmb.populate(pm)
             pm.run(program_string)
-        cwd = os.getcwd()
+
         program_string = str(program_string).replace('source_filename = "<string>"\n', '')
         program_string = program_string.replace('target triple = "unknown-unknown-unknown"\n', '')
         program_string = program_string.replace('local_unnamed_addr', '')
@@ -737,12 +739,16 @@ class CodeGenerator(NodeVisitor):
 
         with open(output + '.ll', 'w') as out:
             out.write(program_string)
-        
+
+        if emit_llvm:
+            successful(" llvm assembler wrote to " + output + ".ll")
+
         os.popen('clang {0}.ll -o {0}'.format(output))
+        successful("binary file wrote to " + output)
         if run:
             sleep(.1)
             start_time = time()
-            process = subprocess.run('{}'.format(output), stdout=subprocess.PIPE)
+            subprocess.run('{}'.format(output), stdout=subprocess.PIPE)
             end_time = time()
             if timer:
                 print('Runtime: {:f} sec'.format(end_time - start_time))

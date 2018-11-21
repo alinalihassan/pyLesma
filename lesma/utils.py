@@ -1,12 +1,12 @@
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+from huepy import bad, good, info, bold, red, green, orange
+import sys
 
-def error(text: str):
-    print(bcolors.BOLD + bcolors.FAIL + "Error: " + bcolors.ENDC + text)
+def error(text):
+    print(bad(bold(red("Error:"))), text)
+    sys.exit(1)
+
+def warning(text):
+    print(info(bold(orange("Warning:"))), text)
+
+def successful(text):
+    print(good(bold(green("Success:"))), text)

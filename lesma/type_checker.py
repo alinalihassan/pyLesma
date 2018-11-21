@@ -1,4 +1,3 @@
-import warnings
 from lesma.ast import Collection
 from lesma.ast import Var
 from lesma.ast import VarDecl
@@ -10,6 +9,7 @@ from lesma.visitor import CollectionSymbol
 from lesma.visitor import FuncSymbol
 from lesma.visitor import NodeVisitor, StructSymbol
 from lesma.visitor import VarSymbol
+from lesma.utils import warning, error
 
 
 def flatten(container):
@@ -23,12 +23,6 @@ def flatten(container):
                 yield i
 
 
-# noinspection PyUnusedLocal
-def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
-    return 'Warning: {}\n'.format(message)
-
-warnings.formatwarning = warning_on_one_line
-
 
 class Preprocessor(NodeVisitor):
     def __init__(self, file_name=None):
@@ -40,7 +34,7 @@ class Preprocessor(NodeVisitor):
     def check(self, node):
         res = self.visit(node)
         if self.unvisited_symbols:
-            warnings.warn('Unused variables ({})'.format(','.join(sym_name for sym_name in self.unvisited_symbols)))
+            warning('Unused variables ({})'.format(','.join(sym_name for sym_name in self.unvisited_symbols)))
         return res
 
     def visit_program(self, node):
@@ -81,7 +75,7 @@ class Preprocessor(NodeVisitor):
         for case in node.cases:
             case_type = self.visit(case)
             if case_type != DEFAULT and case_type is not switch_var.type:
-                warnings.warn('file={} line={}: Types in switch do not match case'.format(self.file_name, node.line_num))
+                warning('file={} line={}: Types in switch do not match case'.format(self.file_name, node.line_num))
                 self.warnings = True
 
     def visit_case(self, node):
@@ -152,8 +146,7 @@ class Preprocessor(NodeVisitor):
                 if var_name is value:
                     return
                 else:
-                    warnings.warn('file={} line={} Type Error: What are you trying to do?!?! (fix this message)'.format(self.file_name, node.line_num))
-                    self.warnings = True
+                    error('file={} line={} Type Error: What are you trying to do?!?! (fix this message)'.format(self.file_name, node.line_num))
             elif isinstance(value, FuncSymbol):
                 value.name = var_name
                 self.define(var_name, value)
@@ -175,8 +168,8 @@ class Preprocessor(NodeVisitor):
                 if lookup_var.item_types == value:
                     return
             if lookup_var.read_only:
-                warnings.warn('file={} line={}: Cannot change the value of a variable declared constant: {}'.format(self.file_name, var_name, node.line_num))
-                self.warnings = True
+                error('file={} line={}: Cannot change the value of a variable declared constant: {}'.format(self.file_name, var_name, node.line_num))
+
             lookup_var.val_assigned = True
             if lookup_var.type in (self.search_scopes(DEC), self.search_scopes(FLOAT)):
                 if value in (self.search_scopes(INT), self.search_scopes(DEC), self.search_scopes(FLOAT)):
@@ -193,8 +186,7 @@ class Preprocessor(NodeVisitor):
             if hasattr(value, 'value'):
                 if value.value == lookup_var.type.name:
                     return
-            warnings.warn('file={} line={} Type Error: Not good things happening (fix this message)'.format(self.file_name, node.line_num))
-            self.warnings = True
+            error('file={} line={} Type Error: Not good things happening (fix this message)'.format(self.file_name, node.line_num))
 
     def visit_opassign(self, node):
         left = self.visit(node.left)
@@ -208,8 +200,7 @@ class Preprocessor(NodeVisitor):
         if right_type is left_type or left_type is any_type or right_type is any_type:
             return left_type
         else:
-            warnings.warn('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
-            self.warnings = True
+            error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
 
     def visit_fieldassignment(self, node):
         obj = self.search_scopes(node.obj)
@@ -219,18 +210,18 @@ class Preprocessor(NodeVisitor):
         var_name = node.value
         val = self.search_scopes(var_name)
         if val is None:
-            warnings.warn('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(var_name)))
-            self.warnings = True
+            error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(var_name)))
         else:
             if not val.val_assigned:
-                warnings.warn('file={} line={}: {} is being accessed before it was defined'.format(self.file_name, var_name, node.line_num))
-                self.warnings = True
+                error('file={} line={}: {} is being accessed before it was defined'.format(self.file_name, var_name, node.line_num))
             val.accessed = True
             return val
 
     def visit_binop(self, node):
-        if node.op == CAST:
+        if node.op == CAST or node.op in (IS, IS_NOT):
             self.visit(node.left)
+            if not node.right.value in TYPES:
+                error('file={} line={}: type expected for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, node.left, node.right))
             return self.infer_type(self.visit(node.right))
         else:
             left = self.visit(node.left)
@@ -241,8 +232,7 @@ class Preprocessor(NodeVisitor):
             if right_type is left_type or left_type is any_type or right_type is any_type:
                 return left_type
             else:
-                warnings.warn('file={} line={}: types do not match for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, left, right))
-                self.warnings = True
+                error('file={} line={}: types do not match for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, left, right))
 
     def visit_unaryop(self, node):
         return self.visit(node.expr)
@@ -259,8 +249,7 @@ class Preprocessor(NodeVisitor):
         if right_type is left_type or left_type is any_type or right_type is any_type:
             return left_type
         else:
-            warnings.warn('file={} line={}: Please don\'t do what you just did there ever again. It bad (fix this message)'.format(self.file_name, node.line_num))
-            self.warnings = True
+            error('file={} line={}: Please don\'t do what you just did there ever again. It bad (fix this message)'.format(self.file_name, node.line_num))
 
     def visit_compound(self, node):
         results = []
@@ -315,11 +304,9 @@ class Preprocessor(NodeVisitor):
             for ret_type in return_types:
                 infered_type = self.infer_type(ret_type)
                 if infered_type is not func_type:
-                    warnings.warn('file={} line={}: The actual return type does not match the declared return type: {}'.format(self.file_name, node.line_num, func_name))
-                    self.warnings = True
+                    error('file={} line={}: The actual return type does not match the declared return type: {}'.format(self.file_name, node.line_num, func_name))
         elif func_type is not None:
-            warnings.warn('file={} line={}: No return value was specified for function: {}'.format(self.file_name, node.line_num, func_name))
-            self.warnings = True
+            error('file={} line={}: No return value was specified for function: {}'.format(self.file_name, node.line_num, func_name))
         func_symbol = FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults)
         self.define(func_name, func_symbol, 1)
         self.drop_top_scope()
@@ -340,8 +327,7 @@ class Preprocessor(NodeVisitor):
         return_var_type = list(flatten(return_var_type))
         for ret_type in return_var_type:
             if self.infer_type(ret_type) is not func_type:
-                warnings.warn('file={} line={}: The actual return type does not match the declared return type'.format(self.file_name, node.line_num))
-                self.warnings = True
+                error('file={} line={}: The actual return type does not match the declared return type'.format(self.file_name, node.line_num))
         self.drop_top_scope()
         return func_symbol
 
@@ -357,15 +343,13 @@ class Preprocessor(NodeVisitor):
             else:
                 func_param_keys = list(func.parameters.keys())
                 if func_param_keys[x] not in node.named_arguments.keys() and func_param_keys[x] not in func.parameter_defaults.keys():
-                    warnings.warn('file={} line={}: Missing arguments to function: {}'.format(self.file_name, node.line_num, repr(func_name)))
-                    self.warnings = True
+                    error('file={} line={}: Missing arguments to function: {}'.format(self.file_name, node.line_num, repr(func_name)))
                 else:
                     if func_param_keys[x] in node.named_arguments.keys():
                         if param.value != self.visit(node.named_arguments[func_param_keys[x]]).name:
                             raise TypeError
         if func is None:
-            warnings.warn('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(func_name)))
-            self.warnings = True
+            error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(func_name)))
         else:
             func.accessed = True
             return func.type
@@ -389,8 +373,7 @@ class Preprocessor(NodeVisitor):
                         if param.value != self.visit(node.named_arguments[method_param_keys[x]]).name:
                             raise TypeError
         if method is None:
-            warnings.warn('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(method_name)))
-            self.warnings = True
+            error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(method_name)))
         else:
             method.accessed = True
             return method.type
@@ -447,17 +430,14 @@ class Preprocessor(NodeVisitor):
             key = self.visit(node.key)
         if collection.type is self.search_scopes(ARRAY) or collection.type is self.search_scopes(LIST) or collection.type is self.search_scopes(SET):
             if key is not self.search_scopes(INT) and key.type is not self.search_scopes(INT):
-                warnings.warn('file={} line={}: Something something error... huh? (fix this message)'.format(self.file_name, node.line_num))
-                self.warnings = True
+                error('file={} line={}: Something something error... huh? (fix this message)'.format(self.file_name, node.line_num))
             return collection.item_types
         elif collection.type is self.search_scopes(DICT) or collection.type is self.search_scopes(ENUM):
             if key is not self.search_scopes(STR) and key.type is not self.search_scopes(STR):
-                warnings.warn('file={} line={}: Dude....... don\'t (fix this message)'.format(self.file_name, node.line_num))
-                self.warnings = True
+                error('file={} line={}: Dude....... don\'t (fix this message)'.format(self.file_name, node.line_num))
             return self.search_scopes(ANY)
         else:
-            warnings.warn('file={} line={}: WHY? (fix this message)'.format(self.file_name, node.line_num))
-            self.warnings = True
+            error('file={} line={}: WHY? (fix this message)'.format(self.file_name, node.line_num))
 
     def visit_print(self, node):
         if node.value:
