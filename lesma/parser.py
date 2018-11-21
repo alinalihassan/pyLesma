@@ -52,8 +52,9 @@ class Parser(object):
         self.indent_level += 1
         fields = OrderedDict()
         while self.current_token.indent_level > name.indent_level:
-            field_type = self.type_spec()
             field = self.next_token().value
+            self.eat_value(COLON)
+            field_type = self.type_spec()
             fields[field] = field_type
             self.eat_type(NEWLINE)
         self.indent_level -= 1
