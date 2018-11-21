@@ -161,12 +161,12 @@ print(num)
 #	YELLOW
 #)
 
-Struct Circle
-	Int radius
-	Int x
-	Int y
+struct Circle
+	radius: int
+	x: int
+	y: int
 
-Circle cir = {radius=5, x=2, y=4}
+cir: Circle = {radius=5, x=2, y=4}
 print(cir.radius)
 
 #TODO: abstract class Vehicle

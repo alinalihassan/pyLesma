@@ -9,6 +9,7 @@
 - [x] Fix void function asking for return
 - [x] Fix uninitialized variable declaration
 - [x] Fix numbers being unsigned integers
+- [ ] Should not allow declaring the type to an existing variable
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
@@ -19,7 +20,6 @@
 - [ ] Allow more operators on different types such as strings
 - [x] Change types to lowercase
 - [x] Change power operator from '**' to '^'
-- [ ] Allow change of type for any type variables
 - [ ] Improve warning messages
 
 ## Features
@@ -27,7 +27,7 @@
 - [ ] Implement List
 - [ ] Implement Dictionary
 - [ ] Implement Empty arrays
-- [ ] Implement is and is not
+- [x] Implement is and is not
 - [ ] Implement 'in' as a boolean result
 - [ ] Implement anonymous functions
 - [ ] Implement alias
