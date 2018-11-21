@@ -19,6 +19,8 @@ def operations(compiler, node):
     right = compiler.visit(node.right)
     if op == CAST:
         return cast_ops(compiler, left, right, node)
+    elif op in (IS, IS_NOT):
+        return is_ops(compiler, op, left, right, node)
     elif isinstance(left.type, ir.IntType) and isinstance(right.type, ir.IntType):
         return int_ops(compiler, op, left, right, node)
     elif type(left.type) in NUM_TYPES and type(right.type) in NUM_TYPES:
@@ -28,6 +30,16 @@ def operations(compiler, node):
         new_right = compiler.search_scopes(node.right.value)
         return str_ops(compiler, op, new_left, new_right, node)
 
+def is_ops(compiler, op, left, right, node):
+    orig = str(left.type)
+    compare = str(right)
+    if op == IS:
+        return compiler.const(orig == compare, BOOL)
+    elif op == IS_NOT:
+        return compiler.const(orig != compare, BOOL)
+    else:
+        raise SyntaxError('Unknown identity operator', node.op)
+        
 
 def int_ops(compiler, op, left, right, node):
     # if left.type.width == 1:
