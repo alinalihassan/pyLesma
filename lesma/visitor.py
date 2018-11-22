@@ -195,7 +195,7 @@ class NodeVisitor(object):
     @property
     def unvisited_symbols(self):
         return [sym_name for sym_name, sym_val in self.items if
-            not isinstance(sym_val, (BuiltinTypeSymbol, BuiltinFuncSymbol)) and not sym_val.accessed]
+            not isinstance(sym_val, (BuiltinTypeSymbol, BuiltinFuncSymbol)) and not sym_val.accessed and sym_name != '_']
 
     def infer_type(self, value):
         if isinstance(value, BuiltinTypeSymbol):
