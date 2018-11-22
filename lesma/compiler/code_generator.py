@@ -704,7 +704,7 @@ class CodeGenerator(NodeVisitor):
         llvmmod = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
-            pmb.opt_level = 2
+            pmb.opt_level = 3
             pm = llvm.create_module_pass_manager()
             pmb.populate(pm)
             pm.run(llvmmod)
@@ -721,38 +721,40 @@ class CodeGenerator(NodeVisitor):
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
     def compile(self, filename, optimize=True, run=False, output=None, emit_llvm=False, timer=False):
+        compile_time = time()
         program_string = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
-            pmb.opt_level = 2
+            pmb.opt_level = 3
             pm = llvm.create_module_pass_manager()
             pmb.populate(pm)
             pm.run(program_string)
 
-        program_string = str(program_string).replace('source_filename = "<string>"\n', '')
-        program_string = program_string.replace('target triple = "unknown-unknown-unknown"\n', '')
-        program_string = program_string.replace('local_unnamed_addr', '')
-        program_string = program_string.replace('@llvm.memset.p0i8.i64(i8* nocapture writeonly', '@llvm.memset.p0i8.i64(i8* nocapture')
-        
         if output is None:
             output = os.path.splitext(filename)[0]
 
-        with open(output + '.ll', 'w') as out:
-            out.write(program_string)
+        target_machine = llvm.Target.from_default_triple().create_target_machine()
+        with llvm.create_mcjit_compiler(program_string, target_machine) as ee:
+            ee.finalize_object()
+            with open(output + ".o", 'wb') as out:
+                out.write(target_machine.emit_object(program_string))
+        
 
         if emit_llvm:
-            successful(" llvm assembler wrote to " + output + ".ll")
+            with open(output + '.ll', 'w') as out:
+                out.write(program_string)
+            successful("llvm assembler wrote to " + output + ".ll")
 
-        os.popen('clang {0}.ll -o {0}'.format(output))
+        os.popen('clang {0}.o -o {0}'.format(output))
+        successful("compilation done in: " + str(time()-compile_time) + " seconds")
         successful("binary file wrote to " + output)
         if run:
-            sleep(.1)
+            sleep(.05)
             start_time = time()
             subprocess.run('{}'.format(output), stdout=subprocess.PIPE)
             end_time = time()
             if timer:
                 print('Runtime: {:f} sec'.format(end_time - start_time))
 
-        if not emit_llvm:
-            sleep(.1)
-            os.remove(output + '.ll')
+        sleep(.05)
+        os.remove(output + '.o')
