@@ -28,7 +28,6 @@ class Preprocessor(NodeVisitor):
     def __init__(self, file_name=None):
         super().__init__()
         self.file_name = file_name
-        self.warnings = False
         self.return_flag = False
 
     def check(self, node):
@@ -75,8 +74,7 @@ class Preprocessor(NodeVisitor):
         for case in node.cases:
             case_type = self.visit(case)
             if case_type != DEFAULT and case_type is not switch_var.type:
-                warning('file={} line={}: Types in switch do not match case'.format(self.file_name, node.line_num))
-                self.warnings = True
+                error('file={} line={}: Types in switch do not match case'.format(self.file_name, node.line_num))
 
     def visit_case(self, node):
         if node.value == DEFAULT:
@@ -445,16 +443,3 @@ class Preprocessor(NodeVisitor):
 
     def visit_input(self, node):
         self.visit(node.value)
-
-if __name__ == '__main__':
-    from lesma.lexer import Lexer
-    from lesma.parser import Parser
-    f = 'test.les'
-    code = open(f).read()
-    lexer = Lexer(code, f)
-    parser = Parser(lexer)
-    tree = parser.parse()
-    symtab_builder = Preprocessor(parser.file_name)
-    symtab_builder.check(tree)
-    if not symtab_builder.warnings:
-        print('Looks good!')

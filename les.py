@@ -57,10 +57,10 @@ def _compile(arg_list):
     t = parser.parse()
     symtab_builder = Preprocessor(parser.file_name)
     symtab_builder.check(t)
-    if not symtab_builder.warnings:
-        generator = CodeGenerator(parser.file_name)
-        generator.generate_code(t)
-        generator.compile(file, True, o, emit_llvm)
+
+    generator = CodeGenerator(parser.file_name)
+    generator.generate_code(t)
+    generator.compile(file, True, o, emit_llvm)
 
 
 if __name__ == "__main__":
