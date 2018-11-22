@@ -35,10 +35,10 @@ def _run(arg_list):
     t = parser.parse()
     symtab_builder = Preprocessor(parser.file_name)
     symtab_builder.check(t)
-    if not symtab_builder.warnings:
-        generator = CodeGenerator(parser.file_name)
-        generator.generate_code(t)
-        generator.evaluate(True, False, timer)
+    
+    generator = CodeGenerator(parser.file_name)
+    generator.generate_code(t)
+    generator.evaluate(True, False, timer)
 
 
 def _compile(arg_list):
