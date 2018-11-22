@@ -720,7 +720,7 @@ class CodeGenerator(NodeVisitor):
             if timer:
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
-    def compile(self, filename, optimize=True, run=False, output=None, emit_llvm=False, timer=False):
+    def compile(self, filename, optimize=True, output=None, emit_llvm=False):
         compile_time = time()
         program_string = llvm.parse_assembly(str(self.module))
         if optimize:
@@ -730,6 +730,7 @@ class CodeGenerator(NodeVisitor):
             pmb.populate(pm)
             pm.run(program_string)
 
+        prog_str = str(program_string)
         if output is None:
             output = os.path.splitext(filename)[0]
 
@@ -738,23 +739,15 @@ class CodeGenerator(NodeVisitor):
             ee.finalize_object()
             with open(output + ".o", 'wb') as out:
                 out.write(target_machine.emit_object(program_string))
-        
+
+        os.popen('clang {0}.o -o {0}'.format(output))
+        successful("compilation done in: %.3f seconds" % (time()-compile_time))
+        successful("binary file wrote to " + output)
 
         if emit_llvm:
             with open(output + '.ll', 'w') as out:
-                out.write(program_string)
+                out.write(prog_str)
             successful("llvm assembler wrote to " + output + ".ll")
-
-        os.popen('clang {0}.o -o {0}'.format(output))
-        successful("compilation done in: " + str(time()-compile_time) + " seconds")
-        successful("binary file wrote to " + output)
-        if run:
-            sleep(.05)
-            start_time = time()
-            subprocess.run('{}'.format(output), stdout=subprocess.PIPE)
-            end_time = time()
-            if timer:
-                print('Runtime: {:f} sec'.format(end_time - start_time))
 
         sleep(.05)
         os.remove(output + '.o')

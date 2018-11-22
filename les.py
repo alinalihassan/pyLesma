@@ -1,7 +1,7 @@
 """Lesma programming language
 
 usage:
-    lesma compile [-lto FILE] <file> 
+    lesma compile [-lo FILE] <file> 
     lesma run [-t] <file>
     lesma [-hv]
 
@@ -45,7 +45,6 @@ def _compile(arg_list):
     file = arg_list['<file>']
     o = arg_list['--output']
     emit_llvm = arg_list['--llvm']
-    timer = arg_list['--timer']
 
     if not os.path.isfile(file):
         error(file + "is not a valid file")
@@ -61,15 +60,15 @@ def _compile(arg_list):
     if not symtab_builder.warnings:
         generator = CodeGenerator(parser.file_name)
         generator.generate_code(t)
-        generator.compile(file, True, False, o, emit_llvm, timer)
+        generator.compile(file, True, o, emit_llvm)
 
 
 if __name__ == "__main__":
-    arg_list = docopt(__doc__, version='v0.1.0')
+    args = docopt(__doc__, version='v0.1.0')
     
-    if arg_list['compile']:
-        _compile(arg_list)
-    elif arg_list['run']:
-        _run(arg_list)
+    if args['compile']:
+        _compile(args)
+    elif args['run']:
+        _run(args)
     else:
         exit(__doc__)
