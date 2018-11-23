@@ -1,5 +1,6 @@
 from decimal import Decimal
 from lesma.grammar import *
+from lesma.utils import *
 
 
 class Token(object):
@@ -79,11 +80,22 @@ class Lexer(object):
         return next_token
 
     def skip_whitespace(self):
+        shouldIndent = False
         if self.peek(-1) == '\n':
-            raise SyntaxError('Only tab characters can indent')
+            shouldIndent = True
+
+        spaces = 0
         while self.current_char is not None and self.current_char.isspace():
             self.next_char()
             self.reset_word()
+            spaces+=1
+            if spaces == 4 and shouldIndent:
+                spaces = 0
+                self.increment_indent_level()
+        
+        if spaces != 0 and shouldIndent:
+            error('file={} line={}: Indentation is locked to 4 spaces, found {} instead'.format(
+                self.file_name, self.line_num, spaces))
 
     def skip_comment(self):
         while self.current_char != '\n':
