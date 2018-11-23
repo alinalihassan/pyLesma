@@ -54,8 +54,8 @@ class Lexer(object):
         peek_pos = self.pos + num
         if peek_pos > len(self.text) - 1:
             return None
-        else:
-            return self.text[peek_pos]
+
+        return self.text[peek_pos]
 
     def preview_token(self, num=1):
         if num < 1:
@@ -150,16 +150,16 @@ class Lexer(object):
     def get_type(char):
         if char.isspace():
             return WHITESPACE
-        if char == '#':
+        elif char == '#':
             return COMMENT
-        if char == '\\':
+        elif char == '\\':
             return ESCAPE
-        if char in OPERATORS:
+        elif char in OPERATORS:
             return OPERATIC
-        if char.isdigit():
+        elif char.isdigit():
             return NUMERIC
-        else:
-            return ALPHANUMERIC
+        
+        return ALPHANUMERIC
 
     def get_next_token(self):
         if self.current_char is None:
@@ -224,8 +224,8 @@ class Lexer(object):
                         self.word += self.current_char
                         self.next_char()
                     return Token(OP, self.reset_word(), self.line_num, self.indent_level)
-                else:
-                    return Token(OP, self.reset_word(), self.line_num, self.indent_level)
+                
+                return Token(OP, self.reset_word(), self.line_num, self.indent_level)
 
             if self.word in KEYWORDS:
                 if self.word in MULTI_WORD_KEYWORDS and self.preview_token(1).value in MULTI_WORD_KEYWORDS:
@@ -235,14 +235,15 @@ class Lexer(object):
                         self.word += self.current_char
                         self.next_char()
                     return Token(KEYWORD, self.reset_word(), self.line_num, self.indent_level)
-                else:
-                    return Token(KEYWORD, self.reset_word(), self.line_num, self.indent_level)
+                
+                return Token(KEYWORD, self.reset_word(), self.line_num, self.indent_level)
+
             elif self.word in TYPES:
                 return Token(TYPE, self.reset_word(), self.line_num, self.indent_level)
             elif self.word in CONSTANTS:
                 return Token(CONSTANT, self.reset_word(), self.line_num, self.indent_level)
-            else:
-                return Token(NAME, self.reset_word(), self.line_num, self.indent_level)
+            
+            return Token(NAME, self.reset_word(), self.line_num, self.indent_level)
 
         if self.word_type == NUMERIC:
             while self.char_type == NUMERIC or self.current_char == DOT and self.peek(1) != DOT:
@@ -276,11 +277,3 @@ class Lexer(object):
             yield token
             token = self.get_next_token()
         yield token
-
-
-if __name__ == '__main__':
-    file = 'test.les'
-    lexer = Lexer(open(file).read(), file)
-    for t in lexer.analyze():
-        print(t)
-

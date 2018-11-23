@@ -157,8 +157,8 @@ class Parser(object):
         self.indent_level -= 1
         if name == ANON:
             return AnonymousFunc(return_type, params, stmts, self.line_num, param_defaults, vararg)
-        else:
-            return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
+        
+        return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 
     def constructor_declaration(self, class_name):
         self.eat_value(NEW)
@@ -202,8 +202,8 @@ class Parser(object):
             return self.curly_bracket_expression(token)
         elif token.value == LPAREN:
             return self.list_expression(token)
-        else:
-            return self.square_bracket_expression(token)
+        
+        return self.square_bracket_expression(token)
 
     def function_call(self, token):
         if token.value == PRINT:
@@ -349,17 +349,17 @@ class Parser(object):
                     right = self.expr()
                     if op.value == ASSIGN:
                         return Assign(access, op.value, right, self.line_num)
-                    else:
-                        return OpAssign(access, op.value, right, self.line_num)
+                    
+                    return OpAssign(access, op.value, right, self.line_num)
                 return access
         elif token.type == NAME:
             self.eat_value(LSQUAREBRACKET)
             tok = self.expr()
             if self.current_token.value == COMMA:
                 return self.slice_expression(tok)
-            else:
-                self.eat_value(RSQUAREBRACKET)
-                return self.access_collection(token, tok)
+            
+            self.eat_value(RSQUAREBRACKET)
+            return self.access_collection(token, tok)
         else:
             raise SyntaxError
 
@@ -442,8 +442,8 @@ class Parser(object):
         token = self.next_token()
         if token.value in ASSIGNMENT_OP:
             return self.field_assignment(token, left)
-        else:
-            return self.method_call(token, left)
+        
+        return self.method_call(token, left)
 
     def method_call(self, _, left):
         args = []
@@ -623,11 +623,11 @@ class Parser(object):
         elif token.value == LPAREN:
             if preview.value == RPAREN:
                 return []
-            else:
-                self.next_token()
-                node = self.expr()
-                self.eat_value(RPAREN)
-                return node
+            
+            self.next_token()
+            node = self.expr()
+            self.eat_value(RPAREN)
+            return node
         elif preview.value == LPAREN:
             self.next_token()
             return self.function_call(token)
@@ -674,11 +674,3 @@ class Parser(object):
         if self.current_token.type != EOF:
             raise SyntaxError('Unexpected end of program')
         return node
-
-if __name__ == '__main__':
-    from lesma.lexer import Lexer
-    file = 'test.les'
-    l = Lexer(open(file).read(), file)
-    parser = Parser(l)
-    tree = parser.parse()
-    print(tree)

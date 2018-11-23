@@ -22,15 +22,15 @@ import os
 from docopt import docopt
 
 def _run(arg_list):
-    file = arg_list['<file>']
+    les_file = arg_list['<file>']
     timer = arg_list['--timer']
 
-    if not os.path.isfile(file):
-        error(file + "is not a valid file")
+    if not os.path.isfile(les_file):
+        error(les_file + "is not a valid file")
         return
 
-    code = open(file).read()
-    lexer = Lexer(code, file)
+    code = open(les_file).read()
+    lexer = Lexer(code, les_file)
     parser = Parser(lexer)
     t = parser.parse()
     symtab_builder = Preprocessor(parser.file_name)
@@ -42,17 +42,17 @@ def _run(arg_list):
 
 
 def _compile(arg_list):
-    file = arg_list['<file>']
+    les_file = arg_list['<file>']
     o = arg_list['--output']
     emit_llvm = arg_list['--llvm']
 
-    if not os.path.isfile(file):
-        error(file + "is not a valid file")
+    if not os.path.isfile(les_file):
+        error(les_file + "is not a valid file")
         return
 
-    file = os.path.abspath(file)
-    code = open(file).read()
-    lexer = Lexer(code, file)
+    les_file = os.path.abspath(les_file)
+    code = open(les_file).read()
+    lexer = Lexer(code, les_file)
     parser = Parser(lexer)
     t = parser.parse()
     symtab_builder = Preprocessor(parser.file_name)
@@ -60,7 +60,7 @@ def _compile(arg_list):
 
     generator = CodeGenerator(parser.file_name)
     generator.generate_code(t)
-    generator.compile(file, True, o, emit_llvm)
+    generator.compile(les_file, True, o, emit_llvm)
 
 
 if __name__ == "__main__":

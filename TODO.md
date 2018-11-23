@@ -4,7 +4,7 @@
 - [ ] Fix **break** and **continue** not branching if the parent block is not the loop
 - [x] Fix initialization without variable
 - [ ] Fix constant declaration not allowing types
-- [ ] Fix Type declaration not expecting square brackets (arrays)
+- [ ] Fix Type declaration not expecting square brackets (for arrays)
 - [ ] Fix input
 - [x] Fix void function asking for return
 - [x] Fix uninitialized variable declaration
@@ -21,6 +21,10 @@
 - [x] Change types to lowercase
 - [x] Change power operator from '**' to '^'
 - [ ] Improve warning messages
+- [x] Allow spaces instead of tabs
+- [x] Improve CLI
+- [ ] Add indentation related errors
+- [ ] Underline is now an ignored variable, it won't show up in unused variables warning
 
 ## Features
 - [ ] Implement Null

@@ -79,8 +79,8 @@ def int_ops(compiler, op, left, right, node):
     elif op == BINARY_LEFT_SHIFT:
         return compiler.builder.lshr(left, right)
     elif op in (EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
-        cmp = compiler.builder.icmp_signed(op, left, right, 'cmptmp')
-        return compiler.builder.sitofp(cmp, type_map[BOOL], 'booltmp')
+        cmp_res = compiler.builder.icmp_signed(op, left, right, 'cmptmp')
+        return compiler.builder.sitofp(cmp_res, type_map[BOOL], 'booltmp')
     else:
         raise SyntaxError('Unknown binary operator', node.op)
 
@@ -107,8 +107,8 @@ def float_ops(compiler, op, left, right, node):
             compiler.builder.store(res, temp)
         return compiler.builder.load(temp)
     elif op in (EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
-        cmp = compiler.builder.fcmp_ordered(op, left, right, 'cmptmp')
-        return compiler.builder.sitofp(cmp, type_map[BOOL], 'booltmp')
+        cmp_res = compiler.builder.fcmp_ordered(op, left, right, 'cmptmp')
+        return compiler.builder.sitofp(cmp_res, type_map[BOOL], 'booltmp')
     else:
         raise SyntaxError('Unknown binary operator', node.op)
 

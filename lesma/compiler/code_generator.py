@@ -273,9 +273,9 @@ class CodeGenerator(NodeVisitor):
     def visit_break(self, _):
         if 'case' in self.builder.block.name:
             return BREAK
-        else:
-            self.is_break = True
-            return self.branch(self.loop_end_blocks[-1])
+        
+        self.is_break = True
+        return self.branch(self.loop_end_blocks[-1])
 
     def visit_continue(self, _):
         return self.branch(self.loop_test_blocks[-1])
@@ -476,8 +476,8 @@ class CodeGenerator(NodeVisitor):
         collection = self.search_scopes(node.collection.value)
         if collection.type.pointee == self.search_scopes('Dynamic_Array'):
             return self.call('dyn_array_get', [collection, key])
-        else:
-            return self.builder.extract_value(self.load(collection.name), [key])
+        
+        return self.builder.extract_value(self.load(collection.name), [key])
 
     def visit_str(self, node):
         array = self.create_array(INT)
@@ -513,8 +513,8 @@ class CodeGenerator(NodeVisitor):
         str_ptr = self.builder.bitcast(str_ptr, type_map[INT].as_pointer())
         self.call('puts', [str_ptr])
 
-    def print_num(self, format, num):
-        percent_d = self.stringz(format)
+    def print_num(self, num_format, num):
+        percent_d = self.stringz(num_format)
         percent_d = self.alloc_and_store(percent_d, ir.ArrayType(percent_d.type.element, percent_d.type.count))
         percent_d = self.gep(percent_d, [self.const(0), self.const(0)])
         percent_d = self.builder.bitcast(percent_d, type_map[INT8].as_pointer())
@@ -595,8 +595,8 @@ class CodeGenerator(NodeVisitor):
         if isinstance(val, int):
             if width:
                 return ir.Constant(type_map[width], val)
-            else:
-                return ir.Constant(type_map[INT], val)
+            
+            return ir.Constant(type_map[INT], val)
         elif isinstance(val, (float, Decimal)):
             return ir.Constant(type_map[DEC], val)
         elif isinstance(val, bool):

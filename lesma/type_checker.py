@@ -95,8 +95,8 @@ class Preprocessor(NodeVisitor):
             return self.search_scopes(BOOL)
         # elif node.value == NULL: #TODO: Implement me
         # 	return self.search_scopes(NULL)
-        else:
-            return NotImplementedError
+        
+        return NotImplementedError
 
     def visit_num(self, node):
         return self.infer_type(node.value)
@@ -400,12 +400,12 @@ class Preprocessor(NodeVisitor):
         for item in node.items:
             types.append(self.visit(item))
         if types[1:] == types[:-1]:
-            if len(types) == 0:
+            if not types:
                 return self.search_scopes(ARRAY), self.search_scopes(ANY)
-            else:
-                return self.search_scopes(ARRAY), types[0]
-        else:
-            return self.search_scopes(LIST), self.search_scopes(ANY)
+            
+            return self.search_scopes(ARRAY), types[0]
+        
+        return self.search_scopes(LIST), self.search_scopes(ANY)
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
