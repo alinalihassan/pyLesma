@@ -1,0 +1,17 @@
+a1: int = 1
+a2: int8 = 2
+a3: int16 = 3
+a4: int32 = 4
+a5: int64 = 5
+a6: int128 = 6
+a7: double = 6.5
+a8: float = 7.69
+a9: str = "Test"
+a10: bool = true
+
+x: int = 5
+y = 7.5
+z = "Hey there"
+print(x)
+print(y)
+print(z)
