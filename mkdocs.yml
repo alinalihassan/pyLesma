@@ -1,0 +1,46 @@
+site_name: Lesma Documentation
+site_description: 'The documentation of Lesma language'
+site_url: 'https://hassanalinali.github.io/Lesma/'
+site_author: 'Alin Ali Hassan'
+
+repo_name: 'hassanalinali/Lesma'
+repo_url: 'https://github.com/hassanalinali/Lesma'
+
+copyright: 'Copyright &copy; 2018 Alin Ali Hassan'
+
+nav:
+  - Lesma: index.md
+  - Examples: examples.md
+  - Features:
+    - Syntax: features/syntax.md
+    - Keywords: features/keywords.md
+    - Types: features/types.md
+    - Operators: features/operators.md
+    - Flow Control: features/flow_control.md
+  - TODO: TODO.md
+  - License: license.md
+
+extra_css:
+    - css/extra.css
+
+theme: 
+  name: 'material'
+  palette: 
+    primary: 'blue'
+    accent: 'blue'
+  font:
+    text: 'Noto Sans'
+    code: 'Roboto Mono'
+  logo:
+    icon: 'book'
+
+markdown_extensions:
+  - admonition
+  - codehilite:
+      guess_lang: false
+      linenums: true
+  - toc:
+      permalink: False
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.inlinehilite

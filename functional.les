@@ -7,8 +7,7 @@ moogles: int # Initialize an Integer, must be assigned a value before it can be 
 const constant_here = 5
 number = 23 # Type Inference
 
-# Decimal will be used by default (as soon as a decimal standard is implimented)
-decimal_number=1.2+2.4 # Spaces are generally insignificant, but encouraged for readability
+double_number=1.2+2.4 # Spaces are generally insignificant, but encouraged for readability
 # If a floating point number is desired then one could include the Float type identifier
 
 question = 'what\'s going on' # Escaping
@@ -19,7 +18,7 @@ something: str # Initialize a String
 
 things = [1, 2, 3] # Array, homogeneous
 # ERROR: other_things = (1, 'Hello') # List, non-homogeneous
-# NOT IMPLEMENTED YET: stuff = {first_name: 'Samus', 'last_name': 'Aran'} # Dictionary, key strings don't have to be in quotes
+# NOT IMPLEMENTED YET: stuff = {'first_name': 'Samus', 'last_name': 'Aran'} # Dictionary
 # NOT IMPLEMENTED: Int[] other_stuff = [] # Empty Array of Ints
 
 if number > 23

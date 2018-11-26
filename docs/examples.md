@@ -1,3 +1,14 @@
+# Examples
+
+Everyone likes some short bits of code to taste the syntax and semantics.
+
+For more in depth code examples and explaination, check the feature pages.
+
+!!! warning
+	Some of the examples shown below are non-functional. Please consult the rest of the documentation for more information
+
+```py
+# Hello World
 print('Hello World')
 print('🍌')
 print('夜のコンサートは最高でした。')
@@ -163,3 +174,4 @@ class Car(Vehicle)
 ford = Car(1992)
 
 print(ford.hatchback)
+```
