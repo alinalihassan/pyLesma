@@ -55,8 +55,8 @@ def int_ops(compiler, op, left, right, node):
     elif op == FLOORDIV:
         return compiler.builder.sdiv(left, right, 'divtmp')
     elif op == DIV:
-        return compiler.builder.fdiv(compiler.builder.sitofp(left, type_map[DEC]),
-            compiler.builder.sitofp(right, type_map[DEC]), 'fdivtmp')
+        return compiler.builder.fdiv(compiler.builder.sitofp(left, type_map[DOUBLE]),
+            compiler.builder.sitofp(right, type_map[DOUBLE]), 'fdivtmp')
     elif op == MOD:
         return compiler.builder.srem(left, right, 'modtmp')
     elif op == POWER:
@@ -100,7 +100,7 @@ def float_ops(compiler, op, left, right, node):
     elif op == MOD:
         return compiler.builder.frem(left, right, 'fmodtmp')
     elif op == POWER:
-        temp = compiler.builder.alloca(type_map[DEC])
+        temp = compiler.builder.alloca(type_map[DOUBLE])
         compiler.builder.store(left, temp)
         for _ in range(node.right.value - 1):
             res = compiler.builder.fmul(compiler.builder.load(temp), left)
@@ -139,7 +139,7 @@ def cast_ops(compiler, left, right, node):
             return cast
     elif cast_type == DOUBLE:
         if orig_type == I64:
-            cast = compiler.builder.sitofp(left, type_map[DEC])
+            cast = compiler.builder.sitofp(left, type_map[DOUBLE])
             return cast
     elif cast_type == FLOAT:
         raise NotImplementedError

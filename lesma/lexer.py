@@ -254,7 +254,7 @@ class Lexer(object):
             value = self.reset_word()
             if '.' in value:
                 value = Decimal(value)
-                value_type = DEC
+                value_type = DOUBLE
             else:
                 value = int(value)
                 value_type = INT

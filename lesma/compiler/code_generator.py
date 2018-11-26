@@ -414,7 +414,7 @@ class CodeGenerator(NodeVisitor):
             elif op == MOD_ASSIGN:
                 res = self.builder.frem(var, right)
             elif op == POWER_ASSIGN:
-                temp = self.alloc_and_store(var, type_map[DEC])
+                temp = self.alloc_and_store(var, type_map[DOUBLE])
                 for _ in range(node.right.value - 1):
                     res = self.builder.fmul(self.load(temp), var)
                     self.store(res, temp)
@@ -598,7 +598,7 @@ class CodeGenerator(NodeVisitor):
             
             return ir.Constant(type_map[INT], val)
         elif isinstance(val, (float, Decimal)):
-            return ir.Constant(type_map[DEC], val)
+            return ir.Constant(type_map[DOUBLE], val)
         elif isinstance(val, bool):
             return ir.Constant(type_map[BOOL], bool(val))
         elif isinstance(val, str):

@@ -32,7 +32,7 @@ INT16_BUILTIN = BuiltinTypeSymbol(INT16, Int16)
 INT32_BUILTIN = BuiltinTypeSymbol(INT32, Int32)
 INT64_BUILTIN = BuiltinTypeSymbol(INT64, Int64)
 INT128_BUILTIN = BuiltinTypeSymbol(INT128, Int128)
-DEC_BUILTIN = BuiltinTypeSymbol(DEC, Dec)
+DOUBLE_BUILTIN = BuiltinTypeSymbol(DOUBLE, Double)
 FLOAT_BUILTIN = BuiltinTypeSymbol(FLOAT, Float)
 COMPLEX_BUILTIN = BuiltinTypeSymbol(COMPLEX, Complex)
 BOOL_BUILTIN = BuiltinTypeSymbol(BOOL, Bool)
@@ -129,7 +129,7 @@ class NodeVisitor(object):
         self.define(INT32, INT32_BUILTIN)
         self.define(INT64, INT64_BUILTIN)
         self.define(INT128, INT128_BUILTIN)
-        self.define(DEC, DEC_BUILTIN)
+        self.define(DOUBLE, DOUBLE_BUILTIN)
         self.define(FLOAT, FLOAT_BUILTIN)
         self.define(COMPLEX, COMPLEX_BUILTIN)
         self.define(BOOL, BOOL_BUILTIN)
@@ -210,7 +210,7 @@ class NodeVisitor(object):
         if isinstance(value, int):
             return self.search_scopes(INT)
         if isinstance(value, Decimal):
-            return self.search_scopes(DEC)
+            return self.search_scopes(DOUBLE)
         if isinstance(value, float):
             return self.search_scopes(FLOAT)
         if isinstance(value, complex):

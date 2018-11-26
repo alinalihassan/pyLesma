@@ -169,8 +169,8 @@ class Preprocessor(NodeVisitor):
                 error('file={} line={}: Cannot change the value of a variable declared constant: {}'.format(self.file_name, var_name, node.line_num))
 
             lookup_var.val_assigned = True
-            if lookup_var.type in (self.search_scopes(DEC), self.search_scopes(FLOAT)):
-                if value in (self.search_scopes(INT), self.search_scopes(DEC), self.search_scopes(FLOAT)):
+            if lookup_var.type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
+                if value in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
                     return
             if lookup_var.type is value:
                 return
@@ -192,8 +192,8 @@ class Preprocessor(NodeVisitor):
         left_type = self.infer_type(left)
         right_type = self.infer_type(right)
         any_type = self.search_scopes(ANY)
-        # if left_type in (self.search_scopes(DEC), self.search_scopes(FLOAT)):
-        # 	if right_type in (self.search_scopes(INT), self.search_scopes(DEC), self.search_scopes(FLOAT)):
+        # if left_type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
+        # 	if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
         # 		return left_type
         if right_type is left_type or left_type is any_type or right_type is any_type:
             return left_type
@@ -241,8 +241,8 @@ class Preprocessor(NodeVisitor):
         left_type = self.infer_type(left)
         right_type = self.infer_type(right)
         any_type = self.search_scopes(ANY)
-        if left_type in (self.search_scopes(INT), self.search_scopes(DEC), self.search_scopes(FLOAT)):
-            if right_type in (self.search_scopes(INT), self.search_scopes(DEC), self.search_scopes(FLOAT)):
+        if left_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
+            if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
                 return left_type
         if right_type is left_type or left_type is any_type or right_type is any_type:
             return left_type

@@ -88,14 +88,14 @@ class Int128(Number):
         return ir.IntType(128)
 
 
-class Dec(Number):
+class Double(Number):
     def __init__(self):
         super().__init__()
-        self.name = DEC
+        self.name = DOUBLE
 
     @staticmethod
     def type():
-        return ir.DoubleType()  # TODO: temorarily making Decimal a DoubleType till find (or make) a better representation
+        return ir.DoubleType() 
 
 
 class Float(Number):
