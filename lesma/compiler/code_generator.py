@@ -52,11 +52,10 @@ class CodeGenerator(NodeVisitor):
         return ir.Constant(type_map[node.val_type], node.value)
 
     def visit_var(self, node):
-        var_name = self.utf8ToAscii(node.value)
-        var = self.search_scopes(var_name)
+        var = self.search_scopes(node.value)
         if isinstance(var, type_map[FUNC]):
             return var
-        return self.load(var_name)
+        return self.load(node.value)
 
     def visit_binop(self, node):
         return operations(self, node)
@@ -66,13 +65,12 @@ class CodeGenerator(NodeVisitor):
         return self.funcdecl('anon{}'.format(self.anon_counter), node)
 
     def visit_funcdecl(self, node):
-        node.name = self.utf8ToAscii(node.name)
         self.funcdecl(node.name, node)
 
     def funcdecl(self, name, node):
         self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
         for i, arg in enumerate(self.current_function.args):
-            arg.name = self.utf8ToAscii(list(node.parameters.keys())[i])
+            arg.name = list(node.parameters.keys())[i]
             self.alloc_define_store(arg, arg.name, arg.type)
         if self.current_function.function_type.return_type != type_map[VOID]:
             self.alloc_and_define(RET_VAR, self.current_function.function_type.return_type)
@@ -87,7 +85,6 @@ class CodeGenerator(NodeVisitor):
         return True
 
     def visit_funccall(self, node):
-        node.name = self.utf8ToAscii(node.name)
         func_type = self.search_scopes(node.name)
         if isinstance(func_type, ir.Function):
             func_type = func_type.type.pointee
@@ -320,7 +317,7 @@ class CodeGenerator(NodeVisitor):
             if not var:
                 return
             if isinstance(node.left, VarDecl):
-                var_name = self.utf8ToAscii(node.left.value.value)
+                var_name = node.left.value.value
                 var_type = type_map[node.left.type.value]
                 casted_value = cast_ops(self, var, var_type, node)
                 self.alloc_define_store(casted_value, var_name, var_type)
@@ -335,7 +332,7 @@ class CodeGenerator(NodeVisitor):
                 right = self.visit(node.right)
                 self.call('dyn_array_set', [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
             else:
-                var_name = self.utf8ToAscii(node.left.value)
+                var_name = node.left.value
                 var_value = self.top_scope.get(var_name)
                 if var_value:
                     if isinstance(var_value, float):
@@ -697,12 +694,6 @@ class CodeGenerator(NodeVisitor):
         buf[-1] = 0
         buf[:-1] = string.encode('utf-8')
         return ir.Constant(ir.ArrayType(type_map[INT8], n), buf)
-    
-    def utf8ToAscii(self, string):
-        unicode = "{}".format(string.encode("unicode_escape"))
-        unicode = unicode[2:len(unicode)-1]
-
-        return unicode
 
     def generate_code(self, node):
         return self.visit(node)

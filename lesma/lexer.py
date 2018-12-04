@@ -243,7 +243,7 @@ class Lexer(object):
             elif self.word in CONSTANTS:
                 return Token(CONSTANT, self.reset_word(), self.line_num, self.indent_level)
             
-            return Token(NAME, self.reset_word(), self.line_num, self.indent_level)
+            return Token(NAME, self.utf8ToAscii(self.reset_word()), self.line_num, self.indent_level)
 
         if self.word_type == NUMERIC:
             while self.char_type == NUMERIC or self.current_char == DOT and self.peek(1) != DOT:
@@ -277,3 +277,10 @@ class Lexer(object):
             yield token
             token = self.get_next_token()
         yield token
+    
+    def utf8ToAscii(self, string):
+        unicode = "{}".format(string.encode('utf-8').decode('latin-1').encode("unicode_escape").replace(b"\\", b"/"))
+        unicode = unicode[2:len(unicode)-1]
+
+        print(unicode)
+        return unicode
