@@ -66,12 +66,13 @@ class CodeGenerator(NodeVisitor):
         return self.funcdecl('anon{}'.format(self.anon_counter), node)
 
     def visit_funcdecl(self, node):
+        node.name = self.utf8ToAscii(node.name)
         self.funcdecl(node.name, node)
 
     def funcdecl(self, name, node):
         self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
         for i, arg in enumerate(self.current_function.args):
-            arg.name = list(node.parameters.keys())[i]
+            arg.name = self.utf8ToAscii(list(node.parameters.keys())[i])
             self.alloc_define_store(arg, arg.name, arg.type)
         if self.current_function.function_type.return_type != type_map[VOID]:
             self.alloc_and_define(RET_VAR, self.current_function.function_type.return_type)
@@ -86,6 +87,7 @@ class CodeGenerator(NodeVisitor):
         return True
 
     def visit_funccall(self, node):
+        node.name = self.utf8ToAscii(node.name)
         func_type = self.search_scopes(node.name)
         if isinstance(func_type, ir.Function):
             func_type = func_type.type.pointee
