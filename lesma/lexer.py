@@ -279,8 +279,7 @@ class Lexer(object):
         yield token
     
     def utf8ToAscii(self, string):
-        unicode = "{}".format(string.encode('utf-8').decode('latin-1').encode("unicode_escape").replace(b"\\", b"/"))
+        unicode = "{}".format(string.encode("unicode_escape"))
         unicode = unicode[2:len(unicode)-1]
 
-        print(unicode)
         return unicode
