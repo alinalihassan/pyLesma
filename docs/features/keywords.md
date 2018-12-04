@@ -15,7 +15,7 @@ For reference, here are all the keywords categorized by type.
 |   |   |   |   |
 |---|---|---|---|
 | xor | and | or | not |
-| in | is |
+| in | is | as |
 
 ## Type keywords
 

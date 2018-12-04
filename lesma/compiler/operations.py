@@ -1,7 +1,7 @@
 from llvmlite import ir
 
 from lesma.compiler import NUM_TYPES
-from lesma.compiler import type_map
+from lesma.compiler import type_map, llvm_type_map
 from lesma.grammar import *
 
 I1 = 'i1'
@@ -11,6 +11,9 @@ I64 = 'i64'
 I128 = 'i128'
 DOUBLE = 'double'
 FLOATINGPOINT = 'float'
+
+false = ir.Constant(type_map[INT], 0)
+true = ir.Constant(type_map[INT], 1)
 
 
 def operations(compiler, node):
@@ -131,33 +134,40 @@ def str_ops(compiler, op, left, right, node):
 
 
 def cast_ops(compiler, left, right, node):
+    print("DEBUG:", left.type)
+    print("DEBUG:", right)
     orig_type = str(left.type)
     cast_type = str(right)
-    if cast_type == I64:
-        if orig_type == DOUBLE:
-            cast = compiler.builder.fptosi(left, type_map[INT])
-            return cast
-    elif cast_type == DOUBLE:
-        if orig_type == I64:
-            cast = compiler.builder.sitofp(left, type_map[DOUBLE])
-            return cast
-    elif cast_type == FLOAT:
-        raise NotImplementedError
-    elif cast_type == COMPLEX:
-        raise NotImplementedError
+
+    if orig_type == cast_type: # cast to the same type
+        return left
+
+    elif cast_type in (I1, I8, I32, I64, I128): # signed int
+        if orig_type in (DOUBLE, FLOATINGPOINT): # from float
+            return compiler.builder.fptosi(left, llvm_type_map[cast_type]) 
+        elif orig_type in (I1, I8, I32, I64, I128): # from signed int
+            width_cast = cast_type.split("i")[1]
+            width_orig = orig_type.split("i")[1]
+            if width_cast > width_orig:
+                return compiler.builder.sext(left, llvm_type_map[cast_type])
+            elif width_orig > width_cast:
+                return compiler.builder.trunc(left, llvm_type_map[cast_type])
+
+    elif cast_type in (DOUBLE, FLOATINGPOINT): # float
+        if orig_type in (I8, I32, I64, I128): # from signed int
+            return compiler.builder.sitofp(left, type_map[DOUBLE])
+        elif orig_type in (I1): # from unsigned int
+            return compiler.builder.uitofp(left, type_map[DOUBLE])
+        elif orig_type in (DOUBLE, FLOATINGPOINT): # from float
+            if cast_type == DOUBLE and orig_type == FLOATINGPOINT:
+                return compiler.builder.fpext(left, llvm_type_map[cast_type])
+            elif cast_type == FLOATINGPOINT and orig_type == DOUBLE:
+                return compiler.builder.fptrunc(left, llvm_type_map[cast_type])
+
     elif cast_type == STR:
         raise NotImplementedError
-    elif cast_type == BOOL:
-        raise NotImplementedError
-    elif cast_type == BYTES:
-        raise NotImplementedError
-    elif cast_type == LIST:
-        raise NotImplementedError
-    elif cast_type == DICT:
-        raise NotImplementedError
-    elif cast_type == ENUM:
-        raise NotImplementedError
-    elif cast_type in (ANY, FUNC):
+
+    elif cast_type in (ANY, FUNC, ENUM, DICT, LIST):
         raise TypeError('file={} line={}: Cannot cast to type {}'.format(
             compiler.file_name,
             node.line_num,

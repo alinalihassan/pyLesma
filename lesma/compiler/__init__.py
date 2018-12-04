@@ -17,6 +17,17 @@ type_map = {
 	FUNC: ir.FunctionType,
 	VOID: ir.VoidType(),
 }
+
+llvm_type_map = {
+	"i1": ir.IntType(1),
+	"i8": ir.IntType(8),
+	"i32": ir.IntType(32),
+	"i64": ir.IntType(64),
+	"i128": ir.IntType(128),
+	"double": ir.DoubleType(),
+	"float": ir.FloatType(),
+}
+
 type_map2 = {
 	ANY: Any(),
 	BOOL: Bool(),

@@ -142,7 +142,7 @@ print('夜のコンサートは最高でした。') # I have no idea what this s
 #print(start_at_5(4))
 #print(start_at_27(15))
 
-Int num = 1.0::Int # Casting a Decimal to Int #TODO: Maybe change to Int(1.0) kind of syntax
+Int num = 1.0 as int # Casting a Decimal to Int #TODO: Maybe change to Int(1.0) kind of syntax
 
 print(num)
 
@@ -243,7 +243,7 @@ greet_name('Anthony')
 #y = 10
 #ERROR: Casting not implemented for all
 #for x in 0..y
-#	print(x::Str)
+#	print(x as str)
 
 things = [3, 2, 1]
 print(things[1 + 1])
@@ -279,7 +279,7 @@ last_name = 'Fabool'
 # ERROR: Operands for assignment
 #a = 2 * g
 d = 0
-#c = a::Int ** b
+#c = a as int ** b
 
 
 def kupo(Int first, Int second) -> Int

@@ -31,7 +31,7 @@ DOT = '.'
 RANGE = '..'
 ELLIPSIS = '...'  # TODO
 ARROW = '->'
-CAST = '::'
+CAST = 'as'
 ASSIGN = '='
 PLUS_ASSIGN = '+='
 MINUS_ASSIGN = '-='

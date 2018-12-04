@@ -9,7 +9,6 @@ Lesma offers the standard mathematical and boolean operators
 |Comma| `,` | To separate elements in a list|
 |Dot| `.` | Member accessing operator|
 |Range| `..` | Range defining operator|
-|Cast| `::` | Casting operator|
 
 ## Mathematical operators
 |Name|Symbol|Info|
@@ -29,6 +28,7 @@ Lesma offers the standard mathematical and boolean operators
 |Or| `or`| Or|
 |Xor| `xor`| Exclusive Or|
 |Is| `is` | Is type operator|
+|As| `as` | Casting operator|
 |Not| `not` | Not bool operator|
 |Equals| `==` | Value equality|
 |Not Equals| `!=` | Value inequality|
