@@ -134,20 +134,18 @@ def str_ops(compiler, op, left, right, node):
 
 
 def cast_ops(compiler, left, right, node):
-    print("DEBUG:", left.type)
-    print("DEBUG:", right)
     orig_type = str(left.type)
     cast_type = str(right)
 
     if orig_type == cast_type: # cast to the same type
         return left
 
-    elif cast_type in (I1, I8, I32, I64, I128): # signed int
+    elif cast_type in (I1, I8, I32, I64, I128): # int
         if orig_type in (DOUBLE, FLOATINGPOINT): # from float
             return compiler.builder.fptosi(left, llvm_type_map[cast_type]) 
         elif orig_type in (I1, I8, I32, I64, I128): # from signed int
-            width_cast = cast_type.split("i")[1]
-            width_orig = orig_type.split("i")[1]
+            width_cast = int(cast_type.split("i")[1])
+            width_orig = int(orig_type.split("i")[1])
             if width_cast > width_orig:
                 return compiler.builder.sext(left, llvm_type_map[cast_type])
             elif width_orig > width_cast:
