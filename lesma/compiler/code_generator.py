@@ -749,5 +749,5 @@ class CodeGenerator(NodeVisitor):
                 out.write(prog_str)
             successful("llvm assembler wrote to " + output + ".ll")
 
-        sleep(.05)
+        sleep(.1)
         os.remove(output + '.o')
