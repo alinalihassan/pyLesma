@@ -15,6 +15,7 @@ print('夜のコンサートは最高でした。')
 
 a_number: int # Initialize an Integer
 
+π = 3.14 # Support for utf-8 variable names
 number = 23 # Type Inference, int in this case
 number = number + 5 // 2 ^ 3 # Number operations
 number+=5 # Operating Assignment

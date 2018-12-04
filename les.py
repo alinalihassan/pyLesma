@@ -1,8 +1,8 @@
 """Lesma programming language
 
 usage:
-    lesma compile [-lo FILE] <file> 
-    lesma run [-t] <file>
+    lesma compile [-ldo FILE] <file> 
+    lesma run [-td] <file>
     lesma [-hv]
 
 options:
@@ -11,6 +11,7 @@ options:
     -l, --llvm                  Emit llvm code
     -o FILE, --output FILE      Output file
     -t, --timer                 Time the execution
+    -d, --debug                 Debugging mode
 """
 
 from lesma.lexer import Lexer
@@ -24,6 +25,7 @@ from docopt import docopt
 def _run(arg_list):
     les_file = arg_list['<file>']
     timer = arg_list['--timer']
+    debug = arg_list['--debug']
 
     if not os.path.isfile(les_file):
         error(les_file + "is not a valid file")
@@ -38,13 +40,14 @@ def _run(arg_list):
     
     generator = CodeGenerator(parser.file_name)
     generator.generate_code(t)
-    generator.evaluate(True, False, timer)
+    generator.evaluate(not debug, debug, timer)
 
 
 def _compile(arg_list):
     les_file = arg_list['<file>']
     o = arg_list['--output']
     emit_llvm = arg_list['--llvm']
+    debug = arg_list['--debug']
 
     if not os.path.isfile(les_file):
         error(les_file + "is not a valid file")
@@ -60,7 +63,7 @@ def _compile(arg_list):
 
     generator = CodeGenerator(parser.file_name)
     generator.generate_code(t)
-    generator.compile(les_file, True, o, emit_llvm)
+    generator.compile(les_file, not debug, o, emit_llvm)
 
 
 if __name__ == "__main__":
