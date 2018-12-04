@@ -23,7 +23,6 @@ def asciiToUnicode(text):
             for j in range(i+3, i+7):
                 curUni += text[j].upper()
             finalStr += chr(int(curUni, 16))
-            print(chr(int(curUni, 16)))
             i+=7
 
     return finalStr
