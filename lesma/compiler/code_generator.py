@@ -8,7 +8,7 @@ from llvmlite import ir
 from lesma.grammar import *
 from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl, Str
 from lesma.compiler import RET_VAR, type_map
-from lesma.compiler.operations import operations
+from lesma.compiler.operations import operations, cast_ops
 from lesma.compiler.builtins import define_builtins
 from lesma.visitor import NodeVisitor
 from lesma.utils import *
@@ -318,9 +318,9 @@ class CodeGenerator(NodeVisitor):
                 return
             if isinstance(node.left, VarDecl):
                 var_name = node.left.value.value
-                if node.left.type.value == FLOAT:
-                    node.right.value = float(node.right.value)
-                self.alloc_define_store(var, var_name, var.type)
+                var_type = type_map[node.left.type.value]
+                casted_value = cast_ops(self, var, var_type, node)
+                self.alloc_define_store(casted_value, var_name, var_type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
