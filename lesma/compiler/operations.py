@@ -166,14 +166,16 @@ def cast_ops(compiler, left, right, node):
         raise NotImplementedError
 
     elif cast_type in (ANY, FUNC, ENUM, DICT, LIST):
-        raise TypeError('file={} line={}: Cannot cast to type {}'.format(
+        raise TypeError('file={} line={}: Cannot cast from {} to type {}'.format(
             compiler.file_name,
             node.line_num,
+            orig_type,
             cast_type
         ))
-    else:
-        raise TypeError('file={} line={}: Unknown cast type {}'.format(
-            compiler.file_name,
-            node.line_num,
-            cast_type
-        ))
+    
+    raise TypeError('file={} line={}: Unknown cast from {} to {}'.format(
+        compiler.file_name,
+        node.line_num,
+        orig_type,
+        cast_type
+    ))

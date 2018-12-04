@@ -141,12 +141,12 @@ Int age = input('How old are you?')
 # String Interpolation
 print('Wow! You are {age} years old?!')
 
-enum Colors(
-	GREEN,
-	RED,
-	BLUE,
+enum Colors
+	GREEN
+	RED
+	BLUE
 	YELLOW
-)
+
 
 struct Circle
 	radius: int
