@@ -52,10 +52,11 @@ class CodeGenerator(NodeVisitor):
         return ir.Constant(type_map[node.val_type], node.value)
 
     def visit_var(self, node):
-        var = self.search_scopes(node.value)
+        var_name = self.utf8ToAscii(node.value)
+        var = self.search_scopes(var_name)
         if isinstance(var, type_map[FUNC]):
             return var
-        return self.load(node.value)
+        return self.load(var_name)
 
     def visit_binop(self, node):
         return operations(self, node)
@@ -317,7 +318,7 @@ class CodeGenerator(NodeVisitor):
             if not var:
                 return
             if isinstance(node.left, VarDecl):
-                var_name = node.left.value.value
+                var_name = self.utf8ToAscii(node.left.value.value)
                 var_type = type_map[node.left.type.value]
                 casted_value = cast_ops(self, var, var_type, node)
                 self.alloc_define_store(casted_value, var_name, var_type)
@@ -332,7 +333,7 @@ class CodeGenerator(NodeVisitor):
                 right = self.visit(node.right)
                 self.call('dyn_array_set', [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
             else:
-                var_name = node.left.value
+                var_name = self.utf8ToAscii(node.left.value)
                 var_value = self.top_scope.get(var_name)
                 if var_value:
                     if isinstance(var_value, float):
@@ -694,6 +695,12 @@ class CodeGenerator(NodeVisitor):
         buf[-1] = 0
         buf[:-1] = string.encode('utf-8')
         return ir.Constant(ir.ArrayType(type_map[INT8], n), buf)
+    
+    def utf8ToAscii(self, string):
+        unicode = "{}".format(string.encode("unicode_escape"))
+        unicode = unicode[2:len(unicode)-1]
+
+        return unicode
 
     def generate_code(self, node):
         return self.visit(node)
