@@ -1,6 +1,6 @@
 from ctypes import CFUNCTYPE, c_void_p
 from decimal import Decimal
-from time import time, sleep
+from time import time
 import llvmlite.binding as llvm
 import os
 import subprocess
@@ -701,6 +701,7 @@ class CodeGenerator(NodeVisitor):
     def evaluate(self, optimize=True, ir_dump=False, timer=False):
         if ir_dump and not optimize:
             print(str(self.module))
+            # print(str(self.module.get_global("main")))
         llvmmod = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
@@ -721,33 +722,24 @@ class CodeGenerator(NodeVisitor):
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
     def compile(self, filename, optimize=True, output=None, emit_llvm=False):
+        startSpinner("Compiling")
         compile_time = time()
         program_string = llvm.parse_assembly(str(self.module))
-        if optimize:
-            pmb = llvm.create_pass_manager_builder()
-            pmb.opt_level = 3
-            pm = llvm.create_module_pass_manager()
-            pmb.populate(pm)
-            pm.run(program_string)
 
         prog_str = str(program_string)
         if output is None:
             output = os.path.splitext(filename)[0]
 
-        target_machine = llvm.Target.from_default_triple().create_target_machine()
-        with llvm.create_mcjit_compiler(program_string, target_machine) as ee:
-            ee.finalize_object()
-            with open(output + ".o", 'wb') as out:
-                out.write(target_machine.emit_object(program_string))
+        with open(output + '.ll', 'w') as out:
+            out.write(prog_str)
 
-        os.popen('clang {0}.o -o {0}'.format(output))
-        successful("compilation done in: %.3f seconds" % (time()-compile_time))
-        successful("binary file wrote to " + output)
+        with open(os.devnull,"w") as tmpout:
+            subprocess.call('clang {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
+            stopSpinner()
+            successful("compilation done in: %.3f seconds" % (time()-compile_time))
+            successful("binary file wrote to " + output)
 
         if emit_llvm:
-            with open(output + '.ll', 'w') as out:
-                out.write(prog_str)
             successful("llvm assembler wrote to " + output + ".ll")
-
-        sleep(.1)
-        os.remove(output + '.o')
+        else:   
+            os.remove(output + '.ll')

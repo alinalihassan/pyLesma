@@ -19,8 +19,8 @@ from lesma.parser import Parser
 from lesma.type_checker import Preprocessor
 from lesma.compiler.code_generator import CodeGenerator
 from lesma.utils import error
-import os
 from docopt import docopt
+import os
 
 def _run(arg_list):
     les_file = arg_list['<file>']
