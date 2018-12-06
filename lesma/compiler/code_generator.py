@@ -700,8 +700,9 @@ class CodeGenerator(NodeVisitor):
 
     def evaluate(self, optimize=True, ir_dump=False, timer=False):
         if ir_dump and not optimize:
-            print(str(self.module))
-            # print(str(self.module.get_global("main")))
+            for func in self.module.functions:
+                if func.name == "main":
+                    print(str(func))
         llvmmod = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
