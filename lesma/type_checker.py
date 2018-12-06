@@ -18,10 +18,8 @@ def flatten(container):
             for j in flatten(i):
                 if j:
                     yield j
-        else:
-            if i:
-                yield i
-
+        elif i:
+            yield i
 
 
 class Preprocessor(NodeVisitor):

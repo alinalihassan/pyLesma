@@ -12,3 +12,5 @@ out/
 \.vscode/
 
 site/
+build/
+dist/

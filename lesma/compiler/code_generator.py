@@ -702,7 +702,7 @@ class CodeGenerator(NodeVisitor):
         if ir_dump and not optimize:
             for func in self.module.functions:
                 if func.name == "main":
-                    print(str(func))
+                    print(func)
         llvmmod = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
