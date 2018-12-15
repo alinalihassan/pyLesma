@@ -3,9 +3,11 @@ from llvmlite import ir
 from lesma.compiler import NUM_TYPES
 from lesma.compiler import type_map, llvm_type_map
 from lesma.grammar import *
+import lesma.compiler.llvmlite_custom
 
 I1 = 'i1'
 I8 = 'i8'
+I16 = 'i16'
 I32 = 'i32'
 I64 = 'i64'
 I128 = 'i128'
@@ -136,14 +138,22 @@ def str_ops(compiler, op, left, right, node):
 def cast_ops(compiler, left, right, node):
     orig_type = str(left.type)
     cast_type = str(right)
+    if cast_type in (I1, I8, I16, I32, I64, I128) and \
+       orig_type in (I1, I8, I16, I32, I64, I128) and \
+       cast_type == orig_type:
+        left.type.signed = right.signed
+        return
 
-    if orig_type == cast_type: # cast to the same type
-        return left
+    elif orig_type == cast_type: # cast to the same type
+        return 
 
-    elif cast_type in (I1, I8, I32, I64, I128): # int
+    elif cast_type in (I1, I8, I16, I32, I64, I128): # int
         if orig_type in (DOUBLE, FLOATINGPOINT): # from float
-            return compiler.builder.fptosi(left, llvm_type_map[cast_type]) 
-        elif orig_type in (I1, I8, I32, I64, I128): # from signed int
+            if right.signed:
+                return compiler.builder.fptosi(left, llvm_type_map[cast_type]) 
+            else:
+                return compiler.builder.fptoui(left, llvm_type_map[cast_type]) 
+        elif orig_type in (I1, I8, I16, I32, I64, I128): # from signed int
             width_cast = int(cast_type.split("i")[1])
             width_orig = int(orig_type.split("i")[1])
             if width_cast > width_orig:
@@ -152,10 +162,11 @@ def cast_ops(compiler, left, right, node):
                 return compiler.builder.trunc(left, llvm_type_map[cast_type])
 
     elif cast_type in (DOUBLE, FLOATINGPOINT): # float
-        if orig_type in (I8, I32, I64, I128): # from signed int
-            return compiler.builder.sitofp(left, type_map[DOUBLE])
-        elif orig_type in (I1): # from unsigned int
-            return compiler.builder.uitofp(left, type_map[DOUBLE])
+        if orig_type in (I1, I8, I16, I32, I64, I128): # from signed int
+            if left.type.signed:
+                return compiler.builder.sitofp(left, type_map[DOUBLE])
+            else:
+                return compiler.builder.uitofp(left, type_map[DOUBLE])
         elif orig_type in (DOUBLE, FLOATINGPOINT): # from float
             if cast_type == DOUBLE and orig_type == FLOATINGPOINT:
                 return compiler.builder.fpext(left, llvm_type_map[cast_type])

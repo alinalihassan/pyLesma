@@ -10,6 +10,7 @@ from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl
 from lesma.compiler import RET_VAR, type_map
 from lesma.compiler.operations import operations, cast_ops
 from lesma.compiler.builtins import define_builtins
+import lesma.compiler.llvmlite_custom
 from lesma.visitor import NodeVisitor
 from lesma.utils import *
 
@@ -320,7 +321,10 @@ class CodeGenerator(NodeVisitor):
                 var_name = node.left.value.value
                 var_type = type_map[node.left.type.value]
                 casted_value = cast_ops(self, var, var_type, node)
-                self.alloc_define_store(casted_value, var_name, var_type)
+                if casted_value is not None:
+                    self.alloc_define_store(casted_value, var_name, var_type)
+                else:
+                    self.alloc_define_store(var, var_name, var_type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
@@ -499,7 +503,16 @@ class CodeGenerator(NodeVisitor):
                 self.call('bool_to_str', [array, val])
                 val = array
             else:
-                self.print_num("%d", val)
+                if val.type.signed:
+                    if int(str(val.type).split("i")[1]) >= 64:
+                        self.print_num("%lld", val)
+                    else:
+                        self.print_num("%d", val)
+                else:
+                    if int(str(val.type).split("i")[1]) >= 64:
+                        self.print_num("%llu", val)
+                    else:
+                        self.print_num("%u", val)
                 return
         elif isinstance(val.type, (ir.FloatType, ir.DoubleType)):
             self.print_num("%g", val)

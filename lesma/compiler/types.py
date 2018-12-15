@@ -1,5 +1,6 @@
 from llvmlite import ir
 from lesma.grammar import *
+import lesma.compiler.llvmlite_custom
 
 
 class Any:
@@ -25,7 +26,7 @@ class Bool(Number):
 
     @staticmethod
     def type():
-        return ir.IntType(1)
+        return ir.IntType(1, signed=False)
 
 
 class Int(Number):
@@ -33,8 +34,7 @@ class Int(Number):
         super().__init__()
         self.name = INT
 
-    @staticmethod
-    def type():
+    def type(self):
         return ir.IntType(64)
 
 
@@ -87,6 +87,63 @@ class Int128(Number):
     def type():
         return ir.IntType(128)
 
+class UInt(Number):
+    def __init__(self):
+        super().__init__()
+        self.name = UINT
+
+    def type(self):
+        return ir.IntType(64, False)
+
+
+class UInt8(Number):
+    def __init__(self):
+        super().__init__()
+        self.name = UINT8
+
+    @staticmethod
+    def type():
+        return ir.IntType(8, False)
+
+
+class UInt16(Number):
+    def __init__(self):
+        super().__init__()
+        self.name = UINT16
+
+    @staticmethod
+    def type():
+        return ir.IntType(16, False)
+
+
+class UInt32(Number):
+    def __init__(self):
+        super().__init__()
+        self.name = UINT32
+
+    @staticmethod
+    def type():
+        return ir.IntType(32, False)
+
+
+class UInt64(Number):
+    def __init__(self):
+        super().__init__()
+        self.name = UINT64
+
+    @staticmethod
+    def type():
+        return ir.IntType(64, False)
+
+
+class UInt128(Number):
+    def __init__(self):
+        super().__init__()
+        self.name = UINT128
+
+    @staticmethod
+    def type():
+        return ir.IntType(128, False)
 
 class Double(Number):
     def __init__(self):
