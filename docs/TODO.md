@@ -15,6 +15,7 @@
 - [ ] Allow more operators on different types such as strings
 - [ ] Improve warning messages
 - [ ] Add indentation related errors
+- [ ] Add docs for as and is
 
 ## Features
 - [ ] Implement Null

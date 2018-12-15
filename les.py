@@ -6,12 +6,12 @@ usage:
     lesma [-hv]
 
 options:
-    -h, --help                  shows the help
-    -v, --version               shows the version
+    -h, --help                  Shows this help menu
+    -v, --version               Shows the version
     -l, --llvm                  Emit llvm code
     -o FILE, --output FILE      Output file
     -t, --timer                 Time the execution
-    -d, --debug                 Debugging mode
+    -d, --debug                 Debug mode
 """
 
 from lesma.lexer import Lexer

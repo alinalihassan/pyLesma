@@ -104,6 +104,14 @@ print(myfunc(2, 3))
 bar = myfunc
 print(bar(3,4))
 
+# Type operators using `as` and `is`
+my_var: int128 = 101
+my_another_var: int64 = my_var as int64
+
+if my_var is int64
+	print("That's not true")
+else if my_var as int64 is int64
+	print("That works too")
 
 # Type Aliasing
 type fInt = func[int] -> int
