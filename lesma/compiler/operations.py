@@ -21,7 +21,7 @@ user_operators = []
 
 
 def userdef_unary_str(op, expr):
-    return op + "_" + str(expr.type)
+    return op + "/" + str(expr.type)
 
 
 def unary_op(compiler, node):
@@ -43,7 +43,7 @@ def unary_op(compiler, node):
 
 
 def userdef_binary_str(op, left, right):
-    return op + "_" + str(left.type) + "_" + str(right.type)
+    return op + "/" + str(left.type) + "/" + str(right.type)
 
 
 def binary_op(compiler, node):

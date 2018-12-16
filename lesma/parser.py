@@ -166,7 +166,7 @@ class Parser(object):
                 raise SyntaxError("Operators can either be unary or binary, and the number of parameters do not match")
 
             for param in params:
-                name.value += "_" + str(type_map[str(params[param].value)])
+                name.value += "/" + str(type_map[str(params[param].value)])
 
             user_operators.append(name.value)
 

@@ -31,7 +31,13 @@ class Preprocessor(NodeVisitor):
     def check(self, node):
         res = self.visit(node)
         if self.unvisited_symbols:
-            warning('Unused variables ({})'.format(','.join(sym_name for sym_name in self.unvisited_symbols)))
+            sym_list = []
+            for sym_name in self.unvisited_symbols:
+                if "/" in sym_name:
+                    continue
+                sym_list.append(sym_name)
+            if len(sym_list):
+                warning('Unused variables ({})'.format(','.join(sym_name for sym_name in sym_list)))
         return res
 
     def visit_program(self, node):
