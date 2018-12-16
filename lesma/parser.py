@@ -1,6 +1,8 @@
 from collections import OrderedDict
 from lesma.ast import *
 from lesma.grammar import *
+from lesma.compiler.operations import user_operators
+from lesma.compiler.__init__ import type_map
 
 
 class Parser(object):
@@ -102,9 +104,14 @@ class Parser(object):
         return AliasDeclaration(name.value, (self.type_spec(),), self.line_num)
 
     def function_declaration(self):
+        op_func = False
         self.eat_value(DEF)
         if self.current_token.value == LPAREN:
             name = ANON
+        elif self.current_token.value == OPERATOR:
+            self.eat_value(OPERATOR)
+            op_func = True
+            name = self.next_token()
         else:
             name = self.next_token()
         self.eat_value(LPAREN)
@@ -138,13 +145,10 @@ class Parser(object):
                     self.eat_value(COMMA)
         self.eat_value(RPAREN)
 
-        try:  # No arrow, void by default
-            self.eat_value(ARROW)
-        except SyntaxError:
+        if self.current_token.value != ARROW:
             return_type = Void()
-            return_void = True
-
-        if return_void is not True:
+        else:
+            self.eat_value(ARROW)
             if self.current_token.value == VOID:
                 return_type = Void()
                 self.next_token()
@@ -157,6 +161,14 @@ class Parser(object):
         self.indent_level -= 1
         if name == ANON:
             return AnonymousFunc(return_type, params, stmts, self.line_num, param_defaults, vararg)
+        if op_func:
+            if len(params) not in (1, 2):  # TODO: move this to type checker
+                raise SyntaxError("Operators can either be unary or binary, and the number of parameters do not match")
+
+            for param in params:
+                name.value += "_" + str(type_map[str(params[param].value)])
+
+            user_operators.append(name.value)
 
         return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 

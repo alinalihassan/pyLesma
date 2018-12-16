@@ -92,6 +92,7 @@ WHILE = 'while'
 SWITCH = 'switch'
 CASE = 'case'
 DEFAULT = 'default'
+OPERATOR = 'operator'
 DEF = 'def'
 CONST = 'const'
 NEW = 'new'  # TODO

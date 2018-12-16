@@ -17,12 +17,43 @@ FLOATINGPOINT = 'float'
 false = ir.Constant(type_map[INT], 0)
 true = ir.Constant(type_map[INT], 1)
 
+user_operators = []
 
-def operations(compiler, node):
+
+def userdef_unary_str(op, expr):
+    return op + "_" + str(expr.type)
+
+
+def unary_op(compiler, node):
+    op = node.op
+    expr = compiler.visit(node.expr)
+    print(userdef_unary_str(op, expr))
+    print(user_operators)
+    if userdef_unary_str(op, expr) in user_operators:
+        return compiler.builder.call(compiler.module.get_global(userdef_unary_str(op, expr)),
+                                     [expr], "unop")
+    elif op == MINUS:
+        if isinstance(expr.type, ir.IntType):
+            return compiler.builder.neg(expr)
+        elif isinstance(expr.type, (ir.FloatType, ir.DoubleType)):
+            return compiler.builder.fsub(ir.Constant(ir.DoubleType(), 0), expr)
+    elif op == NOT:
+        if isinstance(expr.type, ir.IntType):
+            return compiler.builder.not_(expr)
+
+
+def userdef_binary_str(op, left, right):
+    return op + "_" + str(left.type) + "_" + str(right.type)
+
+
+def binary_op(compiler, node):
     op = node.op
     left = compiler.visit(node.left)
     right = compiler.visit(node.right)
-    if op == CAST:
+    if userdef_binary_str(op, left, right) in user_operators:
+        return compiler.builder.call(compiler.module.get_global(userdef_binary_str(op, left, right)),
+                                     (left, right), "binop")
+    elif op == CAST:
         return cast_ops(compiler, left, right, node)
     elif op in (IS, IS_NOT):
         return is_ops(compiler, op, left, right, node)

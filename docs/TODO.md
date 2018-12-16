@@ -4,13 +4,13 @@
 - [ ] Fix **break** and **continue** not branching if the parent block is not the loop
 - [ ] Fix constant declaration not allowing types
 - [ ] Fix Type declaration not expecting square brackets (for arrays)
-- [ ] Fix input
+- [ ] Fix input function
 - [ ] Should not allow declaring the type to an existing variable
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
 - [ ] Allow any type for range (currently only int)
-- [ ] Allow any type for casting
+- [x] Allow any type for casting
 - [ ] Change casting syntax
 - [ ] Allow more operators on different types such as strings
 - [ ] Improve warning messages
@@ -28,4 +28,5 @@
 - [ ] Implement Closure
 - [ ] Implement string interpolation
 - [ ] Implement Enums
-- [ ] Implement unsigned numbers
+- [x] Implement unsigned numbers
+- [x] Implement operator overloading

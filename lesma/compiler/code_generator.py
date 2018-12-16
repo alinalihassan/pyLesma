@@ -8,7 +8,7 @@ from llvmlite import ir
 from lesma.grammar import *
 from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl, Str
 from lesma.compiler import RET_VAR, type_map
-from lesma.compiler.operations import operations, cast_ops
+from lesma.compiler.operations import unary_op, binary_op, cast_ops
 from lesma.compiler.builtins import define_builtins
 import lesma.compiler.llvmlite_custom
 from lesma.visitor import NodeVisitor
@@ -59,7 +59,7 @@ class CodeGenerator(NodeVisitor):
         return self.load(node.value)
 
     def visit_binop(self, node):
-        return operations(self, node)
+        return binary_op(self, node)
 
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
@@ -286,18 +286,7 @@ class CodeGenerator(NodeVisitor):
         return
 
     def visit_unaryop(self, node):
-        op = node.op
-        expr = self.visit(node.expr)
-        res = expr
-        if op == MINUS:
-            if isinstance(expr.type, ir.IntType):
-                res = self.builder.neg(expr)
-            elif isinstance(expr.type, (ir.FloatType, ir.DoubleType)):
-                res = self.builder.fsub(ir.Constant(ir.DoubleType(), 0), expr)
-        elif op == NOT:
-            if isinstance(expr.type, ir.IntType):
-                res = self.builder.not_(expr)
-        return res
+        return unary_op(self, node)
 
     def visit_range(self, node):
         start = self.visit(node.left)

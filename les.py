@@ -1,7 +1,7 @@
 """Lesma programming language
 
 usage:
-    lesma compile [-ldo FILE] <file> 
+    lesma compile [-ldo FILE] <file>
     lesma run [-td] <file>
     lesma [-hv]
 
@@ -22,6 +22,7 @@ from lesma.utils import error
 from docopt import docopt
 import os
 
+
 def _run(arg_list):
     les_file = arg_list['<file>']
     timer = arg_list['--timer']
@@ -37,7 +38,7 @@ def _run(arg_list):
     t = parser.parse()
     symtab_builder = Preprocessor(parser.file_name)
     symtab_builder.check(t)
-    
+
     generator = CodeGenerator(parser.file_name)
     generator.generate_code(t)
     generator.evaluate(not debug, debug, timer)
@@ -68,7 +69,7 @@ def _compile(arg_list):
 
 if __name__ == "__main__":
     args = docopt(__doc__, version='0.1.0')
-    
+
     if args['compile']:
         _compile(args)
     elif args['run']:

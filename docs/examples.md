@@ -15,11 +15,10 @@ print('夜のコンサートは最高でした。')
 
 a_number: int # Initialize an Integer
 
-π = 3.14 # Support for utf-8 variable names
+π: float = 3.14 # Support for utf-8 variable names
 number = 23 # Type Inference, int in this case
 number = number + 5 // 2 ^ 3 # Number operations
 number+=5 # Operating Assignment
-number//=3
 
 question = 'what\'s going on' # Escaping
 
@@ -148,6 +147,14 @@ Int age = input('How old are you?')
 
 # String Interpolation
 print('Wow! You are {age} years old?!')
+
+# Operator Overloading
+def operator - (x: int, y:int) -> int # Two parameters overloads binary operations
+	return x + 3
+
+def operator -(x: int) -> int # One parameters overloads binary operations
+	return 0 - x + 1
+
 
 enum Colors
 	GREEN
