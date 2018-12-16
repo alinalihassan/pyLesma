@@ -2,6 +2,7 @@ from llvmlite import ir
 
 Old_IntType = ir.types.IntType
 
+
 class _IntType(Old_IntType):
     """
     The type for integers.

@@ -88,11 +88,11 @@ class Lexer(object):
         while self.current_char is not None and self.current_char.isspace():
             self.next_char()
             self.reset_word()
-            spaces+=1
+            spaces += 1
             if spaces == 4 and shouldIndent:
                 spaces = 0
                 self.increment_indent_level()
-        
+
         if spaces != 0 and shouldIndent:
             error('file={} line={}: Indentation is locked to 4 spaces, found {} instead'.format(
                 self.file_name, self.line_num, spaces))
@@ -158,7 +158,7 @@ class Lexer(object):
             return OPERATIC
         elif char.isdigit():
             return NUMERIC
-        
+
         return ALPHANUMERIC
 
     def get_next_token(self):
@@ -224,7 +224,7 @@ class Lexer(object):
                         self.word += self.current_char
                         self.next_char()
                     return Token(OP, self.reset_word(), self.line_num, self.indent_level)
-                
+
                 return Token(OP, self.reset_word(), self.line_num, self.indent_level)
 
             if self.word in KEYWORDS:
@@ -235,14 +235,14 @@ class Lexer(object):
                         self.word += self.current_char
                         self.next_char()
                     return Token(KEYWORD, self.reset_word(), self.line_num, self.indent_level)
-                
+
                 return Token(KEYWORD, self.reset_word(), self.line_num, self.indent_level)
 
             elif self.word in TYPES:
                 return Token(TYPE, self.reset_word(), self.line_num, self.indent_level)
             elif self.word in CONSTANTS:
                 return Token(CONSTANT, self.reset_word(), self.line_num, self.indent_level)
-            
+
             return Token(NAME, self.utf8ToAscii(self.reset_word()), self.line_num, self.indent_level)
 
         if self.word_type == NUMERIC:
@@ -277,9 +277,9 @@ class Lexer(object):
             yield token
             token = self.get_next_token()
         yield token
-    
+
     def utf8ToAscii(self, string):
         unicode = "{}".format(string.encode("unicode_escape"))
-        unicode = unicode[2:len(unicode)-1]
+        unicode = unicode[2:len(unicode) - 1]
 
         return unicode

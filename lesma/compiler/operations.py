@@ -35,6 +35,7 @@ def operations(compiler, node):
         new_right = compiler.search_scopes(node.right.value)
         return str_ops(compiler, op, new_left, new_right, node)
 
+
 def is_ops(compiler, op, left, right, node):
     orig = str(left.type)
     compare = str(right)
@@ -44,7 +45,7 @@ def is_ops(compiler, op, left, right, node):
         return compiler.const(orig != compare, BOOL)
     else:
         raise SyntaxError('Unknown identity operator', node.op)
-        
+
 
 def int_ops(compiler, op, left, right, node):
     # if left.type.width == 1:
@@ -60,8 +61,8 @@ def int_ops(compiler, op, left, right, node):
     elif op == FLOORDIV:
         return compiler.builder.sdiv(left, right, 'divtmp')
     elif op == DIV:
-        return compiler.builder.fdiv(compiler.builder.sitofp(left, type_map[DOUBLE]),
-            compiler.builder.sitofp(right, type_map[DOUBLE]), 'fdivtmp')
+        return (compiler.builder.fdiv(compiler.builder.sitofp(left, type_map[DOUBLE]),
+                compiler.builder.sitofp(right, type_map[DOUBLE]), 'fdivtmp'))
     elif op == MOD:
         return compiler.builder.srem(left, right, 'modtmp')
     elif op == POWER:
@@ -98,8 +99,8 @@ def float_ops(compiler, op, left, right, node):
     elif op == MUL:
         return compiler.builder.fmul(left, right, 'fmultmp')
     elif op == FLOORDIV:
-        return compiler.builder.sdiv(compiler.builder.fptosi(left, ir.IntType(64)),
-            compiler.builder.fptosi(right, ir.IntType(64)), 'ffloordivtmp')
+        return (compiler.builder.sdiv(compiler.builder.fptosi(left, ir.IntType(64)),
+                compiler.builder.fptosi(right, ir.IntType(64)), 'ffloordivtmp'))
     elif op == DIV:
         return compiler.builder.fdiv(left, right, 'fdivtmp')
     elif op == MOD:
@@ -144,16 +145,16 @@ def cast_ops(compiler, left, right, node):
         left.type.signed = right.signed
         return
 
-    elif orig_type == cast_type: # cast to the same type
-        return 
+    elif orig_type == cast_type:  # cast to the same type
+        return
 
-    elif cast_type in (I1, I8, I16, I32, I64, I128): # int
-        if orig_type in (DOUBLE, FLOATINGPOINT): # from float
+    elif cast_type in (I1, I8, I16, I32, I64, I128):  # int
+        if orig_type in (DOUBLE, FLOATINGPOINT):  # from float
             if right.signed:
-                return compiler.builder.fptosi(left, llvm_type_map[cast_type]) 
+                return compiler.builder.fptosi(left, llvm_type_map[cast_type])
             else:
-                return compiler.builder.fptoui(left, llvm_type_map[cast_type]) 
-        elif orig_type in (I1, I8, I16, I32, I64, I128): # from signed int
+                return compiler.builder.fptoui(left, llvm_type_map[cast_type])
+        elif orig_type in (I1, I8, I16, I32, I64, I128):  # from signed int
             width_cast = int(cast_type.split("i")[1])
             width_orig = int(orig_type.split("i")[1])
             if width_cast > width_orig:
@@ -161,13 +162,13 @@ def cast_ops(compiler, left, right, node):
             elif width_orig > width_cast:
                 return compiler.builder.trunc(left, llvm_type_map[cast_type])
 
-    elif cast_type in (DOUBLE, FLOATINGPOINT): # float
-        if orig_type in (I1, I8, I16, I32, I64, I128): # from signed int
+    elif cast_type in (DOUBLE, FLOATINGPOINT):  # float
+        if orig_type in (I1, I8, I16, I32, I64, I128):  # from signed int
             if left.type.signed:
                 return compiler.builder.sitofp(left, type_map[DOUBLE])
             else:
                 return compiler.builder.uitofp(left, type_map[DOUBLE])
-        elif orig_type in (DOUBLE, FLOATINGPOINT): # from float
+        elif orig_type in (DOUBLE, FLOATINGPOINT):  # from float
             if cast_type == DOUBLE and orig_type == FLOATINGPOINT:
                 return compiler.builder.fpext(left, llvm_type_map[cast_type])
             elif cast_type == FLOATINGPOINT and orig_type == DOUBLE:
@@ -183,7 +184,7 @@ def cast_ops(compiler, left, right, node):
             orig_type,
             cast_type
         ))
-    
+
     raise TypeError('file={} line={}: Unknown cast from {} to {}'.format(
         compiler.file_name,
         node.line_num,

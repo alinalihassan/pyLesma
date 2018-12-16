@@ -91,9 +91,7 @@ class Preprocessor(NodeVisitor):
     def visit_constant(self, node):
         if node.value == TRUE or node.value == FALSE:
             return self.search_scopes(BOOL)
-        # elif node.value == NULL: #TODO: Implement me
-        # 	return self.search_scopes(NULL)
-        
+
         return NotImplementedError
 
     def visit_num(self, node):
@@ -216,7 +214,7 @@ class Preprocessor(NodeVisitor):
     def visit_binop(self, node):
         if node.op == CAST or node.op in (IS, IS_NOT):
             self.visit(node.left)
-            if not node.right.value in TYPES:
+            if node.right.value not in TYPES:
                 error('file={} line={}: type expected for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, node.left, node.right))
             return self.infer_type(self.visit(node.right))
         else:
@@ -335,7 +333,7 @@ class Preprocessor(NodeVisitor):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
                 if param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name:
-                    raise TypeError # TODO: Make this an actual error
+                    raise TypeError  # TODO: Make this an actual error
             else:
                 func_param_keys = list(func.parameters.keys())
                 if func_param_keys[x] not in node.named_arguments.keys() and func_param_keys[x] not in func.parameter_defaults.keys():
@@ -400,9 +398,9 @@ class Preprocessor(NodeVisitor):
         if types[1:] == types[:-1]:
             if not types:
                 return self.search_scopes(ARRAY), self.search_scopes(ANY)
-            
+
             return self.search_scopes(ARRAY), types[0]
-        
+
         return self.search_scopes(LIST), self.search_scopes(ANY)
 
     def visit_dotaccess(self, node):

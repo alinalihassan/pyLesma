@@ -87,6 +87,7 @@ class Int128(Number):
     def type():
         return ir.IntType(128)
 
+
 class UInt(Number):
     def __init__(self):
         super().__init__()
@@ -145,6 +146,7 @@ class UInt128(Number):
     def type():
         return ir.IntType(128, False)
 
+
 class Double(Number):
     def __init__(self):
         super().__init__()
@@ -152,7 +154,7 @@ class Double(Number):
 
     @staticmethod
     def type():
-        return ir.DoubleType() 
+        return ir.DoubleType()
 
 
 class Float(Number):

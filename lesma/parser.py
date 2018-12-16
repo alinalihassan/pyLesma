@@ -138,13 +138,13 @@ class Parser(object):
                     self.eat_value(COMMA)
         self.eat_value(RPAREN)
 
-        try: # No arrow, void by default
+        try:  # No arrow, void by default
             self.eat_value(ARROW)
         except SyntaxError:
             return_type = Void()
             return_void = True
-        
-        if return_void != True:
+
+        if return_void is not True:
             if self.current_token.value == VOID:
                 return_type = Void()
                 self.next_token()
@@ -157,7 +157,7 @@ class Parser(object):
         self.indent_level -= 1
         if name == ANON:
             return AnonymousFunc(return_type, params, stmts, self.line_num, param_defaults, vararg)
-        
+
         return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 
     def constructor_declaration(self, class_name):
@@ -202,7 +202,7 @@ class Parser(object):
             return self.curly_bracket_expression(token)
         elif token.value == LPAREN:
             return self.list_expression(token)
-        
+
         return self.square_bracket_expression(token)
 
     def function_call(self, token):
@@ -300,7 +300,7 @@ class Parser(object):
                 node = self.property_or_method(self.next_token())
             elif self.preview().value == COLON:
                 node = self.variable_declaration()
-            else :
+            else:
                 node = self.name_statement()
         elif self.current_token.value == DEF:
             node = self.function_declaration()
@@ -349,7 +349,7 @@ class Parser(object):
                     right = self.expr()
                     if op.value == ASSIGN:
                         return Assign(access, op.value, right, self.line_num)
-                    
+
                     return OpAssign(access, op.value, right, self.line_num)
                 return access
         elif token.type == NAME:
@@ -357,7 +357,7 @@ class Parser(object):
             tok = self.expr()
             if self.current_token.value == COMMA:
                 return self.slice_expression(tok)
-            
+
             self.eat_value(RSQUAREBRACKET)
             return self.access_collection(token, tok)
         else:
@@ -442,7 +442,7 @@ class Parser(object):
         token = self.next_token()
         if token.value in ASSIGNMENT_OP:
             return self.field_assignment(token, left)
-        
+
         return self.method_call(token, left)
 
     def method_call(self, _, left):
@@ -581,10 +581,10 @@ class Parser(object):
         #     node = OpAssign(left, token.value, right, self.line_num)
         elif token.value == COLON:
             # Ignore, since we automatically resolve the type
-            token = self.next_token() # Eat colon
+            token = self.next_token()  # Eat colon
             if token.type != TYPE:
                 raise SyntaxError('Invalid variable type: {}'.format(token.value))
-            self.next_token() # Eat type
+            self.next_token()  # Eat type
 
             right = self.expr()
             node = Assign(left, token.value, right, self.line_num)
@@ -623,7 +623,7 @@ class Parser(object):
         elif token.value == LPAREN:
             if preview.value == RPAREN:
                 return []
-            
+
             self.next_token()
             node = self.expr()
             self.eat_value(RPAREN)

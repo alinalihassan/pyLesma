@@ -274,7 +274,7 @@ class CodeGenerator(NodeVisitor):
     def visit_break(self, _):
         if 'case' in self.builder.block.name:
             return BREAK
-        
+
         self.is_break = True
         return self.branch(self.loop_end_blocks[-1])
 
@@ -302,7 +302,7 @@ class CodeGenerator(NodeVisitor):
     def visit_range(self, node):
         start = self.visit(node.left)
         stop = self.visit(node.right)
-        array_ptr = self.create_array(INT)  # TODO: This should be changed to allow for ranges of Decimals, Floating-Points, Characters...
+        array_ptr = self.create_array(INT)  # TODO: This should be changed to allow any type
         self.call('create_range', [array_ptr, start, stop])
         return array_ptr
 
@@ -425,7 +425,7 @@ class CodeGenerator(NodeVisitor):
                 res = self.load(temp)
             else:
                 raise NotImplementedError()
-        
+
         if collection_access:
             self.call('dyn_array_set', [var_name, key, res])
         else:
@@ -480,7 +480,7 @@ class CodeGenerator(NodeVisitor):
         collection = self.search_scopes(node.collection.value)
         if collection.type.pointee == self.search_scopes('Dynamic_Array'):
             return self.call('dyn_array_get', [collection, key])
-        
+
         return self.builder.extract_value(self.load(collection.name), [key])
 
     def visit_str(self, node):
@@ -542,7 +542,7 @@ class CodeGenerator(NodeVisitor):
             str_ptr = self.gep(str_ptr, [self.const(0), self.const(0)])
             str_ptr = self.builder.bitcast(str_ptr, type_map[INT].as_pointer())
             self.call('puts', [str_ptr])
-        
+
         percent_d = self.stringz('%d')
         percent_ptr = self.alloc_and_store(percent_d, ir.ArrayType(percent_d.type.element, percent_d.type.count))
         percent_ptr_gep = self.gep(percent_ptr, [self.const(0), self.const(0)])
@@ -608,7 +608,7 @@ class CodeGenerator(NodeVisitor):
         if isinstance(val, int):
             if width:
                 return ir.Constant(type_map[width], val)
-            
+
             return ir.Constant(type_map[INT], val)
         elif isinstance(val, (float, Decimal)):
             return ir.Constant(type_map[DOUBLE], val)
@@ -747,13 +747,13 @@ class CodeGenerator(NodeVisitor):
         with open(output + '.ll', 'w') as out:
             out.write(prog_str)
 
-        with open(os.devnull,"w") as tmpout:
+        with open(os.devnull, "w") as tmpout:
             subprocess.call('clang {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
             stopSpinner()
-            successful("compilation done in: %.3f seconds" % (time()-compile_time))
+            successful("compilation done in: %.3f seconds" % (time() - compile_time))
             successful("binary file wrote to " + output)
 
         if emit_llvm:
             successful("llvm assembler wrote to " + output + ".ll")
-        else:   
+        else:
             os.remove(output + '.ll')
