@@ -22,7 +22,8 @@ Currently an early Work in Progress, and many thanks to [Ayehavgunne](https://gi
 - Lua
 
 ## Installing
-You can either download the latest binary file from the [Release Page](https://github.com/hassanalinali/Lesma/releases) or build it on your own.
+Currently if you want to test it, you need to build it on your own. In the future I might consider
+publishing the binary to the Release Page.
 
 ## Documentation
 
