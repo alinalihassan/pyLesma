@@ -5,17 +5,12 @@ from lesma.compiler import type_map, llvm_type_map
 from lesma.grammar import *
 import lesma.compiler.llvmlite_custom
 
-I1 = 'i1'
-I8 = 'i8'
-I16 = 'i16'
-I32 = 'i32'
-I64 = 'i64'
-I128 = 'i128'
-DOUBLE = 'double'
-FLOATINGPOINT = 'float'
+# TODO: Determine size using a comparison function
+int_types = ('i1', 'i8', 'i16', 'i32', 'i64', 'i128')
+float_types = ('float', 'double')
 
-false = ir.Constant(type_map[INT], 0)
-true = ir.Constant(type_map[INT], 1)
+false = ir.Constant(type_map[BOOL], 0)
+true = ir.Constant(type_map[BOOL], 1)
 
 user_operators = []
 
@@ -42,8 +37,11 @@ def unary_op(compiler, node):
             return compiler.builder.not_(expr)
 
 
-def userdef_binary_str(op, left, right):
-    return op + "/" + str(left.type) + "/" + str(right.type)
+def userdef_binary_str(op, left, right):  # Hacky way of checking if it's an expression or type
+    try:
+        return op + "/" + str(left.type) + "/" + str(right.type)
+    except Exception:
+        return op + "/" + str(left.type) + "/" + str(right)
 
 
 def binary_op(compiler, node):
@@ -79,10 +77,17 @@ def is_ops(compiler, op, left, right, node):
 
 
 def int_ops(compiler, op, left, right, node):
-    # if left.type.width == 1:
-    # 	left = compiler.builder.zext(left, type_map[INT])
-    # if right.type.width == 1:
-    # 	right = compiler.builder.zext(right, type_map[INT])
+    # Cast values if they're different but compatible
+    if str(left.type) in int_types and \
+       str(right.type) in int_types and \
+       str(left.type) != str(right.type):
+        width_left = int(str(left.type).split("i")[1])
+        width_right = int(str(right.type).split("i")[1])
+        if width_left > width_right:
+            right = cast_ops(compiler, right, left.type, node)
+        else:
+            left = cast_ops(compiler, left, right.type, node)
+
     if op == PLUS:
         return compiler.builder.add(left, right, 'addtmp')
     elif op == MINUS:
@@ -123,6 +128,17 @@ def int_ops(compiler, op, left, right, node):
 
 
 def float_ops(compiler, op, left, right, node):
+    # Cast values if they're different but compatible
+    if str(left.type) in float_types and \
+       str(right.type) in float_types and \
+       str(left.type) != str(right.type):  # Do a more general approach for size comparisons
+        width_left = 0 if str(left.type) == 'float' else 1
+        width_right = 0 if str(right.type) == 'float' else 1
+        if width_left > width_right:
+            right = cast_ops(compiler, right, left.type, node)
+        else:
+            left = cast_ops(compiler, left, right.type, node)
+
     if op == PLUS:
         return compiler.builder.fadd(left, right, 'faddtmp')
     elif op == MINUS:
@@ -170,8 +186,9 @@ def str_ops(compiler, op, left, right, node):
 def cast_ops(compiler, left, right, node):
     orig_type = str(left.type)
     cast_type = str(right)
-    if cast_type in (I1, I8, I16, I32, I64, I128) and \
-       orig_type in (I1, I8, I16, I32, I64, I128) and \
+
+    if cast_type in int_types and \
+       orig_type in int_types and \
        cast_type == orig_type:
         left.type.signed = right.signed
         return
@@ -179,13 +196,13 @@ def cast_ops(compiler, left, right, node):
     elif orig_type == cast_type:  # cast to the same type
         return
 
-    elif cast_type in (I1, I8, I16, I32, I64, I128):  # int
-        if orig_type in (DOUBLE, FLOATINGPOINT):  # from float
+    elif cast_type in int_types:  # int
+        if orig_type in float_types:  # from float
             if right.signed:
                 return compiler.builder.fptosi(left, llvm_type_map[cast_type])
             else:
                 return compiler.builder.fptoui(left, llvm_type_map[cast_type])
-        elif orig_type in (I1, I8, I16, I32, I64, I128):  # from signed int
+        elif orig_type in int_types:  # from signed int
             width_cast = int(cast_type.split("i")[1])
             width_orig = int(orig_type.split("i")[1])
             if width_cast > width_orig:
@@ -193,16 +210,16 @@ def cast_ops(compiler, left, right, node):
             elif width_orig > width_cast:
                 return compiler.builder.trunc(left, llvm_type_map[cast_type])
 
-    elif cast_type in (DOUBLE, FLOATINGPOINT):  # float
-        if orig_type in (I1, I8, I16, I32, I64, I128):  # from signed int
+    elif cast_type in float_types:  # float
+        if orig_type in int_types:  # from signed int
             if left.type.signed:
-                return compiler.builder.sitofp(left, type_map[DOUBLE])
+                return compiler.builder.sitofp(left, type_map[cast_type])
             else:
-                return compiler.builder.uitofp(left, type_map[DOUBLE])
-        elif orig_type in (DOUBLE, FLOATINGPOINT):  # from float
-            if cast_type == DOUBLE and orig_type == FLOATINGPOINT:
+                return compiler.builder.uitofp(left, type_map[cast_type])
+        elif orig_type in float_types:  # from float
+            if cast_type == 'double' and orig_type == 'float':
                 return compiler.builder.fpext(left, llvm_type_map[cast_type])
-            elif cast_type == FLOATINGPOINT and orig_type == DOUBLE:
+            elif cast_type == 'float' and orig_type == 'double':
                 return compiler.builder.fptrunc(left, llvm_type_map[cast_type])
 
     elif cast_type == STR:

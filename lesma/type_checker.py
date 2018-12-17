@@ -22,6 +22,19 @@ def flatten(container):
             yield i
 
 
+def types_compatible(left_type, right_type):
+    left_type = str(left_type)
+    right_type = str(right_type)
+    int_type = ('i8', 'i16', 'i32', 'i64')
+    float_type = ('float', 'double')
+    if (left_type is right_type) or \
+       (left_type in int_type and right_type in int_type) or \
+       (left_type in float_type and right_type in float_type):
+        return True
+
+    return False
+
+
 class Preprocessor(NodeVisitor):
     def __init__(self, file_name=None):
         super().__init__()
@@ -229,7 +242,7 @@ class Preprocessor(NodeVisitor):
             left_type = self.infer_type(left)
             right_type = self.infer_type(right)
             any_type = self.search_scopes(ANY)
-            if right_type is left_type or left_type is any_type or right_type is any_type:
+            if types_compatible(left_type, right_type) or left_type is any_type or right_type is any_type:
                 return left_type
             else:
                 error('file={} line={}: types do not match for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, left, right))
