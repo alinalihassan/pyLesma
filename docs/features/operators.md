@@ -49,3 +49,19 @@ Lesma offers the standard mathematical and boolean operators
 |Integer Division Assignment| `//=`|Assignment of value floor divided by current value assigned|
 |Modulo Assignment| `%=`|Assignment of value modulo current value assigned|
 |Power Assignment| `^=`|Assignment of assigned value to the power of value|
+
+
+## Operator Overloading
+
+Operators can be user-defined by defining functions using the keyword `operator` followed by the specified operator, and with one (for unary operators) or two (for binary operators)
+
+```py
+def operator + (x: int, y:int) -> int
+	return 42
+
+def operator - (x: int) -> int
+	return 0
+
+print(3+5)  # Prints 42
+print(-20)  # Prints 0
+```

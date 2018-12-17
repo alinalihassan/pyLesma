@@ -1,4 +1,9 @@
-Types are optional in Lesma, you can choose whether you specify them or not. Unspecified variable types are inferred at compile time.
+Types are optional in Lesma, you can choose whether you specify them or not. Unspecified variable types are inferred at compile time from the value of the assignment.
+
+Operations between different types will either be casted to the larger type if the two types are compatible, or give an error otherwise. Two types are compatible if they are different sizes of the same group type (such as ints or floating points).
+
+!!! warning
+	Types that are not specified are inferred, this is fundamentally different to dynamic types!
 
 The type must be either a user-defined alias, struct or class, or a built-in type such as:
 
@@ -34,22 +39,21 @@ There are multiple types of ints available based on width and signed/unsigned. T
 ```py
 x: int = 5
 x += 27
+
+large_num: int128 = 5
 ```
 !!! info
 	In Lesma, int and uint are by default 64 bits wide, and they will enlarge by themselves to 128 bits wide if needed. This is not the default behaviour if you specify the size yourself!
 
-!!! warning
-	Unsigned Integers not implemented yet
-
 ## Float
-Double is floating-point real number.
+Float is floating-point real number.
 
 ```py
 x: float = 0.5
 ```
 
 ## Double
-Double is double-precision, floating-point, real number.
+Double is double-precision floating-point real number.
 
 ```py
 x: double = 172312.41923
