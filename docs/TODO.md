@@ -8,12 +8,13 @@
 - [ ] Should not allow declaring the type to an existing variable
 - [ ] Fix not being able to return user-defined structs and classes
 - [ ] Fix not being able to overload operators on user-defined structs and classes
+- [x] Fix Python error on empty input
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
 - [ ] Allow any type for range (currently only int)
 - [x] Allow any type for casting
-- [ ] Change casting syntax
+- [x] Change casting syntax
 - [ ] Allow more operators on different types such as strings
 - [ ] Improve warning messages
 - [ ] Add indentation related errors

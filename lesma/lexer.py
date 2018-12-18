@@ -24,6 +24,9 @@ class Token(object):
 
 class Lexer(object):
     def __init__(self, text, file_name=None):
+        if len(text) == 0:
+            error('empty input')
+
         self.text = text
         self.file_name = file_name
         self.pos = 0
