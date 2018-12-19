@@ -498,15 +498,18 @@ class CodeGenerator(NodeVisitor):
                 val = array
             else:
                 if val.type.signed:
-                    if int(str(val.type).split("i")[1]) >= 64:
-                        self.print_num("%lld", val)
-                    else:
+                    if int(str(val.type).split("i")[1]) < 32:
+                        val = self.builder.sext(val, type_map[INT32])
                         self.print_num("%d", val)
-                else:
-                    if int(str(val.type).split("i")[1]) >= 64:
-                        self.print_num("%llu", val)
+                    elif int(str(val.type).split("i")[1]) == 32:
+                        self.print_num("%d", val)
                     else:
+                        self.print_num("%lld", val)
+                else:
+                    if int(str(val.type).split("i")[1]) <= 32:
                         self.print_num("%u", val)
+                    else:
+                        self.print_num("%llu", val)
                 return
         elif isinstance(val.type, (ir.FloatType, ir.DoubleType)):
             self.print_num("%g", val)
@@ -730,7 +733,8 @@ class CodeGenerator(NodeVisitor):
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
     def compile(self, filename, optimize=True, output=None, emit_llvm=False):
-        startSpinner("Compiling")
+        spinner = Spinner()
+        spinner.startSpinner("Compiling")
         compile_time = time()
         program_string = llvm.parse_assembly(str(self.module))
 
@@ -743,7 +747,7 @@ class CodeGenerator(NodeVisitor):
 
         with open(os.devnull, "w") as tmpout:
             subprocess.call('clang {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
-            stopSpinner()
+            spinner.stopSpinner()
             successful("compilation done in: %.3f seconds" % (time() - compile_time))
             successful("binary file wrote to " + output)
 

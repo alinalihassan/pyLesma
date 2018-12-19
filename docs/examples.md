@@ -36,8 +36,9 @@ else if number == 23
 else
 	print('less than 23')
 
-if something is not number \ # Continuing statement onto next line
-		and true # Indentaion requires tabs only
+if false \ # Continuing statement onto next line
+	and true
+
 	print('They are not the same')
 
 for x in 0..40 # For loop using a range
@@ -110,7 +111,7 @@ my_another_var: int64 = my_var as int64
 if my_var is int64
 	print("That's not true")
 else if my_var as int64 is int64
-	print("That works too")
+	print("That works")
 
 # Type Aliasing
 type fInt = func[int] -> int
@@ -149,10 +150,10 @@ Int age = input('How old are you?')
 print('Wow! You are {age} years old?!')
 
 # Operator Overloading
-def operator - (x: int, y:int) -> int # Two parameters overloads binary operations
+def operator - (x: int, y:int) -> int  # Two parameters overloads binary operations
 	return x + 3
 
-def operator -(x: int) -> int # One parameters overloads binary operations
+def operator - (x: int) -> int  # One parameters overloads binary operations
 	return 0 - x + 1
 
 

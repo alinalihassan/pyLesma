@@ -17,3 +17,4 @@ Currently an early Work in Progress, and many thanks to [Ayehavgunne](https://gi
 - Python
 - Typescript
 - Lua
+- Swift

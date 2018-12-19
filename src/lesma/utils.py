@@ -1,7 +1,27 @@
 import sys
 from halo import Halo
 
-spinner = ""
+
+class Spinner:
+    def __init__(self):
+        self.spinner = None
+
+    def startSpinner(self, text):
+        newLine = {
+            "interval": 130,
+            "frames": [
+                "[-] {}".format(text),
+                "[\\] {}".format(text),
+                "[|] {}".format(text),
+                "[/] {}".format(text)
+            ]
+        }
+        self.spinner = Halo(text='', spinner=newLine, color="magenta")
+        self.spinner.start()
+
+    def stopSpinner(self):
+        if self.spinner is not None:
+            self.spinner.stop()
 
 
 def error(text):
@@ -18,25 +38,6 @@ def warning(text):
 def successful(text):
     print(u'\033[{}m{}\033[0m{}'.format("32;1", "[+] Success: ",
           asciiToUnicode(text)), file=sys.stderr)
-
-
-def startSpinner(text):
-    global spinner
-    newLine = {
-        "interval": 130,
-        "frames": [
-            "[-] {}".format(text),
-            "[\\] {}".format(text),
-            "[|] {}".format(text),
-            "[/] {}".format(text)
-        ]
-    }
-    spinner = Halo(text='', spinner=newLine, color="magenta")
-    spinner.start()
-
-
-def stopSpinner():
-    spinner.stop()
 
 
 def asciiToUnicode(text):

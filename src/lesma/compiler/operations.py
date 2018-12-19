@@ -22,8 +22,6 @@ def userdef_unary_str(op, expr):
 def unary_op(compiler, node):
     op = node.op
     expr = compiler.visit(node.expr)
-    print(userdef_unary_str(op, expr))
-    print(user_operators)
     if userdef_unary_str(op, expr) in user_operators:
         return compiler.builder.call(compiler.module.get_global(userdef_unary_str(op, expr)),
                                      [expr], "unop")
@@ -37,7 +35,8 @@ def unary_op(compiler, node):
             return compiler.builder.not_(expr)
 
 
-def userdef_binary_str(op, left, right):  # Hacky way of checking if it's an expression or type
+# Hacky way of checking if it's an expression or type
+def userdef_binary_str(op, left, right):
     try:
         return op + "/" + str(left.type) + "/" + str(right.type)
     except Exception:
@@ -59,10 +58,10 @@ def binary_op(compiler, node):
         return int_ops(compiler, op, left, right, node)
     elif type(left.type) in NUM_TYPES and type(right.type) in NUM_TYPES:
         return float_ops(compiler, op, left, right, node)
-    elif isinstance(left, (ir.LoadInstr, ir.GEPInstr)) and isinstance(right, (ir.LoadInstr, ir.GEPInstr)):
-        new_left = compiler.search_scopes(node.left.value)
-        new_right = compiler.search_scopes(node.right.value)
-        return str_ops(compiler, op, new_left, new_right, node)
+    # elif isinstance(left, (ir.LoadInstr, ir.GEPInstr)) and isinstance(right, (ir.LoadInstr, ir.GEPInstr)):
+    #     new_left = compiler.search_scopes(node.left.value)
+    #     new_right = compiler.search_scopes(node.right.value)
+    #     return str_ops(compiler, op, new_left, new_right, node)
 
 
 def is_ops(compiler, op, left, right, node):
@@ -98,7 +97,7 @@ def int_ops(compiler, op, left, right, node):
         return compiler.builder.sdiv(left, right, 'divtmp')
     elif op == DIV:
         return (compiler.builder.fdiv(compiler.builder.sitofp(left, type_map[DOUBLE]),
-                compiler.builder.sitofp(right, type_map[DOUBLE]), 'fdivtmp'))
+                                      compiler.builder.sitofp(right, type_map[DOUBLE]), 'fdivtmp'))
     elif op == MOD:
         return compiler.builder.srem(left, right, 'modtmp')
     elif op == POWER:
@@ -147,7 +146,7 @@ def float_ops(compiler, op, left, right, node):
         return compiler.builder.fmul(left, right, 'fmultmp')
     elif op == FLOORDIV:
         return (compiler.builder.sdiv(compiler.builder.fptosi(left, ir.IntType(64)),
-                compiler.builder.fptosi(right, ir.IntType(64)), 'ffloordivtmp'))
+                                      compiler.builder.fptosi(right, ir.IntType(64)), 'ffloordivtmp'))
     elif op == DIV:
         return compiler.builder.fdiv(left, right, 'fdivtmp')
     elif op == MOD:
@@ -166,12 +165,12 @@ def float_ops(compiler, op, left, right, node):
         raise SyntaxError('Unknown binary operator', node.op)
 
 
-def str_ops(compiler, op, left, right, node):
-    # TODO add strings together!
-    # left_len = str_get_len(left, compiler)
-    # right_len = str_get_len(right, compiler)
-    # n = left_len + right_len
-    return
+# def str_ops(compiler, op, left, right, node):
+#     # TODO add strings together!
+#     # left_len = str_get_len(left, compiler)
+#     # right_len = str_get_len(right, compiler)
+#     # n = left_len + right_len
+#     return
 
 
 # def str_get_len(string, compiler):
