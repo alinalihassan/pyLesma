@@ -4,7 +4,7 @@
 
 ___
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/Version-0.1.0-brightgreen.svg)](https://github.com/hassanalinali/Lesma/blob/master/LICENSE.md)
+[![Version](https://img.shields.io/badge/Version-0.1.1-brightgreen.svg)](https://github.com/hassanalinali/Lesma/blob/master/LICENSE.md)
 
 **Lesma** is a compiled, gradually typed, imperative and object oriented programming language with a focused on expressiveness, elegancy, and simplicity, while not sacrificing on performance. The compiler is written in Python using LLVM as a backend.
 

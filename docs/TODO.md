@@ -9,6 +9,7 @@
 - [ ] Fix not being able to return user-defined structs and classes
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [x] Fix Python error on empty input
+- [ ] Unicode doesn't work on Windows platforms
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
@@ -19,9 +20,10 @@
 - [ ] Improve warning messages
 - [ ] Add indentation related errors
 - [ ] Add docs for as and is
+- [ ] Remove clang as a dependency
 
 ## Features
-- [ ] Implement Null
+- [ ] Implement Null (maybe)
 - [ ] Implement List
 - [ ] Implement Dictionary
 - [ ] Implement Empty arrays
