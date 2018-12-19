@@ -159,10 +159,14 @@ class CodeGenerator(NodeVisitor):
             self.cbranch(cond_val, if_true_block, if_false_block)
             self.position_at_end(if_true_block)
             ret = self.visit(node.blocks[x])
-            if not ret:
+            if not ret and not self.is_break:
                 self.branch(end_block)
             self.position_at_end(if_false_block)
-        self.position_at_end(end_block)
+
+        if not self.is_break:
+            self.position_at_end(end_block)
+        else:
+            self.is_break = False
 
     def visit_else(self, _):
         return self.builder.icmp_signed(EQUALS, self.const(1), self.const(1), 'cmptmp')
@@ -279,6 +283,7 @@ class CodeGenerator(NodeVisitor):
         return self.branch(self.loop_end_blocks[-1])
 
     def visit_continue(self, _):
+        self.is_break = True
         return self.branch(self.loop_test_blocks[-1])
 
     @staticmethod

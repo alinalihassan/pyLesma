@@ -1,7 +1,7 @@
 # TODO
 
 ## Fixes
-- [ ] Fix **break** and **continue** not branching if the parent block is not the loop
+- [x] Fix **break** and **continue** not branching if the parent block is not the loop
 - [ ] Fix constant declaration not allowing types
 - [ ] Fix Type declaration not expecting square brackets (for arrays)
 - [ ] Fix input function
