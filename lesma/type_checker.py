@@ -177,6 +177,9 @@ class Preprocessor(NodeVisitor):
                 var_sym.val_assigned = True
                 self.define(var_name, var_sym)
         else:
+            if isinstance(node.left, VarDecl):
+                error('file={} line={}: Cannot redefine the type of a declared variable: {}'.format(self.file_name, node.line_num, var_name))
+
             if collection_assignment:
                 if lookup_var.item_types == value:
                     return

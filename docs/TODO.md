@@ -5,7 +5,7 @@
 - [ ] Fix constant declaration not allowing types
 - [ ] Fix Type declaration not expecting square brackets (for arrays)
 - [ ] Fix input function
-- [ ] Should not allow declaring the type to an existing variable
+- [x] Should not allow declaring the type to an existing variable
 - [ ] Fix not being able to return user-defined structs and classes
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [x] Fix Python error on empty input
