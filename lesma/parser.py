@@ -592,14 +592,10 @@ class Parser(object):
         #     right = self.expr()
         #     node = OpAssign(left, token.value, right, self.line_num)
         elif token.value == COLON:
-            # Ignore, since we automatically resolve the type
-            token = self.next_token()  # Eat colon
-            if token.type != TYPE:
-                raise SyntaxError('Invalid variable type: {}'.format(token.value))
-            self.next_token()  # Eat type
+            type_node = self.type_spec()
 
-            right = self.expr()
-            node = Assign(left, token.value, right, self.line_num)
+            var = VarDecl(left, type_node, self.line_num)
+            node = self.variable_declaration_assignment(var)
         else:
             raise SyntaxError('Unknown assignment operator: {}'.format(token.value))
         return node

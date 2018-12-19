@@ -2,7 +2,7 @@
 
 ## Fixes
 - [x] Fix **break** and **continue** not branching if the parent block is not the loop
-- [ ] Fix constant declaration not allowing types
+- [x] Fix constant declaration not allowing types
 - [ ] Fix Type declaration not expecting square brackets (for arrays)
 - [ ] Fix input function
 - [x] Should not allow declaring the type to an existing variable
