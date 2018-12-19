@@ -611,7 +611,7 @@ class Parser(object):
         if preview.value == DOT:
             self.next_token()
             return self.dot_access(token)
-        elif token.value in (PLUS, MINUS):
+        elif token.value in (PLUS, MINUS, BINARY_ONES_COMPLIMENT):
             self.next_token()
             return UnaryOp(token.value, self.factor(), self.line_num)
         elif token.value == NOT:

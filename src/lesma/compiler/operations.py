@@ -31,6 +31,9 @@ def unary_op(compiler, node):
         elif isinstance(expr.type, (ir.FloatType, ir.DoubleType)):
             return compiler.builder.fsub(ir.Constant(ir.DoubleType(), 0), expr)
     elif op == NOT:
+        if isinstance(expr.type, ir.IntType) and str(expr.type).split("i")[1] == '1':
+            return compiler.builder.not_(expr)
+    elif op == BINARY_ONES_COMPLIMENT:
         if isinstance(expr.type, ir.IntType):
             return compiler.builder.not_(expr)
 
@@ -58,10 +61,6 @@ def binary_op(compiler, node):
         return int_ops(compiler, op, left, right, node)
     elif type(left.type) in NUM_TYPES and type(right.type) in NUM_TYPES:
         return float_ops(compiler, op, left, right, node)
-    # elif isinstance(left, (ir.LoadInstr, ir.GEPInstr)) and isinstance(right, (ir.LoadInstr, ir.GEPInstr)):
-    #     new_left = compiler.search_scopes(node.left.value)
-    #     new_right = compiler.search_scopes(node.right.value)
-    #     return str_ops(compiler, op, new_left, new_right, node)
 
 
 def is_ops(compiler, op, left, right, node):
@@ -77,6 +76,7 @@ def is_ops(compiler, op, left, right, node):
 
 def int_ops(compiler, op, left, right, node):
     # Cast values if they're different but compatible
+    print(op)
     if str(left.type) in int_types and \
        str(right.type) in int_types and \
        str(left.type) != str(right.type):
@@ -117,7 +117,7 @@ def int_ops(compiler, op, left, right, node):
         return compiler.builder.shl(left, right)
     elif op == ARITHMATIC_RIGHT_SHIFT:
         return compiler.builder.ashr(left, right)
-    elif op == BINARY_LEFT_SHIFT:
+    elif op == BINARY_RIGHT_SHIFT:
         return compiler.builder.lshr(left, right)
     elif op in (EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
         cmp_res = compiler.builder.icmp_signed(op, left, right, 'cmptmp')
@@ -163,23 +163,6 @@ def float_ops(compiler, op, left, right, node):
         return compiler.builder.sitofp(cmp_res, type_map[BOOL], 'booltmp')
     else:
         raise SyntaxError('Unknown binary operator', node.op)
-
-
-# def str_ops(compiler, op, left, right, node):
-#     # TODO add strings together!
-#     # left_len = str_get_len(left, compiler)
-#     # right_len = str_get_len(right, compiler)
-#     # n = left_len + right_len
-#     return
-
-
-# def str_get_len(string, compiler):
-# 	if isinstance(string, ir.AllocaInstr):
-# 		str_gep = compiler.builder.gep(string, [compiler.const(1), compiler.const(1)])
-# 		compiler.print_int(compiler.builder.ptrtoint(str_gep, type_map[INT]))
-# 		return str_gep
-# 	if isinstance(string, ir.GEPInstr):
-# 		return string.pointer.type.pointee.count
 
 
 def cast_ops(compiler, left, right, node):
