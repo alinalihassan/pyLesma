@@ -188,7 +188,10 @@ def cast_ops(compiler, left, right, node):
             width_cast = int(cast_type.split("i")[1])
             width_orig = int(orig_type.split("i")[1])
             if width_cast > width_orig:
-                return compiler.builder.sext(left, llvm_type_map[cast_type])
+                if left.type.signed:
+                    return compiler.builder.sext(left, llvm_type_map[cast_type])
+                else:
+                    return compiler.builder.zext(left, llvm_type_map[cast_type])
             elif width_orig > width_cast:
                 return compiler.builder.trunc(left, llvm_type_map[cast_type])
 
