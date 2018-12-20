@@ -7,5 +7,6 @@ jobs:
       - checkout
       - run: |
           pip install --user -r requirements.txt
+          sudo pip install nose
       - run: |
           nosetests
