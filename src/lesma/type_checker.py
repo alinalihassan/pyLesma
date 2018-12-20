@@ -372,7 +372,6 @@ class Preprocessor(NodeVisitor):
 
     def visit_methodcall(self, node):  # TODO: Not done here!
         method_name = node.name
-        obj = self.search_scopes(node.obj)
         method = self.search_scopes(method_name)
         for x, param in enumerate(method.parameters.values()):
             if x < len(node.arguments):

@@ -10,6 +10,7 @@
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [x] Fix Python error on empty input
 - [ ] Unicode doesn't work on Windows platforms
+- [ ] Fix string casting not working
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
