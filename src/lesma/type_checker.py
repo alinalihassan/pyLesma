@@ -285,6 +285,11 @@ class Preprocessor(NodeVisitor):
             typs = tuple(typs)
         typ = AliasSymbol(node.name.value, typs)
         self.define(typ.name, typ)
+    
+    def visit_aliasdeclaration(self, node):
+        typ = AliasSymbol(node.name, node.collection.value)
+        self.define(typ.name, typ)
+    
 
     def visit_funcdecl(self, node):
         func_name = node.name

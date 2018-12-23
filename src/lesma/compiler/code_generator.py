@@ -134,6 +134,11 @@ class CodeGenerator(NodeVisitor):
 
     def visit_typedeclaration(self, node):
         raise NotImplementedError
+    
+
+    def visit_aliasdeclaration(self, node):
+        type_map[node.name] = type_map[node.collection.value]
+        return ALIAS
 
     def visit_vardecl(self, node):
         var_addr = self.allocate(type_map[node.type.value], name=node.value.value)

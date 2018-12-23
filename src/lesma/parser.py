@@ -101,7 +101,7 @@ class Parser(object):
         name = self.next_token()
         self.user_types.append(name.value)
         self.eat_value(ASSIGN)
-        return AliasDeclaration(name.value, (self.type_spec(),), self.line_num)
+        return AliasDeclaration(name.value, self.type_spec(), self.line_num)
 
     def function_declaration(self):
         op_func = False
