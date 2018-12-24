@@ -125,11 +125,14 @@ class CodeGenerator(NodeVisitor):
         fields = []
         for field in node.fields.values():
             if field.value == STR:
-                fields.append(str)
+                raise NotImplementedError
             else:
                 fields.append(type_map[field.value])
-        struct = ir.LiteralStructType(fields)
+
+        struct = self.module.context.get_identified_type(node.name)
         struct.fields = [field for field in node.fields.keys()]
+        struct.name = node.name
+        struct.set_body([field for field in fields])
         self.define(node.name, struct)
 
     def visit_typedeclaration(self, node):
@@ -354,13 +357,16 @@ class CodeGenerator(NodeVisitor):
     def struct_assign(self, node):
         struct_type = self.search_scopes(node.left.type.value)
         name = node.left.value.value
+        struct = self.builder.alloca(struct_type, name=name)
+
         fields = []
         for field in node.right.fields.values():
             fields.append(self.visit(field))
-        struct = struct_type(fields)
-        struct_ptr = self.alloc_and_store(struct, struct_type, name=name)
-        struct_ptr.struct_name = node.left.type.value
-        self.define(name, struct_ptr)
+            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields)-1, width=INT32)], inbounds=True)
+            self.builder.store(fields[len(fields)-1], elem)
+            
+        struct.struct_name = node.left.type.value
+        self.define(name, struct)
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)

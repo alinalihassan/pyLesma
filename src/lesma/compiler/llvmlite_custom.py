@@ -1,6 +1,7 @@
 from llvmlite import ir
 
 Old_IntType = ir.types.IntType
+Old_IdentifiedStructType = ir.IdentifiedStructType
 
 
 class _IntType(Old_IntType):
@@ -31,5 +32,31 @@ class _IntType(Old_IntType):
         return self
 
 
+class _IdentifiedStructType(Old_IdentifiedStructType):
+    def gep(self, i):
+        """
+        Resolve the type of the i-th element (for getelementptr lookups).
+        *i* needs to be a LLVM constant, so that the type can be determined
+        at compile-time.
+        """
+        if not isinstance(i.type, ir.IntType):
+            raise TypeError(i.type)
+        
+        return self.elements[i.constant]
+
+    def set_body(self, elems):
+        if not self.is_opaque:
+            raise RuntimeError("{name} is already defined".format(
+                name=self.name))
+    
+        if not isinstance(elems, list) and not isinstance(elems, tuple):
+            self.elements = tuple(elems)
+        else:
+            self.elements = elems
+
+
+
 ir.types.IntType = _IntType
 ir.IntType = _IntType
+ir.types.IdentifiedStructType = _IdentifiedStructType
+ir.IdentifiedStructType = _IdentifiedStructType
