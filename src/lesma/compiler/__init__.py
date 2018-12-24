@@ -61,7 +61,6 @@ type_map2 = {
     DOUBLE: Double(),
     FLOAT: Float(),
     COMPLEX: Complex(),
-    BYTES: Bytes(),
     ARRAY: Array(),
     STR: Str(),
     LIST: List(),

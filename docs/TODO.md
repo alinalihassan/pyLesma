@@ -10,7 +10,7 @@
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [x] Fix Python error on empty input
 - [ ] Unicode doesn't work on Windows platforms
-- [ ] Fix string casting not working
+- [ ] Fix string and list type declaration not working
 
 ## Improvements
 - [ ] Allow any type for arrays (currently only int)
@@ -22,6 +22,7 @@
 - [ ] Add indentation related errors
 - [ ] Add docs for as and is
 - [ ] Remove clang as a dependency
+- [ ] Change from anonymous structs to identified (to allow proper struct types)
 
 ## Features
 - [ ] Implement Null (maybe)
