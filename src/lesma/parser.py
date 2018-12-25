@@ -282,7 +282,6 @@ class Parser(object):
         return results
 
     def statement(self):
-        print(self.current_token)
         if self.current_token.value == IF:
             node = self.if_statement()
         elif self.current_token.value == WHILE:
