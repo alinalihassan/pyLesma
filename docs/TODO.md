@@ -31,7 +31,7 @@
 - [ ] Implement Empty arrays
 - [ ] Implement 'in' as a boolean result
 - [ ] Implement anonymous functions
-- [ ] Implement alias
+- [x] Implement alias
 - [ ] Implement Closure
 - [ ] Implement string interpolation
 - [ ] Implement Enums

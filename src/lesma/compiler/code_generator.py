@@ -63,7 +63,7 @@ class CodeGenerator(NodeVisitor):
 
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
-        return self.funcdecl('anon{}'.format(self.anon_counter), node)
+        return self.funcdecl('anon_func.{}'.format(self.anon_counter), node)
 
     def visit_funcdecl(self, node):
         self.funcdecl(node.name, node)
@@ -131,7 +131,7 @@ class CodeGenerator(NodeVisitor):
 
         struct = self.module.context.get_identified_type(node.name)
         struct.fields = [field for field in node.fields.keys()]
-        struct.name = node.name
+        struct.name = 'struct.' + node.name
         struct.set_body([field for field in fields])
         self.define(node.name, struct)
 

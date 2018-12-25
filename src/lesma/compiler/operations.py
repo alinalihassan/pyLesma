@@ -12,17 +12,28 @@ float_types = ('float', 'double')
 false = ir.Constant(type_map[BOOL], 0)
 true = ir.Constant(type_map[BOOL], 1)
 
-user_operators = []
 
+def hasFunction(compiler, func_name):
+    for func in compiler.module.functions:
+        if func.name == func_name:
+            return True
 
 def userdef_unary_str(op, expr):
-    return op + "/" + str(expr.type)
+    return 'operator' + '.' + op + '.' + str(expr.type)
+
+
+# Hacky way of checking if it's an expression or type
+def userdef_binary_str(op, left, right):
+    try:
+        return 'operator' + '.' + op + '.' + str(left.type) + '.' + str(right.type)
+    except Exception:
+        return 'operator' + '.' + op + '.' + str(left.type) + '.' + str(right)
 
 
 def unary_op(compiler, node):
     op = node.op
     expr = compiler.visit(node.expr)
-    if userdef_unary_str(op, expr) in user_operators:
+    if hasFunction(compiler, userdef_unary_str(op, expr)):
         return compiler.builder.call(compiler.module.get_global(userdef_unary_str(op, expr)),
                                      [expr], "unop")
     elif op == MINUS:
@@ -38,19 +49,11 @@ def unary_op(compiler, node):
             return compiler.builder.not_(expr)
 
 
-# Hacky way of checking if it's an expression or type
-def userdef_binary_str(op, left, right):
-    try:
-        return op + "/" + str(left.type) + "/" + str(right.type)
-    except Exception:
-        return op + "/" + str(left.type) + "/" + str(right)
-
-
 def binary_op(compiler, node):
     op = node.op
     left = compiler.visit(node.left)
     right = compiler.visit(node.right)
-    if userdef_binary_str(op, left, right) in user_operators:
+    if hasFunction(compiler, userdef_binary_str(op, left, right)):
         return compiler.builder.call(compiler.module.get_global(userdef_binary_str(op, left, right)),
                                      (left, right), "binop")
     elif op == CAST:
@@ -76,7 +79,6 @@ def is_ops(compiler, op, left, right, node):
 
 def int_ops(compiler, op, left, right, node):
     # Cast values if they're different but compatible
-    print(op)
     if str(left.type) in int_types and \
        str(right.type) in int_types and \
        str(left.type) != str(right.type):

@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from lesma.ast import *
 from lesma.grammar import *
-from lesma.compiler.operations import user_operators
 from lesma.compiler.__init__ import type_map
 
 
@@ -163,11 +162,10 @@ class Parser(object):
         if op_func:
             if len(params) not in (1, 2):  # TODO: move this to type checker
                 raise SyntaxError("Operators can either be unary or binary, and the number of parameters do not match")
-
+            
+            name.value = 'operator' + '.' + name.value
             for param in params:
-                name.value += "/" + str(type_map[str(params[param].value)])
-
-            user_operators.append(name.value)
+                name.value += '.' + str(type_map[str(params[param].value)])
 
         return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 
@@ -284,6 +282,7 @@ class Parser(object):
         return results
 
     def statement(self):
+        print(self.current_token)
         if self.current_token.value == IF:
             node = self.if_statement()
         elif self.current_token.value == WHILE:

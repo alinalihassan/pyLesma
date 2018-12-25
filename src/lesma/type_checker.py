@@ -46,7 +46,7 @@ class Preprocessor(NodeVisitor):
         if self.unvisited_symbols:
             sym_list = []
             for sym_name in self.unvisited_symbols:
-                if "/" in sym_name:
+                if "." in sym_name:
                     continue
                 sym_list.append(sym_name)
             if len(sym_list):
