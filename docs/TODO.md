@@ -22,7 +22,7 @@
 - [ ] Add indentation related errors
 - [ ] Add docs for as and is
 - [ ] Remove clang as a dependency
-- [ ] Change from anonymous structs to identified (to allow proper struct types)
+- [x] Change from anonymous structs to identified (to allow proper struct types)
 
 ## Features
 - [ ] Implement Null (maybe)
