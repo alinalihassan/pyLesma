@@ -22,7 +22,7 @@ class CodeGenerator(NodeVisitor):
         self.module = ir.Module()
         self.builder = None
         self._add_builtins()
-        func_ty = ir.FunctionType(ir.VoidType(), [])
+        func_ty = ir.FunctionType(ir.VoidType(), [type_map[INT32], type_map[INT8].as_pointer().as_pointer()])
         func = ir.Function(self.module, func_ty, 'main')
         entry_block = func.append_basic_block('entry')
         exit_block = func.append_basic_block('exit')
@@ -38,6 +38,11 @@ class CodeGenerator(NodeVisitor):
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
         self.anon_counter = 0
+
+        # Add argv and argc to main
+        for i in range(2):
+            func.args[i].name = '.argc' if i == 0 else '.argv'
+            self.alloc_define_store(func.args[i], func.args[i].name[1:], func.args[i].type)
 
     def __str__(self):
         return str(self.module)
@@ -557,18 +562,15 @@ class CodeGenerator(NodeVisitor):
         percent_ptr_gep = self.builder.bitcast(percent_ptr_gep, type_map[INT8].as_pointer())
         return self.call('scanf', [percent_ptr_gep, self.allocate(type_map[INT])])
 
-    # noinspection PyUnusedLocal
     def start_function(self, name, return_type, parameters, parameter_defaults=None, varargs=None):
         self.function_stack.append(self.current_function)
         self.block_stack.append(self.builder.block)
         self.new_scope()
         ret_type = type_map[return_type.value]
         args = [type_map[param.value] for param in parameters.values()]
-        arg_keys = parameters.keys()
         func_type = ir.FunctionType(ret_type, args, varargs)
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
-        func_type.arg_order = arg_keys
         if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
             func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
