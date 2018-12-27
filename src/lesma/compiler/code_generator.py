@@ -107,7 +107,7 @@ class CodeGenerator(NodeVisitor):
                             raise TypeError('got multiple values for argument(s) {}'.format(set(node.named_arguments.keys()) & set(args_supplied)))
                         args.append(self.visit(func_type.parameter_defaults[arg]))
                 args_supplied.append(arg)
-        elif len(node.arguments) + len(node.named_arguments) > len(func_type.args):
+        elif len(node.arguments) + len(node.named_arguments) > len(func_type.args) and func_type.var_arg is None:
             raise SyntaxError('Unexpected arguments')
         else:
             args = [self.visit(arg) for arg in node.arguments]
@@ -565,7 +565,7 @@ class CodeGenerator(NodeVisitor):
         ret_type = type_map[return_type.value]
         args = [type_map[param.value] for param in parameters.values()]
         arg_keys = parameters.keys()
-        func_type = ir.FunctionType(ret_type, args)
+        func_type = ir.FunctionType(ret_type, args, varargs)
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
         func_type.arg_order = arg_keys
