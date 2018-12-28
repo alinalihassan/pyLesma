@@ -68,7 +68,7 @@ def _compile(arg_list):
 
 
 if __name__ == "__main__":
-    args = docopt(__doc__, version='0.1.1')
+    args = docopt(__doc__, version='0.1.2')
 
     if args['compile']:
         _compile(args)
