@@ -1,12 +1,9 @@
 Lesma offers the standard mathematical and boolean operators
 
-## General operators
+## General/Specific operators
 
 |Name|Symbol|Info|
 |--|--|--|
-|Colon| `:`| To specify the type of a variable|
-|Arrow| `->`| To specify the return type of a function|
-|Comma| `,` | To separate elements in a list|
 |Dot| `.` | Member accessing operator|
 |Range| `..` | Range defining operator|
 
@@ -42,6 +39,8 @@ Lesma offers the standard mathematical and boolean operators
 |Name|Symbol|Info|
 |--|--|--|
 |Assignment| `=`| Assignment of value to variable|
+|Incremental Assignment| `++`| Increments the value of a variable|
+|Decrement Assignment| `--`| Decrements the value of a variable|
 |Addition Assignment| `+=`| Assignment of value plus current value assigned|
 |Substraction Assignment| `-=`|Assignment of value minus current value assigned|
 |Multiplication Assignment| `*=`|Assignment of value multiplied by the current value assigned|
