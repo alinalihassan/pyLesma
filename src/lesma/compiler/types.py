@@ -177,42 +177,32 @@ class Complex(Number):
         raise NotImplementedError
 
 
-class Bytes(Any):
-    def __init__(self):
-        super().__init__()
-        self.name = BYTES
-
-    @staticmethod
-    def type():
-        raise NotImplementedError
-
-
 class Collection(Any):
     def __init__(self):
         super().__init__()
         self.name = None
 
 
-class Array(Collection):
+class List(Collection):
     def __init__(self):
         super().__init__()
-        self.name = ARRAY
+        self.name = LIST
 
     @staticmethod
     def type(element_type, count):
         return ir.ArrayType(element_type, count)
 
 
-class Str(Array):
+class Str(List):
     def __init__(self):
         super().__init__()
         self.name = STR
 
 
-class List(Collection):
+class Tuple(Collection):
     def __init__(self):
         super().__init__()
-        self.name = LIST
+        self.name = TUPLE
 
     @staticmethod
     def type():

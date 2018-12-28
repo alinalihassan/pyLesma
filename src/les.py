@@ -29,7 +29,7 @@ def _run(arg_list):
     debug = arg_list['--debug']
 
     if not os.path.isfile(les_file):
-        error(les_file + "is not a valid file")
+        error(les_file + " is not a valid file")
         return
 
     code = open(les_file).read()
@@ -51,7 +51,7 @@ def _compile(arg_list):
     debug = arg_list['--debug']
 
     if not os.path.isfile(les_file):
-        error(les_file + "is not a valid file")
+        error(les_file + " is not a valid file")
         return
 
     les_file = os.path.abspath(les_file)
@@ -68,7 +68,7 @@ def _compile(arg_list):
 
 
 if __name__ == "__main__":
-    args = docopt(__doc__, version='0.1.1')
+    args = docopt(__doc__, version='0.1.2')
 
     if args['compile']:
         _compile(args)

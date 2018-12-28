@@ -22,14 +22,15 @@ def flatten(container):
             yield i
 
 
+# TODO: Please improve me in a less hacky way
 def types_compatible(left_type, right_type):
     left_type = str(left_type)
     right_type = str(right_type)
-    int_type = ('i8', 'i16', 'i32', 'i64')
+    int_type = ('i8', 'i16', 'i32', 'i64', 'int8', 'int16', 'int32', 'int64', 'int')
     float_type = ('float', 'double')
+    num_type = int_type + float_type
     if (left_type is right_type) or \
-       (left_type in int_type and right_type in int_type) or \
-       (left_type in float_type and right_type in float_type):
+       (left_type in num_type and right_type in num_type):
         return True
 
     return False
@@ -46,7 +47,7 @@ class Preprocessor(NodeVisitor):
         if self.unvisited_symbols:
             sym_list = []
             for sym_name in self.unvisited_symbols:
-                if "/" in sym_name:
+                if "." in sym_name:
                     continue
                 sym_list.append(sym_name)
             if len(sym_list):
@@ -213,10 +214,21 @@ class Preprocessor(NodeVisitor):
         # if left_type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
         # 	if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
         # 		return left_type
-        if right_type is left_type or left_type is any_type or right_type is any_type:
+        if types_compatible(left_type, right_type) or left_type is any_type or right_type is any_type:
             return left_type
         else:
             error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
+
+    def visit_incrementassign(self, node):
+        left = self.visit(node.left)
+        left_type = self.infer_type(left)
+        any_type = self.search_scopes(ANY)
+        if left_type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT), self.search_scopes(INT)) \
+           or left_type is any_type:
+            return left_type
+        else:
+            error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
+
 
     def visit_fieldassignment(self, node):
         obj = self.search_scopes(node.obj)
@@ -285,6 +297,11 @@ class Preprocessor(NodeVisitor):
             typs = tuple(typs)
         typ = AliasSymbol(node.name.value, typs)
         self.define(typ.name, typ)
+    
+    def visit_aliasdeclaration(self, node):
+        typ = AliasSymbol(node.name, node.collection.value)
+        self.define(typ.name, typ)
+    
 
     def visit_funcdecl(self, node):
         func_name = node.name
@@ -294,7 +311,7 @@ class Preprocessor(NodeVisitor):
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults))
         self.new_scope()
         if node.varargs:
-            varargs_type = self.search_scopes(ARRAY)
+            varargs_type = self.search_scopes(LIST)
             varargs_type.type = node.varargs[1].value
             varargs = CollectionSymbol(node.varargs[0], varargs_type, self.search_scopes(node.varargs[1].value))
             varargs.val_assigned = True
@@ -372,7 +389,6 @@ class Preprocessor(NodeVisitor):
 
     def visit_methodcall(self, node):  # TODO: Not done here!
         method_name = node.name
-        obj = self.search_scopes(node.obj)
         method = self.search_scopes(method_name)
         for x, param in enumerate(method.parameters.values()):
             if x < len(node.arguments):
@@ -419,11 +435,11 @@ class Preprocessor(NodeVisitor):
             types.append(self.visit(item))
         if types[1:] == types[:-1]:
             if not types:
-                return self.search_scopes(ARRAY), self.search_scopes(ANY)
+                return self.search_scopes(LIST), self.search_scopes(ANY)
 
-            return self.search_scopes(ARRAY), types[0]
+            return self.search_scopes(LIST), types[0]
 
-        return self.search_scopes(LIST), self.search_scopes(ANY)
+        return self.search_scopes(TUPLE), self.search_scopes(ANY)
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
@@ -444,7 +460,7 @@ class Preprocessor(NodeVisitor):
             key = self.infer_type(node.key.value)
         else:
             key = self.visit(node.key)
-        if collection.type is self.search_scopes(ARRAY) or collection.type is self.search_scopes(LIST) or collection.type is self.search_scopes(SET):
+        if collection.type is self.search_scopes(LIST) or collection.type is self.search_scopes(TUPLE) or collection.type is self.search_scopes(SET):
             if key is not self.search_scopes(INT) and key.type is not self.search_scopes(INT):
                 error('file={} line={}: Something something error... huh? (fix this message)'.format(self.file_name, node.line_num))
             return collection.item_types

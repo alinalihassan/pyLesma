@@ -13,8 +13,8 @@ The type must be either a user-defined alias, struct or class, or a built-in typ
 - `Float`
 - `Str`
 - `Bool`
-- `Array`
 - `List`
+- `Tuple`
 - `Dict`
 - `Range`
 
@@ -60,7 +60,7 @@ x: double = 172312.41923
 ```
 
 ## Str
-Str is Lesma's implementation of strings/char arrays. All Lesma strings support UTF-8.
+Str is Lesma's implementation of strings/char lists. All Lesma strings support UTF-8.
 
 ```py
 x: str = "Hello World!"
@@ -74,8 +74,8 @@ Bools occupy only 1 bit, and can be either `true` or `false`.
 x: bool = true
 ```
 
-## Array
-Arrays are mutable by default, are declared using square paranthesis, have dynamic size, start from 0, and the members are accessed using the their index around square paranthesis.
+## List
+Lists are mutable by default, are declared using square paranthesis, have dynamic size, start from 0, and the members are accessed using the their index around square paranthesis.
 
 ```py
 x = [1,2,3,4]
@@ -83,10 +83,10 @@ print(x[2])
 ```
 
 !!! warning
-	Arrays currently only support integers, no other types!
+	Lists currently only support integers, no other types!
 
-## List
-Lists are like arrays, but immutable, and declared using round paranthesis.
+## Tuple
+Tuples are like lists, but immutable, and declared using round paranthesis.
 
 ```py
 x = (1,5,20)
@@ -94,7 +94,7 @@ print(x[0])
 ```
 
 !!! warning
-	Lists are not yet implemented!
+	Tuples are not yet implemented!
 
 ## Dict
 Dictionaries are lists of key-value pairs (similar to hashmaps), and they're mutable

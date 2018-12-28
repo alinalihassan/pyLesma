@@ -42,11 +42,10 @@ DOUBLE_BUILTIN = BuiltinTypeSymbol(DOUBLE, Double)
 FLOAT_BUILTIN = BuiltinTypeSymbol(FLOAT, Float)
 COMPLEX_BUILTIN = BuiltinTypeSymbol(COMPLEX, Complex)
 BOOL_BUILTIN = BuiltinTypeSymbol(BOOL, Bool)
-BYTES_BUILTIN = BuiltinTypeSymbol(BYTES, Bytes)
 STR_BUILTIN = BuiltinTypeSymbol(STR, Str)
 STRUCT_BUILTIN = BuiltinTypeSymbol(STRUCT, Str)
-ARRAY_BUILTIN = BuiltinTypeSymbol(ARRAY, Array)
 LIST_BUILTIN = BuiltinTypeSymbol(LIST, List)
+TUPLE_BUILTIN = BuiltinTypeSymbol(TUPLE, Tuple)
 DICT_BUILTIN = BuiltinTypeSymbol(DICT, Dict)
 ENUM_BUILTIN = BuiltinTypeSymbol(ENUM, Enum)
 FUNC_BUILTIN = BuiltinTypeSymbol(FUNC, Func)
@@ -145,11 +144,10 @@ class NodeVisitor(object):
         self.define(FLOAT, FLOAT_BUILTIN)
         self.define(COMPLEX, COMPLEX_BUILTIN)
         self.define(BOOL, BOOL_BUILTIN)
-        self.define(BYTES, BYTES_BUILTIN)
         self.define(STR, STR_BUILTIN)
         self.define(STRUCT, STRUCT_BUILTIN)
-        self.define(ARRAY, ARRAY_BUILTIN)
         self.define(LIST, LIST_BUILTIN)
+        self.define(TUPLE, TUPLE_BUILTIN)
         self.define(DICT, DICT_BUILTIN)
         self.define(ENUM, ENUM_BUILTIN)
         self.define(FUNC, FUNC_BUILTIN)
@@ -230,10 +228,8 @@ class NodeVisitor(object):
             return self.search_scopes(STR)
         if isinstance(value, bool):
             return self.search_scopes(BOOL)
-        if isinstance(value, bytes):
-            return self.search_scopes(BYTES)
         if isinstance(value, list):
-            return self.search_scopes(LIST)
+            return self.search_scopes(TUPLE)
         if isinstance(value, dict):
             return self.search_scopes(DICT)
         if isinstance(value, Enum):

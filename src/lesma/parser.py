@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from lesma.ast import *
 from lesma.grammar import *
-from lesma.compiler.operations import user_operators
 from lesma.compiler.__init__ import type_map
 
 
@@ -101,7 +100,7 @@ class Parser(object):
         name = self.next_token()
         self.user_types.append(name.value)
         self.eat_value(ASSIGN)
-        return AliasDeclaration(name.value, (self.type_spec(),), self.line_num)
+        return AliasDeclaration(name.value, self.type_spec(), self.line_num)
 
     def function_declaration(self):
         op_func = False
@@ -163,11 +162,10 @@ class Parser(object):
         if op_func:
             if len(params) not in (1, 2):  # TODO: move this to type checker
                 raise SyntaxError("Operators can either be unary or binary, and the number of parameters do not match")
-
+            
+            name.value = 'operator' + '.' + name.value
             for param in params:
-                name.value += "/" + str(type_map[str(params[param].value)])
-
-            user_operators.append(name.value)
+                name.value += '.' + str(type_map[str(params[param].value)])
 
         return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 
@@ -212,7 +210,7 @@ class Parser(object):
         if token.value == LCURLYBRACKET:
             return self.curly_bracket_expression(token)
         elif token.value == LPAREN:
-            return self.list_expression(token)
+            return self.tuple_expression(token)
 
         return self.square_bracket_expression(token)
 
@@ -339,7 +337,7 @@ class Parser(object):
                 else:
                     break
             self.eat_value(RSQUAREBRACKET)
-            return Collection(ARRAY, self.line_num, False, *items)
+            return Collection(LIST, self.line_num, False, *items)
         elif self.current_token.type == TYPE:
             type_token = self.next_token()
             if self.current_token.value == COMMA:
@@ -356,12 +354,15 @@ class Parser(object):
                 access = self.access_collection(token, tok)
                 if self.current_token.value in ASSIGNMENT_OP:
                     op = self.current_token
-                    self.next_token()
-                    right = self.expr()
-                    if op.value == ASSIGN:
-                        return Assign(access, op.value, right, self.line_num)
+                    if op.value in INCREMENTAL_ASSIGNMENT_OP:
+                        return IncrementAssign(access, op.value, self.line_num)
+                    else:
+                        self.next_token()
+                        right = self.expr()
+                        if op.value == ASSIGN:
+                            return Assign(access, op.value, right, self.line_num)
 
-                    return OpAssign(access, op.value, right, self.line_num)
+                        return OpAssign(access, op.value, right, self.line_num)
                 return access
         elif token.type == NAME:
             self.eat_value(LSQUAREBRACKET)
@@ -402,7 +403,7 @@ class Parser(object):
         else:
             raise SyntaxError('Wait... what?')
 
-    def list_expression(self, token):
+    def tuple_expression(self, token):
         if token.value == LPAREN:
             items = []
             while self.current_token.value != RPAREN:
@@ -412,7 +413,7 @@ class Parser(object):
                 else:
                     break
             self.eat_value(RPAREN)
-            return Collection(LIST, self.line_num, False, *items)
+            return Collection(TUPLE, self.line_num, False, *items)
 
     def collection_expression(self, token, type_token):
         if self.current_token.value == ASSIGN:
@@ -485,6 +486,8 @@ class Parser(object):
         elif token.value in ARITHMETIC_ASSIGNMENT_OP:
             right = self.expr()
             node = OpAssign(left, token.value, right, self.line_num)
+        elif token.value in INCREMENTAL_ASSIGNMENT_OP:
+            node = IncrementAssign(left, token.value, self.line_num)
         else:
             raise SyntaxError('Unknown assignment operator: {}'.format(token.value))
         return node
@@ -587,9 +590,11 @@ class Parser(object):
         if token.value == ASSIGN:
             right = self.expr()
             node = Assign(left, token.value, right, self.line_num)
-        # elif token.value in ARITHMETIC_ASSIGNMENT_OP:
-        #     right = self.expr()
-        #     node = OpAssign(left, token.value, right, self.line_num)
+        elif token.value in ARITHMETIC_ASSIGNMENT_OP:
+            right = self.expr()
+            node = OpAssign(left, token.value, right, self.line_num)
+        elif token.value in INCREMENTAL_ASSIGNMENT_OP:
+            node = IncrementAssign(left, token.value, self.line_num)
         elif token.value == COLON:
             type_node = self.type_spec()
 

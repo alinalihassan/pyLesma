@@ -12,17 +12,28 @@ float_types = ('float', 'double')
 false = ir.Constant(type_map[BOOL], 0)
 true = ir.Constant(type_map[BOOL], 1)
 
-user_operators = []
 
+def hasFunction(compiler, func_name):
+    for func in compiler.module.functions:
+        if func.name == func_name:
+            return True
 
 def userdef_unary_str(op, expr):
-    return op + "/" + str(expr.type)
+    return 'operator' + '.' + op + '.' + str(expr.type)
+
+
+# Hacky way of checking if it's an expression or type
+def userdef_binary_str(op, left, right):
+    try:
+        return 'operator' + '.' + op + '.' + str(left.type) + '.' + str(right.type)
+    except Exception:
+        return 'operator' + '.' + op + '.' + str(left.type) + '.' + str(right)
 
 
 def unary_op(compiler, node):
     op = node.op
     expr = compiler.visit(node.expr)
-    if userdef_unary_str(op, expr) in user_operators:
+    if hasFunction(compiler, userdef_unary_str(op, expr)):
         return compiler.builder.call(compiler.module.get_global(userdef_unary_str(op, expr)),
                                      [expr], "unop")
     elif op == MINUS:
@@ -38,19 +49,11 @@ def unary_op(compiler, node):
             return compiler.builder.not_(expr)
 
 
-# Hacky way of checking if it's an expression or type
-def userdef_binary_str(op, left, right):
-    try:
-        return op + "/" + str(left.type) + "/" + str(right.type)
-    except Exception:
-        return op + "/" + str(left.type) + "/" + str(right)
-
-
 def binary_op(compiler, node):
     op = node.op
     left = compiler.visit(node.left)
     right = compiler.visit(node.right)
-    if userdef_binary_str(op, left, right) in user_operators:
+    if hasFunction(compiler, userdef_binary_str(op, left, right)):
         return compiler.builder.call(compiler.module.get_global(userdef_binary_str(op, left, right)),
                                      (left, right), "binop")
     elif op == CAST:
@@ -76,7 +79,6 @@ def is_ops(compiler, op, left, right, node):
 
 def int_ops(compiler, op, left, right, node):
     # Cast values if they're different but compatible
-    print(op)
     if str(left.type) in int_types and \
        str(right.type) in int_types and \
        str(left.type) != str(right.type):
@@ -94,12 +96,18 @@ def int_ops(compiler, op, left, right, node):
     elif op == MUL:
         return compiler.builder.mul(left, right, 'multmp')
     elif op == FLOORDIV:
-        return compiler.builder.sdiv(left, right, 'divtmp')
+        if left.type.signed:
+            return compiler.builder.sdiv(left, right, 'divtmp')
+        else:
+            return compiler.builder.udiv(left, right, 'divtmp')
     elif op == DIV:
-        return (compiler.builder.fdiv(compiler.builder.sitofp(left, type_map[DOUBLE]),
-                                      compiler.builder.sitofp(right, type_map[DOUBLE]), 'fdivtmp'))
+        return (compiler.builder.fdiv(cast_ops(compiler, left, type_map[DOUBLE], node),
+                                      cast_ops(compiler, right, type_map[DOUBLE], node), 'fdivtmp'))
     elif op == MOD:
-        return compiler.builder.srem(left, right, 'modtmp')
+        if left.type.signed:
+            return compiler.builder.srem(left, right, 'modtmp')
+        else:
+            return compiler.builder.urem(left, right, 'modtmp')
     elif op == POWER:
         temp = compiler.builder.alloca(type_map[INT])
         compiler.builder.store(left, temp)
@@ -121,7 +129,7 @@ def int_ops(compiler, op, left, right, node):
         return compiler.builder.lshr(left, right)
     elif op in (EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
         cmp_res = compiler.builder.icmp_signed(op, left, right, 'cmptmp')
-        return compiler.builder.sitofp(cmp_res, type_map[BOOL], 'booltmp')
+        return compiler.builder.uitofp(cmp_res, type_map[BOOL], 'booltmp')
     else:
         raise SyntaxError('Unknown binary operator', node.op)
 
@@ -145,8 +153,8 @@ def float_ops(compiler, op, left, right, node):
     elif op == MUL:
         return compiler.builder.fmul(left, right, 'fmultmp')
     elif op == FLOORDIV:
-        return (compiler.builder.sdiv(compiler.builder.fptosi(left, ir.IntType(64)),
-                                      compiler.builder.fptosi(right, ir.IntType(64)), 'ffloordivtmp'))
+        return (compiler.builder.sdiv(cast_ops(compiler, left, ir.IntType(64), node),
+                                      cast_ops(compiler, right, ir.IntType(64), node), 'ffloordivtmp'))
     elif op == DIV:
         return compiler.builder.fdiv(left, right, 'fdivtmp')
     elif op == MOD:
@@ -160,7 +168,7 @@ def float_ops(compiler, op, left, right, node):
         return compiler.builder.load(temp)
     elif op in (EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
         cmp_res = compiler.builder.fcmp_ordered(op, left, right, 'cmptmp')
-        return compiler.builder.sitofp(cmp_res, type_map[BOOL], 'booltmp')
+        return compiler.builder.uitofp(cmp_res, type_map[BOOL], 'booltmp')
     else:
         raise SyntaxError('Unknown binary operator', node.op)
 
@@ -173,10 +181,10 @@ def cast_ops(compiler, left, right, node):
        orig_type in int_types and \
        cast_type == orig_type:
         left.type.signed = right.signed
-        return
+        return left
 
     elif orig_type == cast_type:  # cast to the same type
-        return
+        return left
 
     elif cast_type in int_types:  # int
         if orig_type in float_types:  # from float
@@ -188,7 +196,10 @@ def cast_ops(compiler, left, right, node):
             width_cast = int(cast_type.split("i")[1])
             width_orig = int(orig_type.split("i")[1])
             if width_cast > width_orig:
-                return compiler.builder.sext(left, llvm_type_map[cast_type])
+                if left.type.signed:
+                    return compiler.builder.sext(left, llvm_type_map[cast_type])
+                else:
+                    return compiler.builder.zext(left, llvm_type_map[cast_type])
             elif width_orig > width_cast:
                 return compiler.builder.trunc(left, llvm_type_map[cast_type])
 
@@ -207,7 +218,7 @@ def cast_ops(compiler, left, right, node):
     elif cast_type == STR:
         raise NotImplementedError
 
-    elif cast_type in (ANY, FUNC, ENUM, DICT, LIST):
+    elif cast_type in (ANY, FUNC, ENUM, DICT, TUPLE):
         raise TypeError('file={} line={}: Cannot cast from {} to type {}'.format(
             compiler.file_name,
             node.line_num,

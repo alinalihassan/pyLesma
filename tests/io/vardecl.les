@@ -6,7 +6,6 @@ a5: int64 = 5
 a6: int128 = 6
 a7: double = 6.5
 a8: float = 7.69
-a9: str = "Test"
 a10: bool = true
 
 x: int = 5

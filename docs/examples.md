@@ -22,8 +22,8 @@ number+=5 # Operating Assignment
 
 question = 'what\'s going on' # Escaping
 
-things = [1, 2, 3] # Array, homogeneous
-other_things = (1, 'Hello') # List, non-homogeneous
+things = [1, 2, 3] # List, homogeneous
+other_things = (1, 'Hello') # Tuple, non-homogeneous
 stuff = {'first_name': 'Samus', 'last_name': 'Aran'} # Dictionary
 other_stuff: int[] = [] # Empty Array of Ints
 

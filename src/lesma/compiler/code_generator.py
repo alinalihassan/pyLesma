@@ -22,7 +22,7 @@ class CodeGenerator(NodeVisitor):
         self.module = ir.Module()
         self.builder = None
         self._add_builtins()
-        func_ty = ir.FunctionType(ir.VoidType(), [])
+        func_ty = ir.FunctionType(ir.VoidType(), [type_map[INT32], type_map[INT8].as_pointer().as_pointer()])
         func = ir.Function(self.module, func_ty, 'main')
         entry_block = func.append_basic_block('entry')
         exit_block = func.append_basic_block('exit')
@@ -38,6 +38,11 @@ class CodeGenerator(NodeVisitor):
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
         self.anon_counter = 0
+
+        # Add argv and argc to main
+        for i in range(2):
+            func.args[i].name = '.argc' if i == 0 else '.argv'
+            self.alloc_define_store(func.args[i], func.args[i].name[1:], func.args[i].type)
 
     def __str__(self):
         return str(self.module)
@@ -63,7 +68,7 @@ class CodeGenerator(NodeVisitor):
 
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
-        return self.funcdecl('anon{}'.format(self.anon_counter), node)
+        return self.funcdecl('anon_func.{}'.format(self.anon_counter), node)
 
     def visit_funcdecl(self, node):
         self.funcdecl(node.name, node)
@@ -107,7 +112,7 @@ class CodeGenerator(NodeVisitor):
                             raise TypeError('got multiple values for argument(s) {}'.format(set(node.named_arguments.keys()) & set(args_supplied)))
                         args.append(self.visit(func_type.parameter_defaults[arg]))
                 args_supplied.append(arg)
-        elif len(node.arguments) + len(node.named_arguments) > len(func_type.args):
+        elif len(node.arguments) + len(node.named_arguments) > len(func_type.args) and func_type.var_arg is None:
             raise SyntaxError('Unexpected arguments')
         else:
             args = [self.visit(arg) for arg in node.arguments]
@@ -125,15 +130,57 @@ class CodeGenerator(NodeVisitor):
         fields = []
         for field in node.fields.values():
             if field.value == STR:
-                fields.append(str)
+                raise NotImplementedError
             else:
                 fields.append(type_map[field.value])
-        struct = ir.LiteralStructType(fields)
+
+        struct = self.module.context.get_identified_type(node.name)
         struct.fields = [field for field in node.fields.keys()]
+        struct.name = 'struct.' + node.name
+        struct.set_body([field for field in fields])
         self.define(node.name, struct)
 
     def visit_typedeclaration(self, node):
         raise NotImplementedError
+    
+    def visit_incrementassign(self, node):
+        collection_access = None
+        key = None
+        if isinstance(node.left, CollectionAccess):
+            collection_access = True
+            var_name = self.search_scopes(node.left.collection.value)
+            key = self.const(node.left.key.value)
+            var = self.call('dyn_array_get', [var_name, key])
+            pointee = var.type
+        else:
+            var_name = node.left.value
+            var = self.load(var_name)
+            pointee = self.search_scopes(var_name).type.pointee
+        op = node.op
+        temp = ir.Constant(var.type, 1)
+        
+        if isinstance(pointee, ir.IntType):
+            if op == PLUS_PLUS:
+                res = self.builder.add(var, temp)
+            elif op == MINUS_MINUS:
+                res = self.builder.sub(var, temp)
+        elif isinstance(pointee, ir.DoubleType) or isinstance(pointee, ir.FloatType):
+            if op == PLUS_PLUS:
+                res = self.builder.fadd(var, temp)
+            elif op == MINUS_MINUS:
+                res = self.builder.fsub(var, temp)
+        else:
+            raise NotImplementedError()
+
+        if collection_access:
+            self.call('dyn_array_set', [var_name, key, res])
+        else:
+            self.store(res, var_name)
+
+
+    def visit_aliasdeclaration(self, node):
+        type_map[node.name] = type_map[node.collection.value]
+        return ALIAS
 
     def visit_vardecl(self, node):
         var_addr = self.allocate(type_map[node.type.value], name=node.value.value)
@@ -315,10 +362,7 @@ class CodeGenerator(NodeVisitor):
                 var_name = node.left.value.value
                 var_type = type_map[node.left.type.value]
                 casted_value = cast_ops(self, var, var_type, node)
-                if casted_value is not None:
-                    self.alloc_define_store(casted_value, var_name, var_type)
-                else:
-                    self.alloc_define_store(var, var_name, var_type)
+                self.alloc_define_store(casted_value, var_name, var_type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
@@ -349,13 +393,16 @@ class CodeGenerator(NodeVisitor):
     def struct_assign(self, node):
         struct_type = self.search_scopes(node.left.type.value)
         name = node.left.value.value
+        struct = self.builder.alloca(struct_type, name=name)
+
         fields = []
         for field in node.right.fields.values():
             fields.append(self.visit(field))
-        struct = struct_type(fields)
-        struct_ptr = self.alloc_and_store(struct, struct_type, name=name)
-        struct_ptr.struct_name = node.left.type.value
-        self.define(name, struct_ptr)
+            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields)-1, width=INT32)], inbounds=True)
+            self.builder.store(fields[len(fields)-1], elem)
+            
+        struct.struct_name = node.left.type.value
+        self.define(name, struct)
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
@@ -377,20 +424,35 @@ class CodeGenerator(NodeVisitor):
             var = self.load(var_name)
             pointee = self.search_scopes(var_name).type.pointee
         op = node.op
+        right = cast_ops(self, right, var.type, node)
         if isinstance(pointee, ir.IntType):
             if op == PLUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.add(var, right)
             elif op == MINUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.sub(var, right)
             elif op == MUL_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.mul(var, right)
             elif op == FLOORDIV_ASSIGN:
-                res = self.builder.sdiv(var, right)
+                # We convert a lot in case that right operand is float
+                temp = cast_ops(self, var, ir.DoubleType(), node)
+                temp_right = cast_ops(self, right, ir.DoubleType(), node)
+                temp = self.builder.fdiv(temp, temp_right)
+                res = cast_ops(self, temp, var.type, node)
             elif op == DIV_ASSIGN:
-                res = self.builder.fdiv(var, right)
+                right = cast_ops(self, right, var.type, node)
+                res = self.builder.sdiv(var, right)
             elif op == MOD_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.srem(var, right)
             elif op == POWER_ASSIGN:
+                if not isinstance(node.right.value, int):
+                    error('Cannot use non-integers for power coeficient') 
+                    # TODO: Send me to typechecker and check for binop as well
+                
+                right = cast_ops(self, right, var.type, node)
                 temp = self.alloc_and_store(var, type_map[INT])
                 for _ in range(node.right.value - 1):
                     res = self.builder.mul(self.load(temp), var)
@@ -398,20 +460,27 @@ class CodeGenerator(NodeVisitor):
                 res = self.load(temp)
             else:
                 raise NotImplementedError()
-        else:
+        elif isinstance(pointee, ir.DoubleType) or isinstance(pointee, ir.FloatType):
             if op == PLUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fadd(var, right)
             elif op == MINUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fsub(var, right)
             elif op == MUL_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fmul(var, right)
             elif op == FLOORDIV_ASSIGN:
-                res = self.builder.sdiv(self.builder.fptosi(var, ir.IntType(64)), self.builder.fptosi(right, ir.IntType(64)))
+                right = cast_ops(self, right, var.type, node)
+                res = self.builder.fdiv(var, right)
             elif op == DIV_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fdiv(var, right)
             elif op == MOD_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.frem(var, right)
             elif op == POWER_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 temp = self.alloc_and_store(var, type_map[DOUBLE])
                 for _ in range(node.right.value - 1):
                     res = self.builder.fmul(self.load(temp), var)
@@ -419,6 +488,8 @@ class CodeGenerator(NodeVisitor):
                 res = self.load(temp)
             else:
                 raise NotImplementedError()
+        else:
+            raise NotImplementedError()
 
         if collection_access:
             self.call('dyn_array_set', [var_name, key, res])
@@ -437,10 +508,10 @@ class CodeGenerator(NodeVisitor):
         elements = []
         for item in node.items:
             elements.append(self.visit(item))
-        if node.type == ARRAY:
+        if node.type == LIST:
             return self.define_array(node, elements)
-        elif node.type == LIST:
-            return self.define_list(node, elements)
+        elif node.type == TUPLE:
+            return self.define_tuple(node, elements)
         else:
             raise NotImplementedError
 
@@ -463,7 +534,7 @@ class CodeGenerator(NodeVisitor):
         self.call('dyn_array_init', [array])
         return array
 
-    def define_list(self, node, elements):
+    def define_tuple(self, node, elements):
         raise NotImplementedError
 
     def visit_hashmap(self, node):
@@ -546,18 +617,15 @@ class CodeGenerator(NodeVisitor):
         percent_ptr_gep = self.builder.bitcast(percent_ptr_gep, type_map[INT8].as_pointer())
         return self.call('scanf', [percent_ptr_gep, self.allocate(type_map[INT])])
 
-    # noinspection PyUnusedLocal
     def start_function(self, name, return_type, parameters, parameter_defaults=None, varargs=None):
         self.function_stack.append(self.current_function)
         self.block_stack.append(self.builder.block)
         self.new_scope()
         ret_type = type_map[return_type.value]
         args = [type_map[param.value] for param in parameters.values()]
-        arg_keys = parameters.keys()
-        func_type = ir.FunctionType(ret_type, args)
+        func_type = ir.FunctionType(ret_type, args, varargs)
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
-        func_type.arg_order = arg_keys
         if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
             func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
