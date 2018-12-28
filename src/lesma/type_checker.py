@@ -299,7 +299,7 @@ class Preprocessor(NodeVisitor):
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults))
         self.new_scope()
         if node.varargs:
-            varargs_type = self.search_scopes(ARRAY)
+            varargs_type = self.search_scopes(LIST)
             varargs_type.type = node.varargs[1].value
             varargs = CollectionSymbol(node.varargs[0], varargs_type, self.search_scopes(node.varargs[1].value))
             varargs.val_assigned = True
@@ -423,11 +423,11 @@ class Preprocessor(NodeVisitor):
             types.append(self.visit(item))
         if types[1:] == types[:-1]:
             if not types:
-                return self.search_scopes(ARRAY), self.search_scopes(ANY)
+                return self.search_scopes(LIST), self.search_scopes(ANY)
 
-            return self.search_scopes(ARRAY), types[0]
+            return self.search_scopes(LIST), types[0]
 
-        return self.search_scopes(LIST), self.search_scopes(ANY)
+        return self.search_scopes(TUPLE), self.search_scopes(ANY)
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
@@ -448,7 +448,7 @@ class Preprocessor(NodeVisitor):
             key = self.infer_type(node.key.value)
         else:
             key = self.visit(node.key)
-        if collection.type is self.search_scopes(ARRAY) or collection.type is self.search_scopes(LIST) or collection.type is self.search_scopes(SET):
+        if collection.type is self.search_scopes(LIST) or collection.type is self.search_scopes(TUPLE) or collection.type is self.search_scopes(SET):
             if key is not self.search_scopes(INT) and key.type is not self.search_scopes(INT):
                 error('file={} line={}: Something something error... huh? (fix this message)'.format(self.file_name, node.line_num))
             return collection.item_types

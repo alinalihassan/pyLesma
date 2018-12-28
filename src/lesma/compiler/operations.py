@@ -212,7 +212,7 @@ def cast_ops(compiler, left, right, node):
     elif cast_type == STR:
         raise NotImplementedError
 
-    elif cast_type in (ANY, FUNC, ENUM, DICT, LIST):
+    elif cast_type in (ANY, FUNC, ENUM, DICT, TUPLE):
         raise TypeError('file={} line={}: Cannot cast from {} to type {}'.format(
             compiler.file_name,
             node.line_num,

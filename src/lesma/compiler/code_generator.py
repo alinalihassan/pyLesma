@@ -453,10 +453,10 @@ class CodeGenerator(NodeVisitor):
         elements = []
         for item in node.items:
             elements.append(self.visit(item))
-        if node.type == ARRAY:
+        if node.type == LIST:
             return self.define_array(node, elements)
-        elif node.type == LIST:
-            return self.define_list(node, elements)
+        elif node.type == TUPLE:
+            return self.define_tuple(node, elements)
         else:
             raise NotImplementedError
 
@@ -479,7 +479,7 @@ class CodeGenerator(NodeVisitor):
         self.call('dyn_array_init', [array])
         return array
 
-    def define_list(self, node, elements):
+    def define_tuple(self, node, elements):
         raise NotImplementedError
 
     def visit_hashmap(self, node):

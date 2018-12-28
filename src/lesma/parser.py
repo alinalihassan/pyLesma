@@ -210,7 +210,7 @@ class Parser(object):
         if token.value == LCURLYBRACKET:
             return self.curly_bracket_expression(token)
         elif token.value == LPAREN:
-            return self.list_expression(token)
+            return self.tuple_expression(token)
 
         return self.square_bracket_expression(token)
 
@@ -337,7 +337,7 @@ class Parser(object):
                 else:
                     break
             self.eat_value(RSQUAREBRACKET)
-            return Collection(ARRAY, self.line_num, False, *items)
+            return Collection(LIST, self.line_num, False, *items)
         elif self.current_token.type == TYPE:
             type_token = self.next_token()
             if self.current_token.value == COMMA:
@@ -400,7 +400,7 @@ class Parser(object):
         else:
             raise SyntaxError('Wait... what?')
 
-    def list_expression(self, token):
+    def tuple_expression(self, token):
         if token.value == LPAREN:
             items = []
             while self.current_token.value != RPAREN:
@@ -410,7 +410,7 @@ class Parser(object):
                 else:
                     break
             self.eat_value(RPAREN)
-            return Collection(LIST, self.line_num, False, *items)
+            return Collection(TUPLE, self.line_num, False, *items)
 
     def collection_expression(self, token, type_token):
         if self.current_token.value == ASSIGN:

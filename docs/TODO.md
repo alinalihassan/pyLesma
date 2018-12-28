@@ -3,7 +3,7 @@
 ## Fixes
 - [x] Fix **break** and **continue** not branching if the parent block is not the loop
 - [x] Fix constant declaration not allowing types
-- [ ] Fix Type declaration not expecting square brackets (for arrays)
+- [ ] Fix Type declaration not expecting square brackets (for lists)
 - [ ] Fix input function
 - [x] Should not allow declaring the type to an existing variable
 - [ ] Fix not being able to return user-defined structs and classes
@@ -13,7 +13,7 @@
 - [ ] Fix string and list type declaration not working
 
 ## Improvements
-- [ ] Allow any type for arrays (currently only int)
+- [ ] Allow any type for lists/tuples (currently only int)
 - [ ] Allow any type for range (currently only int)
 - [x] Allow any type for casting
 - [x] Change casting syntax
@@ -26,9 +26,9 @@
 
 ## Features
 - [ ] Implement Null (maybe)
-- [ ] Implement List
+- [ ] Implement Tuples
 - [ ] Implement Dictionary
-- [ ] Implement Empty arrays
+- [ ] Implement Empty lists
 - [ ] Implement 'in' as a boolean result
 - [ ] Implement anonymous functions
 - [x] Implement alias
