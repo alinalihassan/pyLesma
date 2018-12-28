@@ -23,6 +23,7 @@
 - [ ] Add docs for as and is
 - [ ] Remove clang as a dependency
 - [x] Change from anonymous structs to identified (to allow proper struct types)
+- [ ] Move error messages from source files to typechecker
 
 ## Features
 - [ ] Implement Null (maybe)

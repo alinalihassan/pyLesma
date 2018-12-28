@@ -73,6 +73,21 @@ class CodeGenerator(NodeVisitor):
     def visit_funcdecl(self, node):
         self.funcdecl(node.name, node)
 
+    def visit_externfuncdecl(self, node):
+        self.externfuncdecl(node.name, node)
+
+    def externfuncdecl(self, name, node):
+        return_type = node.return_type
+        parameters = node.parameters
+        varargs = node.varargs
+        ret_type = type_map[return_type.value]
+        args = [type_map[param.value] for param in parameters.values()]
+        func_type = ir.FunctionType(ret_type, args, varargs)
+        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
+            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
+        func = ir.Function(self.module, func_type, name)
+        self.define(name, func, 1)
+
     def funcdecl(self, name, node):
         self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
         for i, arg in enumerate(self.current_function.args):

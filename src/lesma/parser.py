@@ -2,7 +2,7 @@ from collections import OrderedDict
 from lesma.ast import *
 from lesma.grammar import *
 from lesma.compiler.__init__ import type_map
-
+from lesma.utils import error
 
 class Parser(object):
     def __init__(self, lexer):
@@ -104,12 +104,17 @@ class Parser(object):
 
     def function_declaration(self):
         op_func = False
+        extern_func = False
         self.eat_value(DEF)
         if self.current_token.value == LPAREN:
             name = ANON
         elif self.current_token.value == OPERATOR:
             self.eat_value(OPERATOR)
             op_func = True
+            name = self.next_token()
+        elif self.current_token.value == EXTERN:
+            self.eat_value(EXTERN)
+            extern_func = True
             name = self.next_token()
         else:
             name = self.next_token()
@@ -129,6 +134,8 @@ class Parser(object):
             params[param_name] = param_type
             if self.current_token.value != RPAREN:
                 if self.current_token.value == ASSIGN:
+                    if extern_func:
+                        error("Extern functions cannot have defaults")
                     self.eat_value(ASSIGN)
                     param_defaults[param_name] = self.expr()
                 if self.current_token.value == ELLIPSIS:
@@ -153,6 +160,9 @@ class Parser(object):
             else:
                 return_type = self.type_spec()
 
+        if extern_func:
+            return ExternFuncDecl(name.value, return_type, params, self.line_num, vararg)
+
         self.eat_type(NEWLINE)
         self.indent_level += 1
         stmts = self.compound_statement()
@@ -161,7 +171,7 @@ class Parser(object):
             return AnonymousFunc(return_type, params, stmts, self.line_num, param_defaults, vararg)
         if op_func:
             if len(params) not in (1, 2):  # TODO: move this to type checker
-                raise SyntaxError("Operators can either be unary or binary, and the number of parameters do not match")
+                error("Operators can either be unary or binary, and the number of parameters do not match")
             
             name.value = 'operator' + '.' + name.value
             for param in params:

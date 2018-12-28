@@ -302,6 +302,38 @@ class Preprocessor(NodeVisitor):
         typ = AliasSymbol(node.name, node.collection.value)
         self.define(typ.name, typ)
     
+    def visit_externfuncdecl(self, node):
+        func_name = node.name
+        func_type = self.search_scopes(node.return_type.value)
+        if func_type and func_type.name == FUNC:
+            func_type.return_type = self.visit(node.return_type.func_ret_type)
+        self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, None))
+
+        if node.varargs:
+            varargs_type = self.search_scopes(LIST)
+            varargs_type.type = node.varargs[1].value
+            varargs = CollectionSymbol(node.varargs[0], varargs_type, self.search_scopes(node.varargs[1].value))
+            varargs.val_assigned = True
+            self.define(varargs.name, varargs)
+        for k, v in node.parameters.items():
+            var_type = self.search_scopes(v.value)
+            if var_type is self.search_scopes(FUNC):
+                sym = FuncSymbol(k, v.func_ret_type, None, None)
+            elif isinstance(var_type, AliasSymbol):
+                var_type.accessed = True
+                if var_type.type is self.search_scopes(FUNC):
+                    sym = FuncSymbol(k, var_type.type.return_type, None, None)
+                else:
+                    raise NotImplementedError
+            else:
+                sym = VarSymbol(k, var_type)
+            sym.val_assigned = True
+            self.define(sym.name, sym)
+
+        func_symbol = FuncSymbol(func_name, func_type, node.parameters, None)
+        self.define(func_name, func_symbol, 1)
+        self.drop_top_scope()
+
 
     def visit_funcdecl(self, node):
         func_name = node.name

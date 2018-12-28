@@ -94,6 +94,7 @@ SWITCH = 'switch'
 CASE = 'case'
 DEFAULT = 'default'
 OPERATOR = 'operator'
+EXTERN = 'extern'
 DEF = 'def'
 CONST = 'const'
 NEW = 'new'  # TODO
