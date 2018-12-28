@@ -585,9 +585,9 @@ class Parser(object):
         if token.value == ASSIGN:
             right = self.expr()
             node = Assign(left, token.value, right, self.line_num)
-        # elif token.value in ARITHMETIC_ASSIGNMENT_OP:
-        #     right = self.expr()
-        #     node = OpAssign(left, token.value, right, self.line_num)
+        elif token.value in ARITHMETIC_ASSIGNMENT_OP:
+            right = self.expr()
+            node = OpAssign(left, token.value, right, self.line_num)
         elif token.value == COLON:
             type_node = self.type_spec()
 

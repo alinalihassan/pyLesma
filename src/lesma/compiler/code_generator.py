@@ -328,10 +328,7 @@ class CodeGenerator(NodeVisitor):
                 var_name = node.left.value.value
                 var_type = type_map[node.left.type.value]
                 casted_value = cast_ops(self, var, var_type, node)
-                if casted_value is not None:
-                    self.alloc_define_store(casted_value, var_name, var_type)
-                else:
-                    self.alloc_define_store(var, var_name, var_type)
+                self.alloc_define_store(casted_value, var_name, var_type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
@@ -393,20 +390,35 @@ class CodeGenerator(NodeVisitor):
             var = self.load(var_name)
             pointee = self.search_scopes(var_name).type.pointee
         op = node.op
+        right = cast_ops(self, right, var.type, node)
         if isinstance(pointee, ir.IntType):
             if op == PLUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.add(var, right)
             elif op == MINUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.sub(var, right)
             elif op == MUL_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.mul(var, right)
             elif op == FLOORDIV_ASSIGN:
-                res = self.builder.sdiv(var, right)
+                # We convert a lot in case that right operand is float
+                temp = cast_ops(self, var, ir.DoubleType(), node)
+                temp_right = cast_ops(self, right, ir.DoubleType(), node)
+                temp = self.builder.fdiv(temp, temp_right)
+                res = cast_ops(self, temp, var.type, node)
             elif op == DIV_ASSIGN:
-                res = self.builder.fdiv(var, right)
+                right = cast_ops(self, right, var.type, node)
+                res = self.builder.sdiv(var, right)
             elif op == MOD_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.srem(var, right)
             elif op == POWER_ASSIGN:
+                if not isinstance(node.right.value, int):
+                    error('Cannot use non-integers for power coeficient') 
+                    # TODO: Send me to typechecker and check for binop as well
+                
+                right = cast_ops(self, right, var.type, node)
                 temp = self.alloc_and_store(var, type_map[INT])
                 for _ in range(node.right.value - 1):
                     res = self.builder.mul(self.load(temp), var)
@@ -414,20 +426,27 @@ class CodeGenerator(NodeVisitor):
                 res = self.load(temp)
             else:
                 raise NotImplementedError()
-        else:
+        elif isinstance(pointee, ir.DoubleType) or isinstance(pointee, ir.FloatType):
             if op == PLUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fadd(var, right)
             elif op == MINUS_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fsub(var, right)
             elif op == MUL_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fmul(var, right)
             elif op == FLOORDIV_ASSIGN:
-                res = self.builder.sdiv(self.builder.fptosi(var, ir.IntType(64)), self.builder.fptosi(right, ir.IntType(64)))
+                right = cast_ops(self, right, var.type, node)
+                res = self.builder.fdiv(var, right)
             elif op == DIV_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.fdiv(var, right)
             elif op == MOD_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 res = self.builder.frem(var, right)
             elif op == POWER_ASSIGN:
+                right = cast_ops(self, right, var.type, node)
                 temp = self.alloc_and_store(var, type_map[DOUBLE])
                 for _ in range(node.right.value - 1):
                     res = self.builder.fmul(self.load(temp), var)
@@ -435,6 +454,8 @@ class CodeGenerator(NodeVisitor):
                 res = self.load(temp)
             else:
                 raise NotImplementedError()
+        else:
+            raise NotImplementedError()
 
         if collection_access:
             self.call('dyn_array_set', [var_name, key, res])

@@ -22,14 +22,15 @@ def flatten(container):
             yield i
 
 
+# TODO: Please improve me in a less hacky way
 def types_compatible(left_type, right_type):
     left_type = str(left_type)
     right_type = str(right_type)
-    int_type = ('i8', 'i16', 'i32', 'i64')
+    int_type = ('i8', 'i16', 'i32', 'i64', 'int8', 'int16', 'int32', 'int64', 'int')
     float_type = ('float', 'double')
+    num_type = int_type + float_type
     if (left_type is right_type) or \
-       (left_type in int_type and right_type in int_type) or \
-       (left_type in float_type and right_type in float_type):
+       (left_type in num_type and right_type in num_type):
         return True
 
     return False
@@ -213,7 +214,7 @@ class Preprocessor(NodeVisitor):
         # if left_type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
         # 	if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
         # 		return left_type
-        if right_type is left_type or left_type is any_type or right_type is any_type:
+        if types_compatible(left_type, right_type) or left_type is any_type or right_type is any_type:
             return left_type
         else:
             error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
