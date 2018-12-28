@@ -143,6 +143,40 @@ class CodeGenerator(NodeVisitor):
     def visit_typedeclaration(self, node):
         raise NotImplementedError
     
+    def visit_incrementassign(self, node):
+        collection_access = None
+        key = None
+        if isinstance(node.left, CollectionAccess):
+            collection_access = True
+            var_name = self.search_scopes(node.left.collection.value)
+            key = self.const(node.left.key.value)
+            var = self.call('dyn_array_get', [var_name, key])
+            pointee = var.type
+        else:
+            var_name = node.left.value
+            var = self.load(var_name)
+            pointee = self.search_scopes(var_name).type.pointee
+        op = node.op
+        temp = ir.Constant(var.type, 1)
+        
+        if isinstance(pointee, ir.IntType):
+            if op == PLUS_PLUS:
+                res = self.builder.add(var, temp)
+            elif op == MINUS_MINUS:
+                res = self.builder.sub(var, temp)
+        elif isinstance(pointee, ir.DoubleType) or isinstance(pointee, ir.FloatType):
+            if op == PLUS_PLUS:
+                res = self.builder.fadd(var, temp)
+            elif op == MINUS_MINUS:
+                res = self.builder.fsub(var, temp)
+        else:
+            raise NotImplementedError()
+
+        if collection_access:
+            self.call('dyn_array_set', [var_name, key, res])
+        else:
+            self.store(res, var_name)
+
 
     def visit_aliasdeclaration(self, node):
         type_map[node.name] = type_map[node.collection.value]

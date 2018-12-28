@@ -219,6 +219,17 @@ class Preprocessor(NodeVisitor):
         else:
             error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
 
+    def visit_incrementassign(self, node):
+        left = self.visit(node.left)
+        left_type = self.infer_type(left)
+        any_type = self.search_scopes(ANY)
+        if left_type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT), self.search_scopes(INT)) \
+           or left_type is any_type:
+            return left_type
+        else:
+            error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
+
+
     def visit_fieldassignment(self, node):
         obj = self.search_scopes(node.obj)
         return self.visit(obj.type.fields[node.field])

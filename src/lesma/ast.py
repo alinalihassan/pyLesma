@@ -141,6 +141,13 @@ class OpAssign(AST):
         self.line_num = line_num
 
 
+class IncrementAssign(AST):
+    def __init__(self, left, op, line_num):
+        self.left = left
+        self.op = op
+        self.line_num = line_num
+
+
 class If(AST):
     def __init__(self, op, comps, blocks, indent_level, line_num):
         self.op = op

@@ -354,12 +354,15 @@ class Parser(object):
                 access = self.access_collection(token, tok)
                 if self.current_token.value in ASSIGNMENT_OP:
                     op = self.current_token
-                    self.next_token()
-                    right = self.expr()
-                    if op.value == ASSIGN:
-                        return Assign(access, op.value, right, self.line_num)
+                    if op.value in INCREMENTAL_ASSIGNMENT_OP:
+                        return IncrementAssign(access, op.value, self.line_num)
+                    else:
+                        self.next_token()
+                        right = self.expr()
+                        if op.value == ASSIGN:
+                            return Assign(access, op.value, right, self.line_num)
 
-                    return OpAssign(access, op.value, right, self.line_num)
+                        return OpAssign(access, op.value, right, self.line_num)
                 return access
         elif token.type == NAME:
             self.eat_value(LSQUAREBRACKET)
@@ -483,6 +486,8 @@ class Parser(object):
         elif token.value in ARITHMETIC_ASSIGNMENT_OP:
             right = self.expr()
             node = OpAssign(left, token.value, right, self.line_num)
+        elif token.value in INCREMENTAL_ASSIGNMENT_OP:
+            node = IncrementAssign(left, token.value, self.line_num)
         else:
             raise SyntaxError('Unknown assignment operator: {}'.format(token.value))
         return node
@@ -588,6 +593,8 @@ class Parser(object):
         elif token.value in ARITHMETIC_ASSIGNMENT_OP:
             right = self.expr()
             node = OpAssign(left, token.value, right, self.line_num)
+        elif token.value in INCREMENTAL_ASSIGNMENT_OP:
+            node = IncrementAssign(left, token.value, self.line_num)
         elif token.value == COLON:
             type_node = self.type_spec()
 
