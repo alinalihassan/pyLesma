@@ -308,7 +308,7 @@ class Preprocessor(NodeVisitor):
         if func_type and func_type.name == FUNC:
             func_type.return_type = self.visit(node.return_type.func_ret_type)
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, None))
-
+        self.new_scope()
         if node.varargs:
             varargs_type = self.search_scopes(LIST)
             varargs_type.type = node.varargs[1].value

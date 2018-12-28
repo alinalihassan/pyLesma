@@ -156,6 +156,13 @@ def operator - (x: int, y:int) -> int  # Two parameters overloads binary operati
 def operator - (x: int) -> int  # One parameters overloads binary operations
 	return 0 - x + 1
 
+# Extern functions (FFI)
+neg_num: int32 = -5
+
+def extern abs(neg: int32) -> int32 # from C's stdlib
+
+print(abs(neg_num))
+
 
 enum Colors
 	GREEN
