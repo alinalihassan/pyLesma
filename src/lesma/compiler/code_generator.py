@@ -818,11 +818,27 @@ class CodeGenerator(NodeVisitor):
     def generate_code(self, node):
         return self.visit(node)
 
+    def add_debug_info(self, optimize, filename):
+        di_file = self.module.add_debug_info("DIFile", {
+            "filename": os.path.basename(os.path.abspath(filename)),
+            "directory": os.path.dirname(os.path.abspath(filename)),
+        })
+        di_module = self.module.add_debug_info("DICompileUnit", {
+            "language": ir.DIToken("DW_LANG_Python"),
+            "file": di_file,
+            "producer": "lesma",
+            "runtimeVersion": 1,
+            "isOptimized": optimize,
+        }, is_distinct=True)
+        # self.module.add_global(di_module)
+        self.module.add_named_metadata('debug_info', [di_file, di_module])
+
     def evaluate(self, optimize=True, ir_dump=False, timer=False):
         if ir_dump and not optimize:
             for func in self.module.functions:
                 if func.name == "main":
                     print(func)
+        
         llvmmod = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
@@ -846,6 +862,8 @@ class CodeGenerator(NodeVisitor):
         spinner = Spinner()
         spinner.startSpinner("Compiling")
         compile_time = time()
+
+        self.add_debug_info(optimize, filename)
         program_string = llvm.parse_assembly(str(self.module))
 
         prog_str = str(program_string)
