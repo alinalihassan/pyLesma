@@ -167,7 +167,9 @@ print(abs(-5))
 # Named parameters and defaults
 def optional_params(x: int, y: int32 = 5, z: double = 9) -> int
 	# Lesma takes care of casting the return type between "compatible" types
-	return x + z 
+	return x + z
+
+optional_params(5, z=11)
 
 # Enums
 enum Colors

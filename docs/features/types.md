@@ -2,24 +2,16 @@ Types are optional in Lesma, you can choose whether you specify them or not. Uns
 
 Operations between different types will either be casted to the larger type if the two types are compatible, or give an error otherwise. Two types are compatible if they are different sizes of the same group type (such as ints or floating points).
 
+The type must be either a user-defined alias, a struct or class, or a built-in type.
+
 !!! warning
 	Types that are not specified are inferred, this is fundamentally different to dynamic types!
 
-The type must be either a user-defined alias, struct or class, or a built-in type such as:
+---
 
-- `Any`
-- `Int`
-- `Double`
-- `Float`
-- `Str`
-- `Bool`
-- `List`
-- `Tuple`
-- `Dict`
-- `Range`
+## Built-in Types
 
-
-## Any
+### Any
 
 Any types can receive any kind of value, so it can receive any kind of value at any moment.
 
@@ -31,7 +23,7 @@ x = "Hey there"
 !!! warning
     Any not implemented yet!
 
-## Int
+### Int
 There are multiple types of ints available based on width and signed/unsigned. They can get a minimum of 8 bits width and a maximum of 128. If the width is not specified, it's by default 64.
   - Signed: `int`, `int8`, `int16`, `int32`, `int64`, `int128`
   - Unsigned: `uint`, `uint8`, `uint16`, `uint32`, `uint64`, `uint128`
@@ -45,21 +37,21 @@ large_num: int128 = 5
 !!! info
 	In Lesma, int and uint are by default 64 bits wide, and they will enlarge by themselves to 128 bits wide if needed. This is not the default behaviour if you specify the size yourself!
 
-## Float
+### Float
 Float is floating-point real number.
 
 ```py
 x: float = 0.5
 ```
 
-## Double
+### Double
 Double is double-precision floating-point real number.
 
 ```py
 x: double = 172312.41923
 ```
 
-## Str
+### Str
 Str is Lesma's implementation of strings/char lists. All Lesma strings support UTF-8.
 
 ```py
@@ -68,13 +60,13 @@ x = '🍌'
 x = '夜のコンサートは最高でした。'
 ```
 
-## Bool
+### Bool
 Bools occupy only 1 bit, and can be either `true` or `false`.
 ```py
 x: bool = true
 ```
 
-## List
+### List
 Lists are mutable by default, are declared using square paranthesis, have dynamic size, start from 0, and the members are accessed using the their index around square paranthesis.
 
 ```py
@@ -85,7 +77,7 @@ print(x[2])
 !!! warning
 	Lists currently only support integers, no other types!
 
-## Tuple
+### Tuple
 Tuples are like lists, but immutable, and declared using round paranthesis.
 
 ```py
@@ -96,7 +88,7 @@ print(x[0])
 !!! warning
 	Tuples are not yet implemented!
 
-## Dict
+### Dict
 Dictionaries are lists of key-value pairs (similar to hashmaps), and they're mutable
 
 ```py
@@ -108,7 +100,7 @@ print(x['first_name'])
 !!! warning
 	Dicts are not yet implemented!
 
-## Range
+### Range
 Ranges are similar to Python's ranges, defined using `start..end` kind of syntax, and they're especially used for loops
 
 ```py
@@ -118,3 +110,23 @@ for x in 0..100
 
 !!! warning
 	Ranges can not currently be assigned to variables
+
+----
+
+## Type Operations
+
+### Is
+`Is` binary operator checks if the left operand's type matches the right operand and returns a bool as a result
+
+```py
+x: int = 5
+print(x is int)
+```
+
+### As
+`As` binary operator casts the left operand to the right operand type and returns the casted value
+
+```py
+x: float = 5.5
+print(x as int) # Should print 5
+```

@@ -1,5 +1,5 @@
-- Whitespace is signifiant, indentation uses either Tabs or exactly 4 spaces
-- Flow control statements, structs, classes and functions require an indentation
+- Whitespace is signifiant, indentation uses either tabs or exactly 4 spaces
+- Flow control statements, structs, classes and functions require indentation
 - Lesma's Checker will report any invalid syntax or unrecommended behaviour, such incompatible types for operations, or unused variables.
 - `_` variable name is used as an ignored result, and is treated differently by the compiler (similar to golang)
 
