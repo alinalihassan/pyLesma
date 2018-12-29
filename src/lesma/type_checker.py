@@ -302,6 +302,38 @@ class Preprocessor(NodeVisitor):
         typ = AliasSymbol(node.name, node.collection.value)
         self.define(typ.name, typ)
     
+    def visit_externfuncdecl(self, node):
+        func_name = node.name
+        func_type = self.search_scopes(node.return_type.value)
+        if func_type and func_type.name == FUNC:
+            func_type.return_type = self.visit(node.return_type.func_ret_type)
+        self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, None))
+        self.new_scope()
+        if node.varargs:
+            varargs_type = self.search_scopes(LIST)
+            varargs_type.type = node.varargs[1].value
+            varargs = CollectionSymbol(node.varargs[0], varargs_type, self.search_scopes(node.varargs[1].value))
+            varargs.val_assigned = True
+            self.define(varargs.name, varargs)
+        for k, v in node.parameters.items():
+            var_type = self.search_scopes(v.value)
+            if var_type is self.search_scopes(FUNC):
+                sym = FuncSymbol(k, v.func_ret_type, None, None)
+            elif isinstance(var_type, AliasSymbol):
+                var_type.accessed = True
+                if var_type.type is self.search_scopes(FUNC):
+                    sym = FuncSymbol(k, var_type.type.return_type, None, None)
+                else:
+                    raise NotImplementedError
+            else:
+                sym = VarSymbol(k, var_type)
+            sym.val_assigned = True
+            self.define(sym.name, sym)
+
+        func_symbol = FuncSymbol(func_name, func_type, node.parameters, None)
+        self.define(func_name, func_symbol, 1)
+        self.drop_top_scope()
+
 
     def visit_funcdecl(self, node):
         func_name = node.name
@@ -336,7 +368,7 @@ class Preprocessor(NodeVisitor):
             self.return_flag = False
             for ret_type in return_types:
                 infered_type = self.infer_type(ret_type)
-                if infered_type is not func_type:
+                if infered_type is not func_type and not types_compatible(infered_type, func_type):
                     error('file={} line={}: The actual return type does not match the declared return type: {}'.format(self.file_name, node.line_num, func_name))
         elif func_type is not None:
             error('file={} line={}: No return value was specified for function: {}'.format(self.file_name, node.line_num, func_name))
@@ -371,7 +403,7 @@ class Preprocessor(NodeVisitor):
             if x < len(node.arguments):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
-                if param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name:
+                if not types_compatible(var, param_ss) and (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
                     raise TypeError  # TODO: Make this an actual error
             else:
                 func_param_keys = list(func.parameters.keys())
@@ -379,7 +411,7 @@ class Preprocessor(NodeVisitor):
                     error('file={} line={}: Missing arguments to function: {}'.format(self.file_name, node.line_num, repr(func_name)))
                 else:
                     if func_param_keys[x] in node.named_arguments.keys():
-                        if param.value != self.visit(node.named_arguments[func_param_keys[x]]).name:
+                        if not types_compatible(param.value, self.visit(node.named_arguments[func_param_keys[x]]).name):
                             raise TypeError
         if func is None:
             error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(func_name)))

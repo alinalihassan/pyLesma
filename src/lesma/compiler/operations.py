@@ -128,7 +128,10 @@ def int_ops(compiler, op, left, right, node):
     elif op == BINARY_RIGHT_SHIFT:
         return compiler.builder.lshr(left, right)
     elif op in (EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
-        cmp_res = compiler.builder.icmp_signed(op, left, right, 'cmptmp')
+        if left.type.signed:
+            cmp_res = compiler.builder.icmp_signed(op, left, right, 'cmptmp')
+        else:
+            cmp_res = compiler.builder.icmp_unsigned(op, left, right, 'cmptmp')
         return compiler.builder.uitofp(cmp_res, type_map[BOOL], 'booltmp')
     else:
         raise SyntaxError('Unknown binary operator', node.op)

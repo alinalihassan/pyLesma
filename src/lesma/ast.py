@@ -64,6 +64,14 @@ class FuncDecl(AST):
     # __repr__ = __str__
 
 
+class ExternFuncDecl(AST):
+    def __init__(self, name, return_type, parameters, line_num, varargs=None):
+        self.name = name
+        self.return_type = return_type
+        self.parameters = parameters
+        self.varargs = varargs
+        self.line_num = line_num
+
 class AnonymousFunc(AST):
     def __init__(self, return_type, parameters, body, line_num, parameter_defaults=None, varargs=None):
         self.return_type = return_type
