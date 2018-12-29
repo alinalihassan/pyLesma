@@ -164,6 +164,11 @@ print(abs(-5 as int32)) # ints are int64 by default in Lesma, they're int32 in C
 # or you can just let Lesma convert between "compatible" types such as numbers
 print(abs(-5))
 
+# Named parameters and defaults
+def optional_params(x: int, y: int32 = 5, z: double = 9) -> int
+	# Lesma takes care of casting the return type between "compatible" types
+	return x + z 
+
 # Enums
 enum Colors
 	GREEN

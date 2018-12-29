@@ -368,7 +368,7 @@ class Preprocessor(NodeVisitor):
             self.return_flag = False
             for ret_type in return_types:
                 infered_type = self.infer_type(ret_type)
-                if infered_type is not func_type:
+                if infered_type is not func_type and not types_compatible(infered_type, func_type):
                     error('file={} line={}: The actual return type does not match the declared return type: {}'.format(self.file_name, node.line_num, func_name))
         elif func_type is not None:
             error('file={} line={}: No return value was specified for function: {}'.format(self.file_name, node.line_num, func_name))
