@@ -403,7 +403,7 @@ class Preprocessor(NodeVisitor):
             if x < len(node.arguments):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
-                if param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name:
+                if not types_compatible(var, param_ss) and (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
                     raise TypeError  # TODO: Make this an actual error
             else:
                 func_param_keys = list(func.parameters.keys())
@@ -411,7 +411,7 @@ class Preprocessor(NodeVisitor):
                     error('file={} line={}: Missing arguments to function: {}'.format(self.file_name, node.line_num, repr(func_name)))
                 else:
                     if func_param_keys[x] in node.named_arguments.keys():
-                        if param.value != self.visit(node.named_arguments[func_param_keys[x]]).name:
+                        if not types_compatible(param.value, self.visit(node.named_arguments[func_param_keys[x]]).name):
                             raise TypeError
         if func is None:
             error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(func_name)))

@@ -10,6 +10,7 @@ from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl
 from lesma.compiler import RET_VAR, type_map
 from lesma.compiler.operations import unary_op, binary_op, cast_ops
 from lesma.compiler.builtins import define_builtins
+from lesma.type_checker import types_compatible
 import lesma.compiler.llvmlite_custom
 from lesma.visitor import NodeVisitor
 from lesma.utils import *
@@ -83,6 +84,7 @@ class CodeGenerator(NodeVisitor):
         ret_type = type_map[return_type.value]
         args = [type_map[param.value] for param in parameters.values()]
         func_type = ir.FunctionType(ret_type, args, varargs)
+        func_type.parameters = parameters
         if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
             func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
@@ -113,25 +115,48 @@ class CodeGenerator(NodeVisitor):
             name = name.name
         else:
             name = node.name
+        
         if len(node.arguments) < len(func_type.args):
             args = []
             args_supplied = []
-            for x, arg in enumerate(func_type.arg_order):
+            arg_names = []
+
+            for i in func_type.parameters:
+                arg_names.append(i)
+
+            for x, arg in enumerate(func_type.args):
                 if x < len(node.arguments):
                     args.append(self.visit(node.arguments[x]))
                 else:
-                    if node.named_arguments and arg in node.named_arguments:
-                        args.append(self.visit(node.named_arguments[arg]))
+                    if node.named_arguments and arg_names[x] in node.named_arguments:
+                        args.append(self.comp_cast(
+                            self.visit(node.named_arguments[arg_names[x]]),
+                            self.visit(func_type.parameters[arg_names[x]]),
+                            node
+                        ))
                     else:
                         if set(node.named_arguments.keys()) & set(args_supplied):
                             raise TypeError('got multiple values for argument(s) {}'.format(set(node.named_arguments.keys()) & set(args_supplied)))
-                        args.append(self.visit(func_type.parameter_defaults[arg]))
+                        
+                        args.append(self.comp_cast(
+                            self.visit(func_type.parameter_defaults[arg_names[x]]),
+                            self.visit(func_type.parameters[arg_names[x]]),
+                            node
+                        ))
                 args_supplied.append(arg)
         elif len(node.arguments) + len(node.named_arguments) > len(func_type.args) and func_type.var_arg is None:
             raise SyntaxError('Unexpected arguments')
         else:
-            args = [self.visit(arg) for arg in node.arguments]
+            args = []
+            for i, arg in enumerate(node.arguments):
+                args.append(self.comp_cast(self.visit(arg), func_type.args[i], node))
         return self.call(name, args)
+
+    def comp_cast(self, arg, typ, node):
+        if types_compatible(str(arg.type), typ):
+            return cast_ops(self, arg, typ, node)
+        
+        return arg
 
     def visit_compound(self, node):
         ret = None
@@ -639,6 +664,7 @@ class CodeGenerator(NodeVisitor):
         ret_type = type_map[return_type.value]
         args = [type_map[param.value] for param in parameters.values()]
         func_type = ir.FunctionType(ret_type, args, varargs)
+        func_type.parameters = parameters
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
         if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:

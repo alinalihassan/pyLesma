@@ -157,20 +157,21 @@ def operator - (x: int) -> int  # One parameters overloads binary operations
 	return 0 - x + 1
 
 # Extern functions (FFI)
-neg_num: int32 = -5
+def extern abs(x: int32) -> int32 # from C's stdlib
 
-def extern abs(neg: int32) -> int32 # from C's stdlib
+print(abs(-5 as int32)) # ints are int64 by default in Lesma, they're int32 in C
 
-print(abs(neg_num))
+# or you can just let Lesma convert between "compatible" types such as numbers
+print(abs(-5))
 
-
+# Enums
 enum Colors
 	GREEN
 	RED
 	BLUE
 	YELLOW
 
-
+# Structs
 struct Circle
 	radius: int
 	x: int
@@ -180,6 +181,7 @@ cir: Circle = {radius=5, x=2, y=4}
 
 print(cir.radius)
 
+# Classes
 class Vehicle
 	# Constructor
 	new(year: int, color: str)
