@@ -63,6 +63,10 @@ def binary_op(compiler, node):
     elif isinstance(left.type, ir.IntType) and isinstance(right.type, ir.IntType):
         return int_ops(compiler, op, left, right, node)
     elif type(left.type) in NUM_TYPES and type(right.type) in NUM_TYPES:
+        if isinstance(left.type, ir.IntType):
+            left = cast_ops(compiler, left, right.type, node)
+        elif isinstance(right.type, ir.IntType):
+            left = cast_ops(compiler, right, left.type, node)
         return float_ops(compiler, op, left, right, node)
 
 
