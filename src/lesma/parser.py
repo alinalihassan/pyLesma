@@ -71,22 +71,33 @@ class Parser(object):
         base = None
         constructor = None
         methods = None
-        class_fields = None
+        class_fields = OrderedDict()
         instance_fields = None
         self.in_class = True
         self.next_token()
         class_name = self.current_token
+        self.user_types.append(class_name.value)
         self.eat_type(NAME)
         if self.current_token.value == LPAREN:
             pass  # TODO impliment multiple inheritance
         self.eat_type(NEWLINE)
         self.indent_level += 1
-        while self.current_token.indent_level == self.indent_level:
+        while self.keep_indent():
+            if self.current_token.type == NEWLINE:
+                self.eat_type(NEWLINE)
+                continue
+            if self.current_token.type == NAME and self.preview().value == COLON:
+                field = self.current_token.value
+                self.eat_type(NAME)
+                self.eat_value(COLON)
+                field_type = self.type_spec()
+                class_fields[field] = field_type
+                self.eat_type(NEWLINE)
             if self.current_token.value == NEW:
                 constructor = self.constructor_declaration(class_name)
         self.indent_level -= 1
         self.in_class = False
-        return ClassDeclaration(class_name.value, base=base, constructor=constructor, methods=methods, class_fields=class_fields, instance_fields=instance_fields)
+        return ClassDeclaration(class_name.value, base, constructor, methods, class_fields, instance_fields)
 
     def variable_declaration(self):
         var_node = Var(self.current_token.value, self.line_num)
@@ -192,14 +203,15 @@ class Parser(object):
         param_defaults = {}
         vararg = None
         while self.current_token.value != RPAREN:
-            if self.current_token.type == NAME:
-                param_type = self.variable(self.current_token)
-                self.eat_type(NAME)
-            else:
-                param_type = self.type_spec()
-            params[self.current_token.value] = param_type
             param_name = self.current_token.value
             self.eat_type(NAME)
+            if self.current_token.value == COLON:
+                self.eat_value(COLON)
+                param_type = self.type_spec()
+            else:
+                param_type = self.variable(self.current_token)
+
+            params[self.current_token.value] = param_type
             if self.current_token.value != RPAREN:
                 if self.current_token.value == ASSIGN:
                     self.eat_value(ASSIGN)
@@ -334,8 +346,8 @@ class Parser(object):
         elif self.current_token.type == TYPE:
             if self.current_token.value == STRUCT:
                 node = self.struct_declaration()
-        elif self.current_token.value == CLASS:
-            node = self.class_declaration()
+            elif self.current_token.value == CLASS:
+                node = self.class_declaration()
         elif self.current_token.value == EOF:
             return
         else:

@@ -35,6 +35,7 @@ class CodeGenerator(NodeVisitor):
         self.loop_test_blocks = []
         self.loop_end_blocks = []
         self.is_break = False
+        self.in_class = False
         llvm.initialize()
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
@@ -170,16 +171,30 @@ class CodeGenerator(NodeVisitor):
     def visit_structdeclaration(self, node):
         fields = []
         for field in node.fields.values():
-            if field.value == STR:
-                raise NotImplementedError
-            else:
-                fields.append(type_map[field.value])
+            fields.append(type_map[field.value])
 
         struct = self.module.context.get_identified_type(node.name)
         struct.fields = [field for field in node.fields.keys()]
         struct.name = 'struct.' + node.name
         struct.set_body([field for field in fields])
         self.define(node.name, struct)
+    
+
+    def visit_classdeclaration(self, node):
+        self.in_class = True
+
+        fields = []
+        for field in node.class_fields.values():
+            fields.append(type_map[field.value])
+
+        classdecl = self.module.context.get_identified_type(node.name)
+        classdecl.fields = [field for field in node.class_fields.keys()]
+        classdecl.name = 'class.' + node.name
+        classdecl.set_body([field for field in fields])
+        
+        # self.funcdecl('class.{}.new'.format(node.name), node.constructor)
+        self.in_class = False
+        self.define(node.name, classdecl)
 
     def visit_typedeclaration(self, node):
         raise NotImplementedError

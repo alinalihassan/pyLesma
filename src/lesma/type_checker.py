@@ -1,14 +1,6 @@
-from lesma.ast import Collection
-from lesma.ast import Var
-from lesma.ast import VarDecl
-from lesma.ast import DotAccess
-from lesma.ast import CollectionAccess
+from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess
 from lesma.grammar import *
-from lesma.visitor import AliasSymbol
-from lesma.visitor import CollectionSymbol
-from lesma.visitor import FuncSymbol
-from lesma.visitor import NodeVisitor, StructSymbol
-from lesma.visitor import VarSymbol
+from lesma.visitor import AliasSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, ClassSymbol, VarSymbol
 from lesma.utils import warning, error
 
 
@@ -444,6 +436,10 @@ class Preprocessor(NodeVisitor):
 
     def visit_structdeclaration(self, node):
         sym = StructSymbol(node.name, node.fields)
+        self.define(sym.name, sym)
+
+    def visit_classdeclaration(self, node):
+        sym = ClassSymbol(node.name, node.class_fields)
         self.define(sym.name, sym)
 
     def visit_return(self, node):

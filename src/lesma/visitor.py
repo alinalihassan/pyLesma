@@ -72,6 +72,13 @@ class StructSymbol(Symbol):
         self.accessed = False
         self.val_assigned = False
 
+class ClassSymbol(Symbol):
+    def __init__(self, name, class_fields):
+        super().__init__(name)
+        self.class_fields = class_fields
+        self.accessed = False
+        self.val_assigned = False
+
 
 class CollectionSymbol(Symbol):
     def __init__(self, name, var_type, item_types):
