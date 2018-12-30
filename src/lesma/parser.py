@@ -37,6 +37,12 @@ class Parser(object):
 
     def preview(self, num=1):
         return self.lexer.preview_token(num)
+    
+    def keep_indent(self):
+        while self.current_token.type == NEWLINE:
+            self.eat_type(NEWLINE)
+        return self.current_token.indent_level == self.indent_level
+        
 
     def program(self):
         root = Compound()
@@ -282,7 +288,7 @@ class Parser(object):
         if isinstance(node, Return):
             return [node]
         results = [node]
-        while self.current_token.indent_level == self.indent_level:
+        while self.keep_indent():
             results.append(self.statement())
             if self.current_token.type == NEWLINE:
                 self.next_token()
@@ -557,7 +563,7 @@ class Parser(object):
         switch = Switch(value, [], self.line_num)
         if self.current_token.type == NEWLINE:
             self.next_token()
-        while self.current_token.indent_level == self.indent_level:
+        while self.keep_indent():
             switch.cases.append(self.case_statement())
             if self.current_token.type == NEWLINE:
                 self.next_token()
