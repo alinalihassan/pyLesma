@@ -6,7 +6,7 @@ import os
 import subprocess
 from llvmlite import ir
 from lesma.grammar import *
-from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl, Str
+from lesma.ast import CollectionAccess, DotAccess, Input, VarDecl, Str
 from lesma.compiler import RET_VAR, type_map
 from lesma.compiler.operations import unary_op, binary_op, cast_ops
 from lesma.compiler.builtins import define_builtins
@@ -115,9 +115,11 @@ class CodeGenerator(NodeVisitor):
             func_type = func_type.type.pointee
             name = self.search_scopes(node.name)
             name = name.name
+        elif isinstance(func_type, ir.IdentifiedStructType):
+            return self.struct_assign(node)
         else:
             name = node.name
-        
+
         if len(node.arguments) < len(func_type.args):
             args = []
             args_supplied = []
@@ -404,8 +406,8 @@ class CodeGenerator(NodeVisitor):
         return array_ptr
 
     def visit_assign(self, node):  # TODO: Simplify this, it just keeps getting worse
-        if isinstance(node.right, StructLiteral):
-            self.struct_assign(node)
+        if isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
+            self.define(node.left.value.value, self.visit(node.right))
         elif hasattr(node.right, 'value') and isinstance(self.search_scopes(node.right.value), ir.Function):
             self.define(node.left.value, self.search_scopes(node.right.value))
         else:
@@ -447,18 +449,17 @@ class CodeGenerator(NodeVisitor):
         return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
 
     def struct_assign(self, node):
-        struct_type = self.search_scopes(node.left.type.value)
-        name = node.left.value.value
-        struct = self.builder.alloca(struct_type, name=name)
+        struct_type = self.search_scopes(node.name)
+        struct = self.builder.alloca(struct_type)
 
         fields = []
-        for field in node.right.fields.values():
+        for field in node.named_arguments.values():
             fields.append(self.visit(field))
             elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields)-1, width=INT32)], inbounds=True)
             self.builder.store(fields[len(fields)-1], elem)
-            
-        struct.struct_name = node.left.type.value
-        self.define(name, struct)
+
+        struct.struct_name = node.name
+        return struct
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
@@ -618,7 +619,6 @@ class CodeGenerator(NodeVisitor):
             self.call('putchar', [ir.Constant(type_map[INT32], 10)])
             return
         if isinstance(val.type, ir.IntType):
-            # noinspection PyUnresolvedReferences
             if val.type.width == 1:
                 array = self.create_array(BOOL)
                 self.call('bool_to_str', [array, val])

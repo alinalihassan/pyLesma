@@ -126,6 +126,10 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
+        elif isinstance(self.search_scopes(node.right.name), (StructSymbol, ClassSymbol)):
+            var_name = node.left.value
+            value = self.infer_type(self.search_scopes(node.right.name))
+            value.accessed = True
         elif isinstance(node.right, Collection):
             var_name = node.left.value
             value, collection_type = self.visit(node.right)
@@ -161,7 +165,6 @@ class Preprocessor(NodeVisitor):
                 if isinstance(var, FuncSymbol):
                     self.define(var_name, var)
                 else:
-                    # noinspection PyUnresolvedReferences
                     val_info = self.search_scopes(node.right.value)
                     func_sym = FuncSymbol(var_name, val_info.type.return_type, val_info.parameters, val_info.body, val_info.parameter_defaults)
                     self.define(var_name, func_sym)
@@ -391,15 +394,24 @@ class Preprocessor(NodeVisitor):
     def visit_funccall(self, node):
         func_name = node.name
         func = self.search_scopes(func_name)
-        for x, param in enumerate(func.parameters.values()):
+        parameters = None
+        parameter_defaults = None
+        if isinstance(func, (StructSymbol, ClassSymbol)):
+            parameters = func.fields
+            parameter_defaults = func.fields
+        else:
+            parameters = func.parameters
+            parameter_defaults = func.parameter_defaults
+
+        for x, param in enumerate(parameters.values()):
             if x < len(node.arguments):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
                 if not types_compatible(var, param_ss) and (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
                     raise TypeError  # TODO: Make this an actual error
             else:
-                func_param_keys = list(func.parameters.keys())
-                if func_param_keys[x] not in node.named_arguments.keys() and func_param_keys[x] not in func.parameter_defaults.keys():
+                func_param_keys = list(parameters.keys())
+                if func_param_keys[x] not in node.named_arguments.keys() and func_param_keys[x] not in parameter_defaults.keys():
                     error('file={} line={}: Missing arguments to function: {}'.format(self.file_name, node.line_num, repr(func_name)))
                 else:
                     if func_param_keys[x] in node.named_arguments.keys():

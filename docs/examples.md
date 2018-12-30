@@ -184,7 +184,7 @@ struct Circle
 	x: int
 	y: int
 
-cir: Circle = {radius=5, x=2, y=4}
+cir: Circle = Circle(radius=5, x=2, y=4)
 
 print(cir.radius)
 

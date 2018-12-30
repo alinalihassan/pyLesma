@@ -407,27 +407,18 @@ class Parser(object):
         pass
 
     def curly_bracket_expression(self, token):
-        hash_or_struct = None
         if token.value == LCURLYBRACKET:
             pairs = OrderedDict()
             while self.current_token.value != RCURLYBRACKET:
                 key = self.expr()
-                if self.current_token.value == COLON:
-                    hash_or_struct = 'hash'
-                    self.eat_value(COLON)
-                else:
-                    hash_or_struct = 'struct'
-                    self.eat_value(ASSIGN)
+                self.eat_value(ASSIGN)
                 pairs[key.value] = self.expr()
                 if self.current_token.value == COMMA:
                     self.next_token()
                 else:
                     break
             self.eat_value(RCURLYBRACKET)
-            if hash_or_struct == 'hash':
-                return HashMap(pairs, self.line_num)
-            elif hash_or_struct == 'struct':
-                return StructLiteral(pairs, self.line_num)
+            return HashMap(pairs, self.line_num)
         else:
             raise SyntaxError('Wait... what?')
 

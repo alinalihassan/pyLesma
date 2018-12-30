@@ -117,12 +117,6 @@ class StructDeclaration(AST):
         self.line_num = line_num
 
 
-class StructLiteral(AST):
-    def __init__(self, fields, line_num):
-        self.fields = fields
-        self.line_num = line_num
-
-
 class ClassDeclaration(AST):
     def __init__(self, name, base=None, constructor=None, methods=None, class_fields=None, instance_fields=None):
         self.name = name
