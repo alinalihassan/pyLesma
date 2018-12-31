@@ -126,7 +126,7 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
-        elif isinstance(self.search_scopes(node.right.name), (StructSymbol, ClassSymbol)):
+        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, ClassSymbol)):
             var_name = node.left.value
             value = self.infer_type(self.search_scopes(node.right.name))
             value.accessed = True

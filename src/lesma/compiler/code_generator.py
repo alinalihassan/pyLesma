@@ -406,7 +406,7 @@ class CodeGenerator(NodeVisitor):
         return array_ptr
 
     def visit_assign(self, node):  # TODO: Simplify this, it just keeps getting worse
-        if isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
+        if hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
             self.define(node.left.value.value, self.visit(node.right))
         elif hasattr(node.right, 'value') and isinstance(self.search_scopes(node.right.value), ir.Function):
             self.define(node.left.value, self.search_scopes(node.right.value))
