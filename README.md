@@ -54,9 +54,10 @@ python les.py run test.les
 python les.py compile test.les
 ```
 
-Or run the unit tests using nosetests
+Or install pytest and run the unit tests yourself
 ```bash
-nosetests
+pip install pytest
+pytest
 ```
 
 For advanced usage or help, consult the CLI help menu

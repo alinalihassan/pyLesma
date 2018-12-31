@@ -1,0 +1,5 @@
+things = [1, 2, 3] # List, homogeneous
+print(things[0])
+print(things[1*1+1])
+things[2] = 1002
+print(things[2])

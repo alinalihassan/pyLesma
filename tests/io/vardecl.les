@@ -7,6 +7,7 @@ a6: int128 = 6
 a7: double = 6.5
 a8: float = 7.69
 a10: bool = true
+# a11: str = "Hey there"
 
 x: int = 5
 y = 7.5
