@@ -10,7 +10,9 @@ class TestArithmetic(unittest.TestCase):
         error = err.decode('utf-8').strip()
         rc = proc.returncode
         with open('tests/io/operators.output') as expected:
+            exp_str = "".join(expected.readlines())
             self.assertTrue('Error:' not in error)
+            self.assertTrue(output == exp_str)
             self.assertEqual(rc, 0)
             expected.close()
 
