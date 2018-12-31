@@ -141,7 +141,7 @@ class CodeGenerator(NodeVisitor):
                     else:
                         if set(node.named_arguments.keys()) & set(args_supplied):
                             raise TypeError('got multiple values for argument(s) {}'.format(set(node.named_arguments.keys()) & set(args_supplied)))
-                        
+
                         args.append(self.comp_cast(
                             self.visit(func_type.parameter_defaults[arg_names[x]]),
                             self.visit(func_type.parameters[arg_names[x]]),
@@ -159,7 +159,7 @@ class CodeGenerator(NodeVisitor):
     def comp_cast(self, arg, typ, node):
         if types_compatible(str(arg.type), typ):
             return cast_ops(self, arg, typ, node)
-        
+
         return arg
 
     def visit_compound(self, node):
@@ -180,7 +180,6 @@ class CodeGenerator(NodeVisitor):
         struct.name = 'struct.' + node.name
         struct.set_body([field for field in fields])
         self.define(node.name, struct)
-    
 
     def visit_classdeclaration(self, node):
         self.in_class = True
@@ -193,14 +192,14 @@ class CodeGenerator(NodeVisitor):
         classdecl.fields = [field for field in node.class_fields.keys()]
         classdecl.name = 'class.' + node.name
         classdecl.set_body([field for field in fields])
-        
+
         # self.funcdecl('class.{}.new'.format(node.name), node.constructor)
         self.in_class = False
         self.define(node.name, classdecl)
 
     def visit_typedeclaration(self, node):
         raise NotImplementedError
-    
+
     def visit_incrementassign(self, node):
         collection_access = None
         key = None
@@ -216,7 +215,7 @@ class CodeGenerator(NodeVisitor):
             pointee = self.search_scopes(var_name).type.pointee
         op = node.op
         temp = ir.Constant(var.type, 1)
-        
+
         if isinstance(pointee, ir.IntType):
             if op == PLUS_PLUS:
                 res = self.builder.add(var, temp)
@@ -234,7 +233,6 @@ class CodeGenerator(NodeVisitor):
             self.call('dyn_array_set', [var_name, key, res])
         else:
             self.store(res, var_name)
-
 
     def visit_aliasdeclaration(self, node):
         type_map[node.name] = type_map[node.collection.value]
@@ -455,8 +453,8 @@ class CodeGenerator(NodeVisitor):
         fields = []
         for field in node.named_arguments.values():
             fields.append(self.visit(field))
-            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields)-1, width=INT32)], inbounds=True)
-            self.builder.store(fields[len(fields)-1], elem)
+            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields) - 1, width=INT32)], inbounds=True)
+            self.builder.store(fields[len(fields) - 1], elem)
 
         struct.struct_name = node.name
         return struct
@@ -506,9 +504,9 @@ class CodeGenerator(NodeVisitor):
                 res = self.builder.srem(var, right)
             elif op == POWER_ASSIGN:
                 if not isinstance(node.right.value, int):
-                    error('Cannot use non-integers for power coeficient') 
+                    error('Cannot use non-integers for power coeficient')
                     # TODO: Send me to typechecker and check for binop as well
-                
+
                 right = cast_ops(self, right, var.type, node)
                 temp = self.alloc_and_store(var, type_map[INT])
                 for _ in range(node.right.value - 1):
@@ -530,6 +528,8 @@ class CodeGenerator(NodeVisitor):
             elif op == FLOORDIV_ASSIGN:
                 right = cast_ops(self, right, var.type, node)
                 res = self.builder.fdiv(var, right)
+                temp = cast_ops(self, res, ir.IntType(64), node)
+                res = cast_ops(self, temp, res.type, node)
             elif op == DIV_ASSIGN:
                 right = cast_ops(self, right, var.type, node)
                 res = self.builder.fdiv(var, right)
@@ -853,7 +853,7 @@ class CodeGenerator(NodeVisitor):
             for func in self.module.functions:
                 if func.name == "main":
                     print(func)
-        
+
         llvmmod = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
