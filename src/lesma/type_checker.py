@@ -224,7 +224,6 @@ class Preprocessor(NodeVisitor):
         else:
             error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
 
-
     def visit_fieldassignment(self, node):
         obj = self.search_scopes(node.obj)
         return self.visit(obj.type.fields[node.field])
@@ -292,14 +291,18 @@ class Preprocessor(NodeVisitor):
             typs = tuple(typs)
         typ = AliasSymbol(node.name.value, typs)
         self.define(typ.name, typ)
-    
+
     def visit_aliasdeclaration(self, node):
         typ = AliasSymbol(node.name, node.collection.value)
         self.define(typ.name, typ)
-    
+
     def visit_externfuncdecl(self, node):
         func_name = node.name
         func_type = self.search_scopes(node.return_type.value)
+
+        if self.search_scopes(func_name) is not None:
+            error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
+
         if func_type and func_type.name == FUNC:
             func_type.return_type = self.visit(node.return_type.func_ret_type)
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, None))
@@ -329,10 +332,13 @@ class Preprocessor(NodeVisitor):
         self.define(func_name, func_symbol, 1)
         self.drop_top_scope()
 
-
     def visit_funcdecl(self, node):
         func_name = node.name
         func_type = self.search_scopes(node.return_type.value)
+
+        if self.search_scopes(func_name) is not None:
+            error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
+
         if func_type and func_type.name == FUNC:
             func_type.return_type = self.visit(node.return_type.func_ret_type)
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults))
