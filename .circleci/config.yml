@@ -9,4 +9,4 @@ jobs:
           pip install --user -r requirements.txt
           sudo pip install pytest
       - run: |
-          pytest -vv
+          pytest -vv --cache-clear
