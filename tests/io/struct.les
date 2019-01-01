@@ -1,0 +1,10 @@
+struct Circle
+	radius: int
+	x: int
+	y: int
+
+cir: Circle = Circle(radius=5, x=2, y=4)
+
+print(cir.radius + cir.x)
+cir.x = 20
+print(cir.x)

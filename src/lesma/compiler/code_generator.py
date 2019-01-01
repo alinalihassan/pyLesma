@@ -422,10 +422,14 @@ class CodeGenerator(NodeVisitor):
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
-                new_obj = self.builder.insert_value(self.load(obj.name), self.visit(node.right), obj_type.fields.index(node.left.field))
-                struct_ptr = self.alloc_and_store(new_obj, obj_type, name=obj.name)
-                struct_ptr.struct_name = obj.struct_name
-                self.define(obj.name, struct_ptr)
+                idx = -1
+                for i, v in enumerate(obj_type.fields):
+                    if v == node.left.field:
+                        idx = i
+                        break
+
+                elem = self.builder.gep(obj, [self.const(0, width=INT32), self.const(idx, width=INT32)], inbounds=True)
+                self.builder.store(self.visit(node.right), elem)
             elif isinstance(node.left, CollectionAccess):
                 right = self.visit(node.right)
                 self.call('dyn_array_set', [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
