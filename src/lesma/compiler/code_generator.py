@@ -639,6 +639,8 @@ class CodeGenerator(NodeVisitor):
                         self.print_num("%llu", val)
                 return
         elif isinstance(val.type, (ir.FloatType, ir.DoubleType)):
+            if isinstance(val.type, ir.FloatType):
+                val = cast_ops(self, val, ir.DoubleType(), node)
             self.print_num("%g", val)
             return
         self.call('print', [val])

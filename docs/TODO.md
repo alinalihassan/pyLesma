@@ -7,6 +7,7 @@
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [ ] Unicode doesn't work on Windows platforms
 - [ ] Fix string and list type declaration not working
+- [ ] Fix base unary operators being applied before user defined ones
 
 ## Improvements
 - [ ] Allow any type for lists/tuples (currently only int)

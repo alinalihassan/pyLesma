@@ -8,6 +8,10 @@ a7: double = 6.5
 a8: float = 7.69
 a10: bool = true
 # a11: str = "Hey there"
+a12 = [1,2,3,4]
+# a13 = [1.5,3.5,9.0]
+# a14 = ["Hey", "There"]
+# a15 = [true, false, false]
 
 x: int = 5
 y = 7.5

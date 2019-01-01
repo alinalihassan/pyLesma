@@ -18,6 +18,7 @@ def hasFunction(compiler, func_name):
         if func.name == func_name:
             return True
 
+
 def userdef_unary_str(op, expr):
     return 'operator' + '.' + op + '.' + str(expr.type)
 
