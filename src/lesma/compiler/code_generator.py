@@ -632,7 +632,9 @@ class CodeGenerator(NodeVisitor):
                 self.call('bool_to_str', [array, val])
                 val = array
             else:
-                if val.type.signed:
+                if int(str(val.type).split("i")[1]) == 8:
+                    self.print_num("%c", val)
+                elif val.type.signed:
                     if int(str(val.type).split("i")[1]) < 32:
                         val = self.builder.sext(val, type_map[INT32])
                         self.print_num("%d", val)
@@ -824,7 +826,7 @@ class CodeGenerator(NodeVisitor):
         scanf_ty = ir.FunctionType(type_map[INT], [type_map[INT8].as_pointer(), type_map[INT].as_pointer()], var_arg=True)
         ir.Function(self.module, scanf_ty, 'scanf')
 
-        getchar_ty = ir.FunctionType(ir.IntType(4), [])
+        getchar_ty = ir.FunctionType(ir.IntType(8), [])
         ir.Function(self.module, getchar_ty, 'getchar')
 
         puts_ty = ir.FunctionType(type_map[INT], [type_map[INT].as_pointer()])
