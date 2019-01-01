@@ -846,7 +846,7 @@ class CodeGenerator(NodeVisitor):
             "isOptimized": optimize,
         }, is_distinct=True)
         # self.module.add_global(di_module)
-        self.module.add_named_metadata('debug_info', [di_file, di_module])
+        self.module.add_named_metadata('llvm.dbg.cu', [di_file, di_module])
 
     def evaluate(self, optimize=True, ir_dump=False, timer=False):
         if ir_dump and not optimize:
