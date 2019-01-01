@@ -56,7 +56,6 @@ python les.py compile test.les
 
 Or install pytest and run the unit tests yourself
 ```bash
-pip install pytest
 pytest
 ```
 

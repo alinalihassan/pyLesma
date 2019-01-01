@@ -2,7 +2,7 @@
 
 # Pytest
 echo "Running pre-commit hook"
-pytest -vv --cache-clear
+pytest -vv -p no:cacheprovider
 
 if [ $? -ne 0 ]; then
  echo "Tests must pass before committing"
