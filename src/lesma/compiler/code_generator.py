@@ -79,6 +79,10 @@ class CodeGenerator(NodeVisitor):
         self.externfuncdecl(node.name, node)
 
     def externfuncdecl(self, name, node):
+        for func in self.module.functions:
+            if func.name == name:
+                self.define(name, func, 1)
+                return
         return_type = node.return_type
         parameters = node.parameters
         varargs = node.varargs
