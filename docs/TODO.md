@@ -14,7 +14,7 @@
 - [ ] Allow more operators on different types such as strings
 - [ ] Improve warning messages
 - [ ] Add indentation related errors
-- [ ] Add docs for as and is
+- [x] Add docs for as and is
 - [ ] Remove clang as a dependency
 - [ ] Move error messages from source files to typechecker
 - [ ] Fix array types not working and empty lists

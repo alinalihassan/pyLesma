@@ -4,6 +4,7 @@ from lesma.grammar import *
 from lesma.compiler.__init__ import type_map
 from lesma.utils import error
 
+
 class Parser(object):
     def __init__(self, lexer):
         self.lexer = lexer
@@ -37,12 +38,11 @@ class Parser(object):
 
     def preview(self, num=1):
         return self.lexer.preview_token(num)
-    
+
     def keep_indent(self):
         while self.current_token.type == NEWLINE:
             self.eat_type(NEWLINE)
         return self.current_token.indent_level == self.indent_level
-        
 
     def program(self):
         root = Compound()
@@ -189,7 +189,7 @@ class Parser(object):
         if op_func:
             if len(params) not in (1, 2):  # TODO: move this to type checker
                 error("Operators can either be unary or binary, and the number of parameters do not match")
-            
+
             name.value = 'operator' + '.' + name.value
             for param in params:
                 name.value += '.' + str(type_map[str(params[param].value)])

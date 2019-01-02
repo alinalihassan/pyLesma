@@ -72,6 +72,7 @@ class StructSymbol(Symbol):
         self.accessed = False
         self.val_assigned = False
 
+
 class ClassSymbol(Symbol):
     def __init__(self, name, class_fields):
         super().__init__(name)
