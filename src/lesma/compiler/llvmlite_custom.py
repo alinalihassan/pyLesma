@@ -76,10 +76,9 @@ class ShuffleVector(ir.instructions.Instruction):
             raise TypeError("vector1 needs to be of VectorType.")
         if vector2 != ir.Undefined:
             if vector2.type != vector1.type:
-                raise TypeError("vector2 needs to be " +
-                                "Undefined or of the same type as vector1.")
-        if (not isinstance(mask, ir.Constant) or
-           not isinstance(mask.type, ir.types.VectorType) or
+                raise TypeError("vector2 needs to be Undefined or of the same type as vector1.")
+        if (not isinstance(mask, ir.Constant) or not
+           isinstance(mask.type, ir.types.VectorType) or not
            mask.type.elementtype != ir.types.IntType(32)):
             raise TypeError("mask needs to be a constant i32 vector.")
         typ = ir.types.VectorType(vector1.type.elementtype, mask.type.count)

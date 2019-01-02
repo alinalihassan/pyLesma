@@ -1,8 +1,17 @@
 #!/bin/sh
 
 # Pytest
-echo "Running pre-commit hook"
+echo "Running pre-commit hooks"
 pytest -vv -p no:cacheprovider
+
+if [ $? -ne 0 ]; then
+ echo "Tests must pass before committing"
+ exit 1
+fi
+####
+
+# Pycodestyle
+pycodestyle src/* --ignore=E501
 
 if [ $? -ne 0 ]; then
  echo "Tests must pass before committing"
