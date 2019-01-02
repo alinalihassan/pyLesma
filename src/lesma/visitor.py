@@ -73,6 +73,14 @@ class StructSymbol(Symbol):
         self.val_assigned = False
 
 
+class ClassSymbol(Symbol):
+    def __init__(self, name, class_fields):
+        super().__init__(name)
+        self.class_fields = class_fields
+        self.accessed = False
+        self.val_assigned = False
+
+
 class CollectionSymbol(Symbol):
     def __init__(self, name, var_type, item_types):
         super().__init__(name, var_type)
@@ -204,8 +212,8 @@ class NodeVisitor(object):
     @property
     def unvisited_symbols(self):
         return [sym_name for sym_name, sym_val in self.items if
-                not isinstance(sym_val, (BuiltinTypeSymbol, BuiltinFuncSymbol)) and
-                not sym_val.accessed and sym_name != '_']
+                not isinstance(sym_val, (BuiltinTypeSymbol, BuiltinFuncSymbol)) and not
+                sym_val.accessed and sym_name != '_']
 
     def infer_type(self, value):
         if isinstance(value, BuiltinTypeSymbol):
@@ -226,6 +234,10 @@ class NodeVisitor(object):
             return self.search_scopes(COMPLEX)
         if isinstance(value, str):
             return self.search_scopes(STR)
+        if isinstance(value, StructSymbol):
+            return self.search_scopes(STRUCT)
+        if isinstance(value, ClassSymbol):
+            return self.search_scopes(CLASS)
         if isinstance(value, bool):
             return self.search_scopes(BOOL)
         if isinstance(value, list):

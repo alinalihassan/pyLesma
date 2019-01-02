@@ -144,7 +144,7 @@ print(start_at_5(4))
 print(start_at_27(15))
 
 # User input
-Int age = input('How old are you?')
+age: int = input('How old are you?')
 
 # String Interpolation
 print('Wow! You are {age} years old?!')
@@ -157,17 +157,19 @@ def operator - (x: int) -> int  # One parameters overloads binary operations
 	return 0 - x + 1
 
 # Extern functions (FFI)
-def extern abs(x: int32) -> int32 # from C's stdlib
+def extern abs(x: int) -> int # from C's stdlib
 
-print(abs(-5 as int32)) # ints are int64 by default in Lesma, they're int32 in C
+print(abs(-5.0 as int)) # ints are int64 by default in Lesma, they're int32 in C
 
 # or you can just let Lesma convert between "compatible" types such as numbers
-print(abs(-5))
+print(abs(-5.0))
 
 # Named parameters and defaults
 def optional_params(x: int, y: int32 = 5, z: double = 9) -> int
 	# Lesma takes care of casting the return type between "compatible" types
-	return x + z 
+	return x + z
+
+optional_params(5, z=11)
 
 # Enums
 enum Colors
@@ -182,7 +184,7 @@ struct Circle
 	x: int
 	y: int
 
-cir: Circle = {radius=5, x=2, y=4}
+cir: Circle = Circle(radius=5, x=2, y=4)
 
 print(cir.radius)
 

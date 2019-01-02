@@ -1,14 +1,6 @@
-from lesma.ast import Collection
-from lesma.ast import Var
-from lesma.ast import VarDecl
-from lesma.ast import DotAccess
-from lesma.ast import CollectionAccess
+from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess
 from lesma.grammar import *
-from lesma.visitor import AliasSymbol
-from lesma.visitor import CollectionSymbol
-from lesma.visitor import FuncSymbol
-from lesma.visitor import NodeVisitor, StructSymbol
-from lesma.visitor import VarSymbol
+from lesma.visitor import AliasSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, ClassSymbol, VarSymbol
 from lesma.utils import warning, error
 
 
@@ -134,6 +126,10 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
+        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, ClassSymbol)):
+            var_name = node.left.value
+            value = self.infer_type(self.search_scopes(node.right.name))
+            value.accessed = True
         elif isinstance(node.right, Collection):
             var_name = node.left.value
             value, collection_type = self.visit(node.right)
@@ -169,7 +165,6 @@ class Preprocessor(NodeVisitor):
                 if isinstance(var, FuncSymbol):
                     self.define(var_name, var)
                 else:
-                    # noinspection PyUnresolvedReferences
                     val_info = self.search_scopes(node.right.value)
                     func_sym = FuncSymbol(var_name, val_info.type.return_type, val_info.parameters, val_info.body, val_info.parameter_defaults)
                     self.define(var_name, func_sym)
@@ -228,7 +223,6 @@ class Preprocessor(NodeVisitor):
             return left_type
         else:
             error('file={} line={}: Things that should not be happening ARE happening (fix this message)'.format(self.file_name, node.line_num))
-
 
     def visit_fieldassignment(self, node):
         obj = self.search_scopes(node.obj)
@@ -297,14 +291,18 @@ class Preprocessor(NodeVisitor):
             typs = tuple(typs)
         typ = AliasSymbol(node.name.value, typs)
         self.define(typ.name, typ)
-    
+
     def visit_aliasdeclaration(self, node):
         typ = AliasSymbol(node.name, node.collection.value)
         self.define(typ.name, typ)
-    
+
     def visit_externfuncdecl(self, node):
         func_name = node.name
         func_type = self.search_scopes(node.return_type.value)
+
+        if self.search_scopes(func_name) is not None:
+            error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
+
         if func_type and func_type.name == FUNC:
             func_type.return_type = self.visit(node.return_type.func_ret_type)
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, None))
@@ -334,10 +332,13 @@ class Preprocessor(NodeVisitor):
         self.define(func_name, func_symbol, 1)
         self.drop_top_scope()
 
-
     def visit_funcdecl(self, node):
         func_name = node.name
         func_type = self.search_scopes(node.return_type.value)
+
+        if self.search_scopes(func_name) is not None:
+            error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
+
         if func_type and func_type.name == FUNC:
             func_type.return_type = self.visit(node.return_type.func_ret_type)
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults))
@@ -399,15 +400,25 @@ class Preprocessor(NodeVisitor):
     def visit_funccall(self, node):
         func_name = node.name
         func = self.search_scopes(func_name)
-        for x, param in enumerate(func.parameters.values()):
+        parameters = None
+        parameter_defaults = None
+        if isinstance(func, (StructSymbol, ClassSymbol)):
+            parameters = func.fields
+            parameter_defaults = func.fields
+        else:
+            parameters = func.parameters
+            parameter_defaults = func.parameter_defaults
+
+        for x, param in enumerate(parameters.values()):
             if x < len(node.arguments):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
-                if not types_compatible(var, param_ss) and (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
+                if var.type is not None and not types_compatible(var, param_ss) and \
+                   (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
                     raise TypeError  # TODO: Make this an actual error
             else:
-                func_param_keys = list(func.parameters.keys())
-                if func_param_keys[x] not in node.named_arguments.keys() and func_param_keys[x] not in func.parameter_defaults.keys():
+                func_param_keys = list(parameters.keys())
+                if func_param_keys[x] not in node.named_arguments.keys() and func_param_keys[x] not in parameter_defaults.keys():
                     error('file={} line={}: Missing arguments to function: {}'.format(self.file_name, node.line_num, repr(func_name)))
                 else:
                     if func_param_keys[x] in node.named_arguments.keys():
@@ -446,6 +457,10 @@ class Preprocessor(NodeVisitor):
         sym = StructSymbol(node.name, node.fields)
         self.define(sym.name, sym)
 
+    def visit_classdeclaration(self, node):
+        sym = ClassSymbol(node.name, node.class_fields)
+        self.define(sym.name, sym)
+
     def visit_return(self, node):
         res = self.visit(node.value)
         self.return_flag = True
@@ -476,6 +491,9 @@ class Preprocessor(NodeVisitor):
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
         obj.accessed = True
+        if node.field not in obj.type.fields:
+            error('file={} line={}: Invalid property {} of variable {}'.format(
+                self.file_name, node.line_num, node.field, node.obj))
         return self.visit(obj.type.fields[node.field])
 
     def visit_hashmap(self, node):

@@ -24,9 +24,9 @@ Lesma offers the standard mathematical and boolean operators
 |And| `and`| And|
 |Or| `or`| Or|
 |Xor| `xor`| Exclusive Or|
-|Is| `is` | Is type operator|
+|Is| `is` | Type checking operator|
 |As| `as` | Casting operator|
-|Not| `not` | Not bool operator|
+|Not| `not` | Not boolean operator|
 |Equals| `==` | Value equality|
 |Not Equals| `!=` | Value inequality|
 |Less Than| `<` | Less than value|

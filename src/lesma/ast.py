@@ -72,6 +72,7 @@ class ExternFuncDecl(AST):
         self.varargs = varargs
         self.line_num = line_num
 
+
 class AnonymousFunc(AST):
     def __init__(self, return_type, parameters, body, line_num, parameter_defaults=None, varargs=None):
         self.return_type = return_type
@@ -113,12 +114,6 @@ class Return(AST):
 class StructDeclaration(AST):
     def __init__(self, name, fields, line_num):
         self.name = name
-        self.fields = fields
-        self.line_num = line_num
-
-
-class StructLiteral(AST):
-    def __init__(self, fields, line_num):
         self.fields = fields
         self.line_num = line_num
 

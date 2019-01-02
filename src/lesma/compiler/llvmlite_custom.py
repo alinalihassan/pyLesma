@@ -1,7 +1,8 @@
 from llvmlite import ir
 
 # Vectors
- 
+
+
 def extract_element(self, vector, idx, name=''):
     """
     Returns the value at position idx.
@@ -9,7 +10,8 @@ def extract_element(self, vector, idx, name=''):
     instr = ir.instructions.ExtractElement(self.block, vector, idx, name=name)
     self._insert(instr)
     return instr
- 
+
+
 def insert_element(self, vector, value, idx, name=''):
     """
     Returns vector with vector[idx] replaced by value.
@@ -18,6 +20,7 @@ def insert_element(self, vector, value, idx, name=''):
     instr = ir.instructions.InsertElement(self.block, vector, value, idx, name=name)
     self._insert(instr)
     return instr
+
 
 def shuffle_vector(self, vector1, vector2, mask, name=''):
     """
@@ -38,13 +41,13 @@ class ExtractElement(ir.instructions.Instruction):
             raise TypeError("index needs to be of IntType.")
         typ = vector.type.elementtype
         super(ExtractElement, self).__init__(parent, typ, "extractelement",
-                                        [vector, index], name=name)
+                                             [vector, index], name=name)
 
     def descr(self, buf):
         operands = ", ".join("{0} {1}".format(
-                op.type, op.get_reference()) for op in self.operands)
+                   op.type, op.get_reference()) for op in self.operands)
         buf.append("{opname} {operands}\n".format(
-                opname = self.opname, operands = operands))
+                   opname=self.opname, operands=operands))
 
 
 class InsertElement(ir.instructions.Instruction):
@@ -58,13 +61,14 @@ class InsertElement(ir.instructions.Instruction):
             raise TypeError("index needs to be of IntType.")
         typ = vector.type
         super(InsertElement, self).__init__(parent, typ, "insertelement",
-                                        [vector, value, index], name=name)
+                                            [vector, value, index], name=name)
 
     def descr(self, buf):
         operands = ", ".join("{0} {1}".format(
-                op.type, op.get_reference()) for op in self.operands)
+                   op.type, op.get_reference()) for op in self.operands)
         buf.append("{opname} {operands}\n".format(
-                opname = self.opname, operands = operands))
+                   opname=self.opname, operands=operands))
+
 
 class ShuffleVector(ir.instructions.Instruction):
     def __init__(self, parent, vector1, vector2, mask, name=''):
@@ -72,25 +76,24 @@ class ShuffleVector(ir.instructions.Instruction):
             raise TypeError("vector1 needs to be of VectorType.")
         if vector2 != ir.Undefined:
             if vector2.type != vector1.type:
-                raise TypeError("vector2 needs to be " +
-                                "Undefined or of the same type as vector1.")
-        if (not isinstance(mask, ir.Constant) or
-            not isinstance(mask.type, ir.types.VectorType) or
-            mask.type.elementtype != ir.types.IntType(32)):
+                raise TypeError("vector2 needs to be Undefined or of the same type as vector1.")
+        if (not isinstance(mask, ir.Constant) or not
+           isinstance(mask.type, ir.types.VectorType) or not
+           mask.type.elementtype != ir.types.IntType(32)):
             raise TypeError("mask needs to be a constant i32 vector.")
         typ = ir.types.VectorType(vector1.type.elementtype, mask.type.count)
         index_range = range(vector1.type.count if vector2 == ir.Undefined else 2 * vector1.type.count)
         if not all(ii.constant in index_range for ii in mask.constant):
             raise IndexError("mask values need to be in {0}".format(index_range))
         super(ShuffleVector, self).__init__(parent, typ, "shufflevector",
-                                        [vector1, vector2, mask], name=name)
+                                            [vector1, vector2, mask], name=name)
 
     def descr(self, buf):
         buf.append("shufflevector {0} {1}\n".format(
-                ", ".join("{0} {1}".format(op.type, op.get_reference())
-                            for op in self.operands),
-                self._stringify_metadata(leading_comma=True),
-                ))
+                   ", ".join("{0} {1}".format(op.type, op.get_reference())
+                             for op in self.operands),
+                   self._stringify_metadata(leading_comma=True),
+                   ))
 
 
 class VectorType(ir.Type):
@@ -140,7 +143,7 @@ class VectorType(ir.Type):
             return (ir.Constant(self.elementtype, values), ) * self.count
         if len(values) != len(self):
             raise ValueError("wrong constant size for %s: got %d elements"
-                            % (self, len(values)))
+                             % (self, len(values)))
         return [ir.Constant(ty, val) if not isinstance(val, ir.Value) else val
                 for ty, val in zip(self.elements, values)]
 
@@ -199,6 +202,7 @@ ir.IntType = _IntType
 
 Old_IdentifiedStructType = ir.IdentifiedStructType
 
+
 class _IdentifiedStructType(Old_IdentifiedStructType):
     def gep(self, i):
         """
@@ -208,7 +212,7 @@ class _IdentifiedStructType(Old_IdentifiedStructType):
         """
         if not isinstance(i.type, ir.IntType):
             raise TypeError(i.type)
-        
+
         return self.elements[i.constant]
 
     def set_body(self, *elems):

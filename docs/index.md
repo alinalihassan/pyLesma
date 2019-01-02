@@ -10,7 +10,7 @@ Currently an early Work in Progress, and many thanks to [Ayehavgunne](https://gi
 ## Features
 - **it's fast**, because it should be so, but it won't ever oblige you to make an extra effort for the sake of performance 
 - **it's compiled**, so you can finally distribute your projects without dependencies, and because binary size also matters, a Hello World example would be around 8kb
-- **it's statically typed** so you don't need to guess the type of the variable if your coworker didn't spend the time to use meaningful names
+- **it's statically typed** so you don't need to guess the type of the variable if your coworker didn't spend the time to use meaningful names and you can make use of compile-time checks, autocomplete and more
 - **it's simple and expressive** because the code should be easily readable and it shouldn't make you guess what it does
 
 ## Influences

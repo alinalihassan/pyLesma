@@ -6,7 +6,7 @@ import os
 import subprocess
 from llvmlite import ir
 from lesma.grammar import *
-from lesma.ast import CollectionAccess, DotAccess, Input, StructLiteral, VarDecl, Str
+from lesma.ast import CollectionAccess, DotAccess, Input, VarDecl, Str
 from lesma.compiler import RET_VAR, type_map
 from lesma.compiler.operations import unary_op, binary_op, cast_ops
 from lesma.compiler.builtins import define_builtins
@@ -35,6 +35,7 @@ class CodeGenerator(NodeVisitor):
         self.loop_test_blocks = []
         self.loop_end_blocks = []
         self.is_break = False
+        self.in_class = False
         llvm.initialize()
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
@@ -78,6 +79,10 @@ class CodeGenerator(NodeVisitor):
         self.externfuncdecl(node.name, node)
 
     def externfuncdecl(self, name, node):
+        for func in self.module.functions:
+            if func.name == name:
+                self.define(name, func, 1)
+                return
         return_type = node.return_type
         parameters = node.parameters
         varargs = node.varargs
@@ -114,9 +119,11 @@ class CodeGenerator(NodeVisitor):
             func_type = func_type.type.pointee
             name = self.search_scopes(node.name)
             name = name.name
+        elif isinstance(func_type, ir.IdentifiedStructType):
+            return self.struct_assign(node)
         else:
             name = node.name
-        
+
         if len(node.arguments) < len(func_type.args):
             args = []
             args_supplied = []
@@ -138,7 +145,7 @@ class CodeGenerator(NodeVisitor):
                     else:
                         if set(node.named_arguments.keys()) & set(args_supplied):
                             raise TypeError('got multiple values for argument(s) {}'.format(set(node.named_arguments.keys()) & set(args_supplied)))
-                        
+
                         args.append(self.comp_cast(
                             self.visit(func_type.parameter_defaults[arg_names[x]]),
                             self.visit(func_type.parameters[arg_names[x]]),
@@ -156,7 +163,7 @@ class CodeGenerator(NodeVisitor):
     def comp_cast(self, arg, typ, node):
         if types_compatible(str(arg.type), typ):
             return cast_ops(self, arg, typ, node)
-        
+
         return arg
 
     def visit_compound(self, node):
@@ -170,10 +177,7 @@ class CodeGenerator(NodeVisitor):
     def visit_structdeclaration(self, node):
         fields = []
         for field in node.fields.values():
-            if field.value == STR:
-                raise NotImplementedError
-            else:
-                fields.append(type_map[field.value])
+            fields.append(type_map[field.value])
 
         struct = self.module.context.get_identified_type(node.name)
         struct.fields = [field for field in node.fields.keys()]
@@ -181,9 +185,25 @@ class CodeGenerator(NodeVisitor):
         struct.set_body([field for field in fields])
         self.define(node.name, struct)
 
+    def visit_classdeclaration(self, node):
+        self.in_class = True
+
+        fields = []
+        for field in node.class_fields.values():
+            fields.append(type_map[field.value])
+
+        classdecl = self.module.context.get_identified_type(node.name)
+        classdecl.fields = [field for field in node.class_fields.keys()]
+        classdecl.name = 'class.' + node.name
+        classdecl.set_body([field for field in fields])
+
+        # self.funcdecl('class.{}.new'.format(node.name), node.constructor)
+        self.in_class = False
+        self.define(node.name, classdecl)
+
     def visit_typedeclaration(self, node):
         raise NotImplementedError
-    
+
     def visit_incrementassign(self, node):
         collection_access = None
         key = None
@@ -199,7 +219,7 @@ class CodeGenerator(NodeVisitor):
             pointee = self.search_scopes(var_name).type.pointee
         op = node.op
         temp = ir.Constant(var.type, 1)
-        
+
         if isinstance(pointee, ir.IntType):
             if op == PLUS_PLUS:
                 res = self.builder.add(var, temp)
@@ -217,7 +237,6 @@ class CodeGenerator(NodeVisitor):
             self.call('dyn_array_set', [var_name, key, res])
         else:
             self.store(res, var_name)
-
 
     def visit_aliasdeclaration(self, node):
         type_map[node.name] = type_map[node.collection.value]
@@ -389,8 +408,8 @@ class CodeGenerator(NodeVisitor):
         return array_ptr
 
     def visit_assign(self, node):  # TODO: Simplify this, it just keeps getting worse
-        if isinstance(node.right, StructLiteral):
-            self.struct_assign(node)
+        if hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
+            self.define(node.left.value.value, self.visit(node.right))
         elif hasattr(node.right, 'value') and isinstance(self.search_scopes(node.right.value), ir.Function):
             self.define(node.left.value, self.search_scopes(node.right.value))
         else:
@@ -407,10 +426,14 @@ class CodeGenerator(NodeVisitor):
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
-                new_obj = self.builder.insert_value(self.load(obj.name), self.visit(node.right), obj_type.fields.index(node.left.field))
-                struct_ptr = self.alloc_and_store(new_obj, obj_type, name=obj.name)
-                struct_ptr.struct_name = obj.struct_name
-                self.define(obj.name, struct_ptr)
+                idx = -1
+                for i, v in enumerate(obj_type.fields):
+                    if v == node.left.field:
+                        idx = i
+                        break
+
+                elem = self.builder.gep(obj, [self.const(0, width=INT32), self.const(idx, width=INT32)], inbounds=True)
+                self.builder.store(self.visit(node.right), elem)
             elif isinstance(node.left, CollectionAccess):
                 right = self.visit(node.right)
                 self.call('dyn_array_set', [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
@@ -432,18 +455,17 @@ class CodeGenerator(NodeVisitor):
         return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
 
     def struct_assign(self, node):
-        struct_type = self.search_scopes(node.left.type.value)
-        name = node.left.value.value
-        struct = self.builder.alloca(struct_type, name=name)
+        struct_type = self.search_scopes(node.name)
+        struct = self.builder.alloca(struct_type)
 
         fields = []
-        for field in node.right.fields.values():
+        for field in node.named_arguments.values():
             fields.append(self.visit(field))
-            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields)-1, width=INT32)], inbounds=True)
-            self.builder.store(fields[len(fields)-1], elem)
-            
-        struct.struct_name = node.left.type.value
-        self.define(name, struct)
+            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields) - 1, width=INT32)], inbounds=True)
+            self.builder.store(fields[len(fields) - 1], elem)
+
+        struct.struct_name = node.name
+        return struct
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
@@ -490,9 +512,9 @@ class CodeGenerator(NodeVisitor):
                 res = self.builder.srem(var, right)
             elif op == POWER_ASSIGN:
                 if not isinstance(node.right.value, int):
-                    error('Cannot use non-integers for power coeficient') 
+                    error('Cannot use non-integers for power coeficient')
                     # TODO: Send me to typechecker and check for binop as well
-                
+
                 right = cast_ops(self, right, var.type, node)
                 temp = self.alloc_and_store(var, type_map[INT])
                 for _ in range(node.right.value - 1):
@@ -514,6 +536,8 @@ class CodeGenerator(NodeVisitor):
             elif op == FLOORDIV_ASSIGN:
                 right = cast_ops(self, right, var.type, node)
                 res = self.builder.fdiv(var, right)
+                temp = cast_ops(self, res, ir.IntType(64), node)
+                res = cast_ops(self, temp, res.type, node)
             elif op == DIV_ASSIGN:
                 right = cast_ops(self, right, var.type, node)
                 res = self.builder.fdiv(var, right)
@@ -603,13 +627,14 @@ class CodeGenerator(NodeVisitor):
             self.call('putchar', [ir.Constant(type_map[INT32], 10)])
             return
         if isinstance(val.type, ir.IntType):
-            # noinspection PyUnresolvedReferences
             if val.type.width == 1:
                 array = self.create_array(BOOL)
                 self.call('bool_to_str', [array, val])
                 val = array
             else:
-                if val.type.signed:
+                if int(str(val.type).split("i")[1]) == 8:
+                    self.print_num("%c", val)
+                elif val.type.signed:
                     if int(str(val.type).split("i")[1]) < 32:
                         val = self.builder.sext(val, type_map[INT32])
                         self.print_num("%d", val)
@@ -624,6 +649,8 @@ class CodeGenerator(NodeVisitor):
                         self.print_num("%llu", val)
                 return
         elif isinstance(val.type, (ir.FloatType, ir.DoubleType)):
+            if isinstance(val.type, ir.FloatType):
+                val = cast_ops(self, val, ir.DoubleType(), node)
             self.print_num("%g", val)
             return
         self.call('print', [val])
@@ -799,7 +826,7 @@ class CodeGenerator(NodeVisitor):
         scanf_ty = ir.FunctionType(type_map[INT], [type_map[INT8].as_pointer(), type_map[INT].as_pointer()], var_arg=True)
         ir.Function(self.module, scanf_ty, 'scanf')
 
-        getchar_ty = ir.FunctionType(ir.IntType(4), [])
+        getchar_ty = ir.FunctionType(ir.IntType(8), [])
         ir.Function(self.module, getchar_ty, 'getchar')
 
         puts_ty = ir.FunctionType(type_map[INT], [type_map[INT].as_pointer()])
@@ -818,11 +845,27 @@ class CodeGenerator(NodeVisitor):
     def generate_code(self, node):
         return self.visit(node)
 
+    def add_debug_info(self, optimize, filename):
+        di_file = self.module.add_debug_info("DIFile", {
+            "filename": os.path.basename(os.path.abspath(filename)),
+            "directory": os.path.dirname(os.path.abspath(filename)),
+        })
+        di_module = self.module.add_debug_info("DICompileUnit", {
+            "language": ir.DIToken("DW_LANG_Python"),
+            "file": di_file,
+            "producer": "Lesma v0.2.1",
+            "runtimeVersion": 1,
+            "isOptimized": optimize,
+        }, is_distinct=True)
+        # self.module.add_global(di_module)
+        self.module.add_named_metadata('llvm.dbg.cu', [di_file, di_module])
+
     def evaluate(self, optimize=True, ir_dump=False, timer=False):
         if ir_dump and not optimize:
             for func in self.module.functions:
                 if func.name == "main":
                     print(func)
+
         llvmmod = llvm.parse_assembly(str(self.module))
         if optimize:
             pmb = llvm.create_pass_manager_builder()
@@ -846,6 +889,8 @@ class CodeGenerator(NodeVisitor):
         spinner = Spinner()
         spinner.startSpinner("Compiling")
         compile_time = time()
+
+        self.add_debug_info(optimize, filename)
         program_string = llvm.parse_assembly(str(self.module))
 
         prog_str = str(program_string)

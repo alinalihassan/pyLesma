@@ -32,7 +32,7 @@ def _run(arg_list):
         error(les_file + " is not a valid file")
         return
 
-    code = open(les_file).read()
+    code = open(les_file, encoding="utf8").read()
     lexer = Lexer(code, les_file)
     parser = Parser(lexer)
     t = parser.parse()
@@ -55,7 +55,7 @@ def _compile(arg_list):
         return
 
     les_file = os.path.abspath(les_file)
-    code = open(les_file).read()
+    code = open(les_file, encoding="utf8").read()
     lexer = Lexer(code, les_file)
     parser = Parser(lexer)
     t = parser.parse()
@@ -68,7 +68,7 @@ def _compile(arg_list):
 
 
 if __name__ == "__main__":
-    args = docopt(__doc__, version='0.2.0')
+    args = docopt(__doc__, version='0.2.1')
 
     if args['compile']:
         _compile(args)

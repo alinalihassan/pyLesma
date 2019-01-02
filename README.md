@@ -4,7 +4,7 @@
 
 ___
 [![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)](https://github.com/hassanalinali/Lesma/blob/master/LICENSE.md)
+[![Version](https://img.shields.io/badge/version-0.2.1-brightgreen.svg)](https://github.com/hassanalinali/Lesma/blob/master/LICENSE.md)
 [![CircleCI](https://circleci.com/gh/hassanalinali/Lesma/tree/master.svg?style=shield)](https://circleci.com/gh/hassanalinali/Lesma/tree/master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/90fcc06be70d4dd98f54f1bb2713d70c)](https://www.codacy.com/app/hassanalinali/Lesma?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hassanalinali/Lesma&amp;utm_campaign=Badge_Grade)
 
@@ -15,7 +15,7 @@ Currently an early Work in Progress, and **many thanks** to [Ayehavgunne](https:
 ## Features
 - **it's fast**, because it should be so, but it won't ever oblige you to make an extra effort for the sake of performance 
 - **it's compiled**, so you can finally distribute your projects without dependencies, and because binary size also matters, a Hello World example would be around 8kb
-- **it's statically typed** so you don't need to guess the type of the variable if your coworker didn't spend the time to use meaningful names
+- **it's statically typed** so you don't need to guess the type of the variable if your coworker didn't spend the time to use meaningful names and you can make use of compile-time checks, autocomplete and more
 - **it's simple and expressive** because the code should be easily readable and it shouldn't make you guess what it does
 
 ## Influences
@@ -54,9 +54,9 @@ python les.py run test.les
 python les.py compile test.les
 ```
 
-Or run the unit tests using nosetests
+Or install pytest and run the unit tests yourself
 ```bash
-nosetests
+pytest
 ```
 
 For advanced usage or help, consult the CLI help menu

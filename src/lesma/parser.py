@@ -4,6 +4,7 @@ from lesma.grammar import *
 from lesma.compiler.__init__ import type_map
 from lesma.utils import error
 
+
 class Parser(object):
     def __init__(self, lexer):
         self.lexer = lexer
@@ -38,6 +39,11 @@ class Parser(object):
     def preview(self, num=1):
         return self.lexer.preview_token(num)
 
+    def keep_indent(self):
+        while self.current_token.type == NEWLINE:
+            self.eat_type(NEWLINE)
+        return self.current_token.indent_level == self.indent_level
+
     def program(self):
         root = Compound()
         while self.current_token.type != EOF:
@@ -65,22 +71,33 @@ class Parser(object):
         base = None
         constructor = None
         methods = None
-        class_fields = None
+        class_fields = OrderedDict()
         instance_fields = None
         self.in_class = True
         self.next_token()
         class_name = self.current_token
+        self.user_types.append(class_name.value)
         self.eat_type(NAME)
         if self.current_token.value == LPAREN:
             pass  # TODO impliment multiple inheritance
         self.eat_type(NEWLINE)
         self.indent_level += 1
-        while self.current_token.indent_level == self.indent_level:
+        while self.keep_indent():
+            if self.current_token.type == NEWLINE:
+                self.eat_type(NEWLINE)
+                continue
+            if self.current_token.type == NAME and self.preview().value == COLON:
+                field = self.current_token.value
+                self.eat_type(NAME)
+                self.eat_value(COLON)
+                field_type = self.type_spec()
+                class_fields[field] = field_type
+                self.eat_type(NEWLINE)
             if self.current_token.value == NEW:
                 constructor = self.constructor_declaration(class_name)
         self.indent_level -= 1
         self.in_class = False
-        return ClassDeclaration(class_name.value, base=base, constructor=constructor, methods=methods, class_fields=class_fields, instance_fields=instance_fields)
+        return ClassDeclaration(class_name.value, base, constructor, methods, class_fields, instance_fields)
 
     def variable_declaration(self):
         var_node = Var(self.current_token.value, self.line_num)
@@ -172,7 +189,7 @@ class Parser(object):
         if op_func:
             if len(params) not in (1, 2):  # TODO: move this to type checker
                 error("Operators can either be unary or binary, and the number of parameters do not match")
-            
+
             name.value = 'operator' + '.' + name.value
             for param in params:
                 name.value += '.' + str(type_map[str(params[param].value)])
@@ -186,14 +203,15 @@ class Parser(object):
         param_defaults = {}
         vararg = None
         while self.current_token.value != RPAREN:
-            if self.current_token.type == NAME:
-                param_type = self.variable(self.current_token)
-                self.eat_type(NAME)
-            else:
-                param_type = self.type_spec()
-            params[self.current_token.value] = param_type
             param_name = self.current_token.value
             self.eat_type(NAME)
+            if self.current_token.value == COLON:
+                self.eat_value(COLON)
+                param_type = self.type_spec()
+            else:
+                param_type = self.variable(self.current_token)
+
+            params[self.current_token.value] = param_type
             if self.current_token.value != RPAREN:
                 if self.current_token.value == ASSIGN:
                     self.eat_value(ASSIGN)
@@ -282,7 +300,7 @@ class Parser(object):
         if isinstance(node, Return):
             return [node]
         results = [node]
-        while self.current_token.indent_level == self.indent_level:
+        while self.keep_indent():
             results.append(self.statement())
             if self.current_token.type == NEWLINE:
                 self.next_token()
@@ -328,8 +346,8 @@ class Parser(object):
         elif self.current_token.type == TYPE:
             if self.current_token.value == STRUCT:
                 node = self.struct_declaration()
-        elif self.current_token.value == CLASS:
-            node = self.class_declaration()
+            elif self.current_token.value == CLASS:
+                node = self.class_declaration()
         elif self.current_token.value == EOF:
             return
         else:
@@ -389,27 +407,18 @@ class Parser(object):
         pass
 
     def curly_bracket_expression(self, token):
-        hash_or_struct = None
         if token.value == LCURLYBRACKET:
             pairs = OrderedDict()
             while self.current_token.value != RCURLYBRACKET:
                 key = self.expr()
-                if self.current_token.value == COLON:
-                    hash_or_struct = 'hash'
-                    self.eat_value(COLON)
-                else:
-                    hash_or_struct = 'struct'
-                    self.eat_value(ASSIGN)
+                self.eat_value(ASSIGN)
                 pairs[key.value] = self.expr()
                 if self.current_token.value == COMMA:
                     self.next_token()
                 else:
                     break
             self.eat_value(RCURLYBRACKET)
-            if hash_or_struct == 'hash':
-                return HashMap(pairs, self.line_num)
-            elif hash_or_struct == 'struct':
-                return StructLiteral(pairs, self.line_num)
+            return HashMap(pairs, self.line_num)
         else:
             raise SyntaxError('Wait... what?')
 
@@ -557,7 +566,7 @@ class Parser(object):
         switch = Switch(value, [], self.line_num)
         if self.current_token.type == NEWLINE:
             self.next_token()
-        while self.current_token.indent_level == self.indent_level:
+        while self.keep_indent():
             switch.cases.append(self.case_statement())
             if self.current_token.type == NEWLINE:
                 self.next_token()
