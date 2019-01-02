@@ -853,7 +853,7 @@ class CodeGenerator(NodeVisitor):
         di_module = self.module.add_debug_info("DICompileUnit", {
             "language": ir.DIToken("DW_LANG_Python"),
             "file": di_file,
-            "producer": "lesma",
+            "producer": "Lesma v0.2.1",
             "runtimeVersion": 1,
             "isOptimized": optimize,
         }, is_distinct=True)
