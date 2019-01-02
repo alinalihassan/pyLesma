@@ -413,7 +413,8 @@ class Preprocessor(NodeVisitor):
             if x < len(node.arguments):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
-                if not types_compatible(var, param_ss) and (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
+                if var.type is not None and not types_compatible(var, param_ss) and \
+                   (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
                     raise TypeError  # TODO: Make this an actual error
             else:
                 func_param_keys = list(parameters.keys())
