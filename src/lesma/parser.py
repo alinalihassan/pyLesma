@@ -293,6 +293,8 @@ class Parser(object):
             if self.current_token.value == ARROW:
                 self.next_token()
                 func_ret_type = self.type_spec()
+            else:
+                func_ret_type = Type(VOID, self.line_num)
 
             type_spec.func_params = func_params
             type_spec.func_ret_type = func_ret_type

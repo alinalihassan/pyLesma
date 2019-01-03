@@ -70,7 +70,8 @@ class CodeGenerator(NodeVisitor):
 
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
-        return self.funcdecl('anon_func.{}'.format(self.anon_counter), node)
+        self.funcdecl('anon_func.{}'.format(self.anon_counter), node)
+        return self.search_scopes('anon_func.{}'.format(self.anon_counter))
 
     def visit_funcdecl(self, node):
         self.funcdecl(node.name, node)
@@ -96,7 +97,7 @@ class CodeGenerator(NodeVisitor):
         self.define(name, func, 1)
 
     def funcdecl(self, name, node):
-        self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
+        func = self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
             self.alloc_define_store(arg, arg.name, arg.type)
@@ -251,7 +252,13 @@ class CodeGenerator(NodeVisitor):
         return ALIAS
 
     def visit_vardecl(self, node):
-        var_addr = self.allocate(type_map[node.type.value], name=node.value.value)
+        typ = type_map[node.type.value]
+        if node.type.value == FUNC:
+            func_ret_type = type_map[node.type.func_ret_type.value]
+            func_parameters = self.get_args(node.type.func_params)
+            func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
+            typ = func_ty
+        var_addr = self.allocate(typ, name=node.value.value)
         self.define(node.value.value, var_addr)
         self.store(self.visit(node.value), node.value.value)
 
@@ -429,8 +436,11 @@ class CodeGenerator(NodeVisitor):
             if isinstance(node.left, VarDecl):
                 var_name = node.left.value.value
                 var_type = type_map[node.left.type.value]
-                casted_value = cast_ops(self, var, var_type, node)
-                self.alloc_define_store(casted_value, var_name, var_type)
+                if not var.type.is_pointer:
+                    casted_value = cast_ops(self, var, var_type, node)
+                    self.alloc_define_store(casted_value, var_name, var_type)
+                else:  # TODO: Not able currently to deal with pointers, such as functions
+                    self.alloc_define_store(var, var_name, var.type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
