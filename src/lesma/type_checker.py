@@ -352,11 +352,11 @@ class Preprocessor(NodeVisitor):
         for k, v in node.parameters.items():
             var_type = self.search_scopes(v.value)
             if var_type is self.search_scopes(FUNC):
-                sym = FuncSymbol(k, v.func_ret_type, None, None)
+                sym = FuncSymbol(k, v.func_ret_type, v.func_params, None)
             elif isinstance(var_type, AliasSymbol):
                 var_type.accessed = True
                 if var_type.type is self.search_scopes(FUNC):
-                    sym = FuncSymbol(k, var_type.type.return_type, None, None)
+                    sym = FuncSymbol(k, var_type.type.return_type, v.func_params, None)
                 else:
                     raise NotImplementedError
             else:
@@ -413,8 +413,8 @@ class Preprocessor(NodeVisitor):
             if x < len(node.arguments):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
-                if var.type is not None and not types_compatible(var, param_ss) and \
-                   (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
+                # TODO: Hacky stuff, first line is made to bypass checks for first-class functions, to fix
+                if not isinstance(var, FuncSymbol) and (var.type is not None and not types_compatible(var, param_ss) and (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name)):
                     raise TypeError  # TODO: Make this an actual error
             else:
                 func_param_keys = list(parameters.keys())

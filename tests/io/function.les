@@ -18,3 +18,11 @@ def factorial(n: int = 5) -> int
 	if n <= 1
 		return 1
 	return n * factorial(n - 1)
+
+def do_stuff(x: int, callback: func[int] -> int) -> int
+    return callback(5)
+
+def demo(x: int) -> int
+    return x
+
+do_stuff(2, demo)

@@ -61,7 +61,7 @@ class CodeGenerator(NodeVisitor):
 
     def visit_var(self, node):
         var = self.search_scopes(node.value)
-        if isinstance(var, type_map[FUNC]):
+        if isinstance(var, type_map[FUNC]) or isinstance(var, ir.Function):
             return var
         return self.load(node.value)
 
@@ -115,7 +115,12 @@ class CodeGenerator(NodeVisitor):
 
     def visit_funccall(self, node):
         func_type = self.search_scopes(node.name)
-        if isinstance(func_type, ir.Function):
+        isFunc = False
+        if type(func_type) == ir.AllocaInstr:
+            name = self.load(func_type)
+            func_type = name.type.pointee
+            isFunc = True
+        elif isinstance(func_type, ir.Function):
             func_type = func_type.type.pointee
             name = self.search_scopes(node.name)
             name = name.name
@@ -158,6 +163,9 @@ class CodeGenerator(NodeVisitor):
             args = []
             for i, arg in enumerate(node.arguments):
                 args.append(self.comp_cast(self.visit(arg), func_type.args[i], node))
+
+        if isFunc:
+            return self.builder.call(name, args)
         return self.call(name, args)
 
     def comp_cast(self, arg, typ, node):
@@ -685,12 +693,25 @@ class CodeGenerator(NodeVisitor):
         percent_ptr_gep = self.builder.bitcast(percent_ptr_gep, type_map[INT8].as_pointer())
         return self.call('scanf', [percent_ptr_gep, self.allocate(type_map[INT])])
 
+    def get_args(self, parameters):
+        args = []
+        for param in parameters.values():
+            if param.value == FUNC:
+                func_ret_type = type_map[param.func_ret_type.value]
+                func_parameters = self.get_args(param.func_params)
+                func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
+                args.append(func_ty)
+            else:
+                args.append(type_map[param.value])
+
+        return args
+
     def start_function(self, name, return_type, parameters, parameter_defaults=None, varargs=None):
         self.function_stack.append(self.current_function)
         self.block_stack.append(self.builder.block)
         self.new_scope()
         ret_type = type_map[return_type.value]
-        args = [type_map[param.value] for param in parameters.values()]
+        args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
         if parameter_defaults:

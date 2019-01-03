@@ -278,12 +278,25 @@ class Parser(object):
         self.eat_type(TYPE)
         type_spec = Type(token.value, self.line_num)
         func_ret_type = None
+        func_params = OrderedDict()
+        param_num = 0
         if self.current_token.value == LSQUAREBRACKET and token.value == FUNC:
             self.next_token()
-            func_ret_type = self.type_spec()
+            while self.current_token.value != RSQUAREBRACKET:
+                param_type = self.type_spec()
+                func_params[str(param_num)] = param_type
+                param_num += 1
+                if self.current_token.value != RSQUAREBRACKET:
+                    self.eat_value(COMMA)
+
             self.eat_value(RSQUAREBRACKET)
-        if func_ret_type:
+            if self.current_token.value == ARROW:
+                self.next_token()
+                func_ret_type = self.type_spec()
+
+            type_spec.func_params = func_params
             type_spec.func_ret_type = func_ret_type
+
         return type_spec
 
     def compound_statement(self):

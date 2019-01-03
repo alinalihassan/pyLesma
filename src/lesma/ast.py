@@ -272,9 +272,10 @@ class DotAccess(AST):
 
 
 class Type(AST):
-    def __init__(self, value, line_num, func_ret_type=None):
+    def __init__(self, value, line_num, func_params=None, func_ret_type=None):
         self.value = value
-        self.func_ret_type = func_ret_type or []
+        self.func_params = func_params
+        self.func_ret_type = func_ret_type
         self.line_num = line_num
 
 
