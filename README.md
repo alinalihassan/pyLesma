@@ -25,8 +25,8 @@ Currently an early Work in Progress, and **many thanks** to [Ayehavgunne](https:
 - Swift
 
 ## Installing
-Currently if you want to test it, you need to build it on your own. In the future I might consider
-publishing the binary to the Release Page.
+You can pick up the latest release in the [Release tab](https://github.com/hassanalinali/Lesma/releases) and start using it. Lesma is currently being tested and provides binaries only on Unix. Compatibility between operating systems and architectures is not hard to achieve, but simply not a priority.
+In the case that your platform is not oficially supported, you need to build it on your own.
 
 ## Documentation
 
@@ -35,7 +35,7 @@ publishing the binary to the Release Page.
 
 ## Build
 
-In order to build Lesma, you need to have [Python 3.7](https://www.python.org/) installed. Currently it's tested only on Linux. It makes use of clang to compile the resulting object file currently, so you need it installed, but only running a file doesn't require clang.
+In order to build Lesma, you need to have [Python 3.7](https://www.python.org/) installed. It's currently tested only on Linux. It makes use of clang to compile the resulting object file currently, so you need it installed, but only running a file doesn't require clang.
 
 Clone the repo:
 ```bash
