@@ -888,7 +888,8 @@ class CodeGenerator(NodeVisitor):
             "runtimeVersion": 1,
             "isOptimized": optimize,
         }, is_distinct=True)
-        # self.module.add_global(di_module)
+
+        self.module.name = os.path.basename(os.path.abspath(filename))
         self.module.add_named_metadata('llvm.dbg.cu', [di_file, di_module])
 
     def evaluate(self, optimize=True, ir_dump=False, timer=False):
@@ -921,7 +922,7 @@ class CodeGenerator(NodeVisitor):
         spinner.startSpinner("Compiling")
         compile_time = time()
 
-        self.add_debug_info(optimize, filename)
+        # self.add_debug_info(optimize, filename)
         program_string = llvm.parse_assembly(str(self.module))
 
         prog_str = str(program_string)

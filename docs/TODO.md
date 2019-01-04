@@ -26,7 +26,7 @@
 - [ ] Implement Tuples
 - [ ] Implement Dictionary
 - [ ] Implement 'in' as a boolean result
-- [ ] Implement anonymous functions
+- [x] Implement anonymous functions
 - [ ] Implement Closure
 - [ ] Implement string interpolation
 - [ ] Implement Enums
