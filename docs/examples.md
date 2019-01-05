@@ -171,6 +171,12 @@ def optional_params(x: int, y: int32 = 5, z: double = 9) -> int
 
 optional_params(5, z=11)
 
+def defer_demo()
+    defer print("World!")
+    print("Hello")
+
+defer_demo() # prints Hello World!
+
 # Enums
 enum Colors
 	GREEN

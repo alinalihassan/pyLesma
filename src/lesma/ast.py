@@ -244,6 +244,17 @@ class Pass(AST):
     __repr__ = __str__
 
 
+class Defer(AST):
+    def __init__(self, line_num, statement):
+        self.line_num = line_num
+        self.statement = statement
+
+    def __str__(self):
+        return DEFER
+
+    __repr__ = __str__
+
+
 class BinOp(AST):
     def __init__(self, left, op, right, line_num):
         self.left = left

@@ -345,6 +345,9 @@ class Parser(object):
             node = Pass(self.line_num)
         elif self.current_token.value == CONST:
             node = self.assignment_statement(self.current_token)
+        elif self.current_token.value == DEFER:
+            self.next_token()
+            node = Defer(self.line_num, self.statement())
         elif self.current_token.value == SWITCH:
             self.next_token()
             node = self.switch_statement()

@@ -472,6 +472,9 @@ class Preprocessor(NodeVisitor):
     def visit_pass(self, node):
         pass
 
+    def visit_defer(self, node):  # TODO: Implement me please
+        pass
+
     def visit_vardecl(self, node):
         type_name = node.type.value
         type_symbol = self.search_scopes(type_name)

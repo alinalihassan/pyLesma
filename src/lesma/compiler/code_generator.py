@@ -32,6 +32,7 @@ class CodeGenerator(NodeVisitor):
         self.builder = ir.IRBuilder(entry_block)
         self.exit_blocks = [exit_block]
         self.block_stack = [entry_block]
+        self.defer_stack = [[]]
         self.loop_test_blocks = []
         self.loop_end_blocks = []
         self.is_break = False
@@ -51,6 +52,8 @@ class CodeGenerator(NodeVisitor):
 
     def visit_program(self, node):
         self.visit(node.block)
+        for stat in self.defer_stack[-1]:
+            self.visit(stat)
         self.branch(self.exit_blocks[0])
         self.position_at_end(self.exit_blocks[0])
         self.builder.ret_void()
@@ -67,6 +70,9 @@ class CodeGenerator(NodeVisitor):
 
     def visit_binop(self, node):
         return binary_op(self, node)
+
+    def visit_defer(self, node):
+        self.defer_stack[-1].append(node.statement)
 
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
@@ -725,6 +731,7 @@ class CodeGenerator(NodeVisitor):
         self.function_stack.append(self.current_function)
         self.block_stack.append(self.builder.block)
         self.new_scope()
+        self.defer_stack.append([])
         ret_type = type_map[return_type.value]
         args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
@@ -741,6 +748,9 @@ class CodeGenerator(NodeVisitor):
         self.position_at_end(entry)
 
     def end_function(self, returned=False):
+        for stat in self.defer_stack[-1]:
+            self.visit(stat)
+        self.defer_stack.pop()
         if not returned:
             self.branch(self.exit_blocks[-1])
         self.position_at_end(self.exit_blocks.pop())
