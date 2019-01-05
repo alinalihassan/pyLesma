@@ -214,6 +214,16 @@ class Break(AST):
     __repr__ = __str__
 
 
+class Fallthrough(AST):
+    def __init__(self, line_num):
+        self.line_num = line_num
+
+    def __str__(self):
+        return FALLTHROUGH
+
+    __repr__ = __str__
+
+
 class Continue(AST):
     def __init__(self, line_num):
         self.line_num = line_num

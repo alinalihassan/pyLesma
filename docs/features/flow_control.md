@@ -1,6 +1,6 @@
 ## While loops 
 
-The expression is required to be of type bool.
+The evaluation expression is required to be of type bool.
 
 ```py
 x = 5
@@ -23,7 +23,7 @@ for num in my_list
 
 ## If else statements
 
-The expression is required to be of type bool.
+The evaluation expression is required to be of type bool.
 
 ```py
 if true
@@ -36,19 +36,19 @@ else
 
 ## Switch statement
 
-**Every case needs a break** if you don't want to continue the flow to the next case, only the last case doesn't need a break, this means that the default would still need one if it's not the last case of the switch statement.
-```py
-coins = 5
+**No implicit fallthrough**, this means that in comparison with languages like C, the equivalent to a break statement is implicit in Lesma, therefore you need to specify the `fallthrough` keyword for the flow to go downstream to the other cases. Break statements are not allowed inside a switch statement.
 
-switch coins
+```py
+odd_even = 1
+
+switch odd_even
 	case 1
-		print('You got only one?')
-	case 2
-		print('Now we\'re talking')
-		break
-	default
-		print(coins)
-		print("You got a lot of coins in there")
+		fallthrough # Go to the next case
 	case 3
-		print('I guess 3 is enough')
+		print('Odd number')
+	default
+		print("Any number")
+		print(odd_even)
+	case 4
+		print('Even number')
 ```

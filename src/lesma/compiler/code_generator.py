@@ -385,8 +385,8 @@ class CodeGenerator(NodeVisitor):
             self.branch(switch_end_block)
         for x, case in enumerate(node.cases):
             self.position_at_end(cases[x])
-            break_ = self.visit(case.block)
-            if break_ == BREAK:
+            fallthrough = self.visit(case.block)
+            if fallthrough != FALLTHROUGH:
                 self.branch(switch_end_block)
             else:
                 if x == len(node.cases) - 1:
@@ -397,10 +397,15 @@ class CodeGenerator(NodeVisitor):
                 switch.add_case(self.visit(case.value), cases[x])
         self.position_at_end(switch_end_block)
 
-    def visit_break(self, _):
+    def visit_fallthrough(self, node):
         if 'case' in self.builder.block.name:
-            return BREAK
+            return FALLTHROUGH
+        else:  # TODO: Move this to typechecker
+            error('file={} line={} Syntax Error: fallthrough keyword cannot be used outside of switch statements'.format(self.file_name, node.line_num))
 
+    def visit_break(self, node):
+        if len(self.loop_end_blocks) == 0:  # TODO: Move this to typechecker
+            error('file={} line={} Syntax Error: break keyword cannot be used outside of control flow statements'.format(self.file_name, node.line_num))
         self.is_break = True
         return self.branch(self.loop_end_blocks[-1])
 

@@ -331,6 +331,9 @@ class Parser(object):
             node = self.while_statement()
         elif self.current_token.value == FOR:
             node = self.for_statement()
+        elif self.current_token.value == FALLTHROUGH:
+            self.next_token()
+            node = Fallthrough(self.line_num)
         elif self.current_token.value == BREAK:
             self.next_token()
             node = Break(self.line_num)

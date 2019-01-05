@@ -57,19 +57,19 @@ if 2 in things
 if 2 not in things
 	print('no')
 
-special_num = 1
+odd_even = 1
 
-switch special_num
+# No implicit fallthrough (in other words, implicit break)
+switch odd_even
 	case 1
-		print('Number one')
-	case 2
-		print('Number two')
-		break
-	default
-		print("Big number")
-		print(special_num)
+		fallthrough # Go to the next case
 	case 3
-		print('Number three')
+		print('Odd number')
+	default
+		print("Any number")
+		print(odd_even)
+	case 4
+		print('Even number')
 
 # Function Return notation
 def fib(n: int) -> int

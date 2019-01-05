@@ -94,6 +94,9 @@ class Preprocessor(NodeVisitor):
         self.visit(node.block)
         return case_type
 
+    def visit_fallthrough(self, node):
+        pass
+
     def visit_break(self, node):
         pass
 
