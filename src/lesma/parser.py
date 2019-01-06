@@ -29,13 +29,13 @@ class Parser(object):
         if self.current_token.type in token_type:
             self.next_token()
         else:
-            raise SyntaxError('Line {}'.format(self.line_num))
+            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, node.line_num, ", ".join(token_type)))
 
     def eat_value(self, *token_value):
         if self.current_token.value in token_value:
             self.next_token()
         else:
-            raise SyntaxError
+            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, self.line_num, ", ".join(token_value)))
 
     def preview(self, num=1):
         return self.lexer.preview_token(num)
