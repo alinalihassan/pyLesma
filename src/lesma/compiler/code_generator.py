@@ -76,7 +76,7 @@ class CodeGenerator(NodeVisitor):
 
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
-        self.funcdecl('anon_func.{}'.format(self.anon_counter), node)
+        self.funcdecl('anon_func.{}'.format(self.anon_counter), node, "private")
         return self.search_scopes('anon_func.{}'.format(self.anon_counter))
 
     def visit_funcdecl(self, node):
@@ -102,8 +102,8 @@ class CodeGenerator(NodeVisitor):
         func = ir.Function(self.module, func_type, name)
         self.define(name, func, 1)
 
-    def funcdecl(self, name, node):
-        func = self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
+    def funcdecl(self, name, node, linkage=None):
+        func = self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
             self.alloc_define_store(arg, arg.name, arg.type)
@@ -730,7 +730,7 @@ class CodeGenerator(NodeVisitor):
 
         return args
 
-    def start_function(self, name, return_type, parameters, parameter_defaults=None, varargs=None):
+    def start_function(self, name, return_type, parameters, parameter_defaults=None, varargs=None, linkage=None):
         self.function_stack.append(self.current_function)
         self.block_stack.append(self.builder.block)
         self.new_scope()
@@ -744,6 +744,7 @@ class CodeGenerator(NodeVisitor):
         if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
             func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
+        func.linkage = linkage
         self.define(name, func, 1)
         self.current_function = func
         entry = self.add_block('entry')
