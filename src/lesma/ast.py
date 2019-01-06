@@ -214,6 +214,16 @@ class Break(AST):
     __repr__ = __str__
 
 
+class Fallthrough(AST):
+    def __init__(self, line_num):
+        self.line_num = line_num
+
+    def __str__(self):
+        return FALLTHROUGH
+
+    __repr__ = __str__
+
+
 class Continue(AST):
     def __init__(self, line_num):
         self.line_num = line_num
@@ -230,6 +240,17 @@ class Pass(AST):
 
     def __str__(self):
         return CONTINUE
+
+    __repr__ = __str__
+
+
+class Defer(AST):
+    def __init__(self, line_num, statement):
+        self.line_num = line_num
+        self.statement = statement
+
+    def __str__(self):
+        return DEFER
 
     __repr__ = __str__
 
@@ -272,9 +293,10 @@ class DotAccess(AST):
 
 
 class Type(AST):
-    def __init__(self, value, line_num, func_ret_type=None):
+    def __init__(self, value, line_num, func_params=None, func_ret_type=None):
         self.value = value
-        self.func_ret_type = func_ret_type or []
+        self.func_params = func_params
+        self.func_ret_type = func_ret_type
         self.line_num = line_num
 
 

@@ -14,6 +14,7 @@ class Parser(object):
         self.next_token()
         self.user_types = []
         self.in_class = False
+        self.func_args = False
 
     @property
     def line_num(self):
@@ -28,16 +29,29 @@ class Parser(object):
         if self.current_token.type in token_type:
             self.next_token()
         else:
-            raise SyntaxError('Line {}'.format(self.line_num))
+            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, node.line_num, ", ".join(token_type)))
 
     def eat_value(self, *token_value):
         if self.current_token.value in token_value:
             self.next_token()
         else:
-            raise SyntaxError
+            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, self.line_num, ", ".join(token_value)))
 
     def preview(self, num=1):
         return self.lexer.preview_token(num)
+
+    def find_until(self, to_find, until):
+        num = 0
+        x = None
+        while x != until:
+            num += 1
+            x = self.lexer.preview_token(num).value
+            if x == to_find:
+                return True
+            elif x == EOF:
+                error('file={} line={} Syntax Error: expected {}'.format(self.file_name, self.line_num, to_find))
+
+        return False
 
     def keep_indent(self):
         while self.current_token.type == NEWLINE:
@@ -244,8 +258,10 @@ class Parser(object):
 
     def function_call(self, token):
         if token.value == PRINT:
+            self.func_args = True
             return Print(self.expr(), self.line_num)
         elif token.value == INPUT:
+            self.func_args = True
             return Input(self.expr(), self.line_num)
 
         self.eat_value(LPAREN)
@@ -278,12 +294,27 @@ class Parser(object):
         self.eat_type(TYPE)
         type_spec = Type(token.value, self.line_num)
         func_ret_type = None
+        func_params = OrderedDict()
+        param_num = 0
         if self.current_token.value == LSQUAREBRACKET and token.value == FUNC:
             self.next_token()
-            func_ret_type = self.type_spec()
+            while self.current_token.value != RSQUAREBRACKET:
+                param_type = self.type_spec()
+                func_params[str(param_num)] = param_type
+                param_num += 1
+                if self.current_token.value != RSQUAREBRACKET:
+                    self.eat_value(COMMA)
+
             self.eat_value(RSQUAREBRACKET)
-        if func_ret_type:
+            if self.current_token.value == ARROW:
+                self.next_token()
+                func_ret_type = self.type_spec()
+            else:
+                func_ret_type = Type(VOID, self.line_num)
+
+            type_spec.func_params = func_params
             type_spec.func_ret_type = func_ret_type
+
         return type_spec
 
     def compound_statement(self):
@@ -316,6 +347,9 @@ class Parser(object):
             node = self.while_statement()
         elif self.current_token.value == FOR:
             node = self.for_statement()
+        elif self.current_token.value == FALLTHROUGH:
+            self.next_token()
+            node = Fallthrough(self.line_num)
         elif self.current_token.value == BREAK:
             self.next_token()
             node = Break(self.line_num)
@@ -327,6 +361,9 @@ class Parser(object):
             node = Pass(self.line_num)
         elif self.current_token.value == CONST:
             node = self.assignment_statement(self.current_token)
+        elif self.current_token.value == DEFER:
+            self.next_token()
+            node = Defer(self.line_num, self.statement())
         elif self.current_token.value == SWITCH:
             self.next_token()
             node = self.switch_statement()
@@ -652,12 +689,18 @@ class Parser(object):
         elif token.type == TYPE:
             return self.type_spec()
         elif token.value == LPAREN:
-            if preview.value == RPAREN:
-                return []
+            if self.func_args or not self.find_until(COMMA, RPAREN):
+                self.func_args = False
+                if preview.value == RPAREN:
+                    return []
 
-            self.next_token()
-            node = self.expr()
-            self.eat_value(RPAREN)
+                self.next_token()
+                node = self.expr()
+                self.eat_value(RPAREN)
+            else:
+                token = self.next_token()
+                node = self.tuple_expression(token)
+
             return node
         elif preview.value == LPAREN:
             self.next_token()

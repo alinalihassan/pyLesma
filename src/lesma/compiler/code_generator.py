@@ -32,6 +32,7 @@ class CodeGenerator(NodeVisitor):
         self.builder = ir.IRBuilder(entry_block)
         self.exit_blocks = [exit_block]
         self.block_stack = [entry_block]
+        self.defer_stack = [[]]
         self.loop_test_blocks = []
         self.loop_end_blocks = []
         self.is_break = False
@@ -51,6 +52,8 @@ class CodeGenerator(NodeVisitor):
 
     def visit_program(self, node):
         self.visit(node.block)
+        for stat in self.defer_stack[-1]:
+            self.visit(stat)
         self.branch(self.exit_blocks[0])
         self.position_at_end(self.exit_blocks[0])
         self.builder.ret_void()
@@ -61,16 +64,20 @@ class CodeGenerator(NodeVisitor):
 
     def visit_var(self, node):
         var = self.search_scopes(node.value)
-        if isinstance(var, type_map[FUNC]):
+        if isinstance(var, type_map[FUNC]) or isinstance(var, ir.Function):
             return var
         return self.load(node.value)
 
     def visit_binop(self, node):
         return binary_op(self, node)
 
+    def visit_defer(self, node):
+        self.defer_stack[-1].append(node.statement)
+
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
-        return self.funcdecl('anon_func.{}'.format(self.anon_counter), node)
+        self.funcdecl('anon_func.{}'.format(self.anon_counter), node)
+        return self.search_scopes('anon_func.{}'.format(self.anon_counter))
 
     def visit_funcdecl(self, node):
         self.funcdecl(node.name, node)
@@ -96,7 +103,7 @@ class CodeGenerator(NodeVisitor):
         self.define(name, func, 1)
 
     def funcdecl(self, name, node):
-        self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
+        func = self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
             self.alloc_define_store(arg, arg.name, arg.type)
@@ -115,7 +122,12 @@ class CodeGenerator(NodeVisitor):
 
     def visit_funccall(self, node):
         func_type = self.search_scopes(node.name)
-        if isinstance(func_type, ir.Function):
+        isFunc = False
+        if type(func_type) == ir.AllocaInstr:
+            name = self.load(func_type)
+            func_type = name.type.pointee
+            isFunc = True
+        elif isinstance(func_type, ir.Function):
             func_type = func_type.type.pointee
             name = self.search_scopes(node.name)
             name = name.name
@@ -158,6 +170,9 @@ class CodeGenerator(NodeVisitor):
             args = []
             for i, arg in enumerate(node.arguments):
                 args.append(self.comp_cast(self.visit(arg), func_type.args[i], node))
+
+        if isFunc:
+            return self.builder.call(name, args)
         return self.call(name, args)
 
     def comp_cast(self, arg, typ, node):
@@ -243,7 +258,13 @@ class CodeGenerator(NodeVisitor):
         return ALIAS
 
     def visit_vardecl(self, node):
-        var_addr = self.allocate(type_map[node.type.value], name=node.value.value)
+        typ = type_map[node.type.value]
+        if node.type.value == FUNC:
+            func_ret_type = type_map[node.type.func_ret_type.value]
+            func_parameters = self.get_args(node.type.func_params)
+            func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
+            typ = func_ty
+        var_addr = self.allocate(typ, name=node.value.value)
         self.define(node.value.value, var_addr)
         self.store(self.visit(node.value), node.value.value)
 
@@ -370,8 +391,8 @@ class CodeGenerator(NodeVisitor):
             self.branch(switch_end_block)
         for x, case in enumerate(node.cases):
             self.position_at_end(cases[x])
-            break_ = self.visit(case.block)
-            if break_ == BREAK:
+            fallthrough = self.visit(case.block)
+            if fallthrough != FALLTHROUGH:
                 self.branch(switch_end_block)
             else:
                 if x == len(node.cases) - 1:
@@ -382,10 +403,15 @@ class CodeGenerator(NodeVisitor):
                 switch.add_case(self.visit(case.value), cases[x])
         self.position_at_end(switch_end_block)
 
-    def visit_break(self, _):
+    def visit_fallthrough(self, node):
         if 'case' in self.builder.block.name:
-            return BREAK
+            return FALLTHROUGH
+        else:  # TODO: Move this to typechecker
+            error('file={} line={} Syntax Error: fallthrough keyword cannot be used outside of switch statements'.format(self.file_name, node.line_num))
 
+    def visit_break(self, node):
+        if len(self.loop_end_blocks) == 0:  # TODO: Move this to typechecker
+            error('file={} line={} Syntax Error: break keyword cannot be used outside of control flow statements'.format(self.file_name, node.line_num))
         self.is_break = True
         return self.branch(self.loop_end_blocks[-1])
 
@@ -421,8 +447,11 @@ class CodeGenerator(NodeVisitor):
             if isinstance(node.left, VarDecl):
                 var_name = node.left.value.value
                 var_type = type_map[node.left.type.value]
-                casted_value = cast_ops(self, var, var_type, node)
-                self.alloc_define_store(casted_value, var_name, var_type)
+                if not var.type.is_pointer:
+                    casted_value = cast_ops(self, var, var_type, node)
+                    self.alloc_define_store(casted_value, var_name, var_type)
+                else:  # TODO: Not able currently to deal with pointers, such as functions
+                    self.alloc_define_store(var, var_name, var.type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.struct_name)
@@ -600,7 +629,10 @@ class CodeGenerator(NodeVisitor):
         return array
 
     def define_tuple(self, node, elements):
-        raise NotImplementedError
+        array_ptr = self.create_array(node.items[0].val_type)
+        for element in elements:
+            self.call('dyn_array_append', [array_ptr, element])
+        return self.load(array_ptr)
 
     def visit_hashmap(self, node):
         raise NotImplementedError
@@ -685,12 +717,26 @@ class CodeGenerator(NodeVisitor):
         percent_ptr_gep = self.builder.bitcast(percent_ptr_gep, type_map[INT8].as_pointer())
         return self.call('scanf', [percent_ptr_gep, self.allocate(type_map[INT])])
 
+    def get_args(self, parameters):
+        args = []
+        for param in parameters.values():
+            if param.value == FUNC:
+                func_ret_type = type_map[param.func_ret_type.value]
+                func_parameters = self.get_args(param.func_params)
+                func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
+                args.append(func_ty)
+            else:
+                args.append(type_map[param.value])
+
+        return args
+
     def start_function(self, name, return_type, parameters, parameter_defaults=None, varargs=None):
         self.function_stack.append(self.current_function)
         self.block_stack.append(self.builder.block)
         self.new_scope()
+        self.defer_stack.append([])
         ret_type = type_map[return_type.value]
-        args = [type_map[param.value] for param in parameters.values()]
+        args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
         if parameter_defaults:
@@ -705,6 +751,9 @@ class CodeGenerator(NodeVisitor):
         self.position_at_end(entry)
 
     def end_function(self, returned=False):
+        for stat in self.defer_stack[-1]:
+            self.visit(stat)
+        self.defer_stack.pop()
         if not returned:
             self.branch(self.exit_blocks[-1])
         self.position_at_end(self.exit_blocks.pop())
@@ -853,11 +902,12 @@ class CodeGenerator(NodeVisitor):
         di_module = self.module.add_debug_info("DICompileUnit", {
             "language": ir.DIToken("DW_LANG_Python"),
             "file": di_file,
-            "producer": "Lesma v0.2.1",
+            "producer": "Lesma v0.3.0",
             "runtimeVersion": 1,
             "isOptimized": optimize,
         }, is_distinct=True)
-        # self.module.add_global(di_module)
+
+        self.module.name = os.path.basename(os.path.abspath(filename))
         self.module.add_named_metadata('llvm.dbg.cu', [di_file, di_module])
 
     def evaluate(self, optimize=True, ir_dump=False, timer=False):
@@ -890,7 +940,7 @@ class CodeGenerator(NodeVisitor):
         spinner.startSpinner("Compiling")
         compile_time = time()
 
-        self.add_debug_info(optimize, filename)
+        # self.add_debug_info(optimize, filename)
         program_string = llvm.parse_assembly(str(self.module))
 
         prog_str = str(program_string)

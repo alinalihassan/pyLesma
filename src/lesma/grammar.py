@@ -71,7 +71,7 @@ COMPLEX = 'complex'  # TODO
 STR = 'str'
 BOOL = 'bool'
 LIST = 'list'
-TUPLE = 'tuple'  # TODO:
+TUPLE = 'tuple'
 SET = 'set'  # TODO
 DICT = 'dict'
 ENUM = 'enum'  # TODO
@@ -107,6 +107,8 @@ THROW = 'throw'  # TODO
 FINALLY = 'finally'  # TODO
 YIELD = 'yield'  # TODO
 BREAK = 'break'
+FALLTHROUGH = 'fallthrough'
+DEFER = 'defer'
 CONTINUE = 'continue'
 DEL = 'del'  # TODO
 FROM = 'from'  # TODO
@@ -151,7 +153,8 @@ SINGLE_OPERATORS = (
 KEYWORDS = (
     IF, ELSE, WHILE, FOR, SWITCH, CASE, DEF, SUPER, THIS, RETURN, TRY, CATCH, THROW,
     FINALLY, YIELD, BREAK, CONTINUE, DEL, IMPORT, FROM, WITH, PASS, VOID,
-    CONST, OVERRIDE, ABSTRACT, ASSERT, DEFAULT, NEW, ALIAS
+    CONST, OVERRIDE, ABSTRACT, ASSERT, DEFAULT, NEW, ALIAS, FALLTHROUGH,
+    DEFER
 )
 
 MULTI_WORD_KEYWORDS = (IF, ELSE, ELSE_IF)

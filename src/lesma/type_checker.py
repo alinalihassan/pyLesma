@@ -94,6 +94,9 @@ class Preprocessor(NodeVisitor):
         self.visit(node.block)
         return case_type
 
+    def visit_fallthrough(self, node):
+        pass
+
     def visit_break(self, node):
         pass
 
@@ -177,10 +180,13 @@ class Preprocessor(NodeVisitor):
                 error('file={} line={}: Cannot redefine the type of a declared variable: {}'.format(self.file_name, node.line_num, var_name))
 
             if collection_assignment:
-                if lookup_var.item_types == value:
+                col = self.search_scopes(node.left.collection.value)
+                if col.type.name == TUPLE:
+                    error('file={} line={}: Cannot change the elements of a tuple: {}'.format(self.file_name, node.line_num, var_name))
+                elif lookup_var.item_types == value:
                     return
             if lookup_var.read_only:
-                error('file={} line={}: Cannot change the value of a variable declared constant: {}'.format(self.file_name, var_name, node.line_num))
+                error('file={} line={}: Cannot change the value of a variable declared constant: {}'.format(self.file_name, node.line_num, var_name))
 
             lookup_var.val_assigned = True
             if lookup_var.type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
@@ -352,11 +358,11 @@ class Preprocessor(NodeVisitor):
         for k, v in node.parameters.items():
             var_type = self.search_scopes(v.value)
             if var_type is self.search_scopes(FUNC):
-                sym = FuncSymbol(k, v.func_ret_type, None, None)
+                sym = FuncSymbol(k, v.func_ret_type, v.func_params, None)
             elif isinstance(var_type, AliasSymbol):
                 var_type.accessed = True
                 if var_type.type is self.search_scopes(FUNC):
-                    sym = FuncSymbol(k, var_type.type.return_type, None, None)
+                    sym = FuncSymbol(k, var_type.type.return_type, v.func_params, None)
                 else:
                     raise NotImplementedError
             else:
@@ -413,8 +419,8 @@ class Preprocessor(NodeVisitor):
             if x < len(node.arguments):
                 var = self.visit(node.arguments[x])
                 param_ss = self.search_scopes(param.value)
-                if var.type is not None and not types_compatible(var, param_ss) and \
-                   (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name):
+                # TODO: Hacky stuff, first line is made to bypass checks for first-class functions, to fix
+                if not isinstance(var, FuncSymbol) and (var.type is not None and not types_compatible(var, param_ss) and (param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name)):
                     raise TypeError  # TODO: Make this an actual error
             else:
                 func_param_keys = list(parameters.keys())
@@ -469,6 +475,9 @@ class Preprocessor(NodeVisitor):
     def visit_pass(self, node):
         pass
 
+    def visit_defer(self, node):  # TODO: Implement me please
+        pass
+
     def visit_vardecl(self, node):
         type_name = node.type.value
         type_symbol = self.search_scopes(type_name)
@@ -482,11 +491,11 @@ class Preprocessor(NodeVisitor):
             types.append(self.visit(item))
         if types[1:] == types[:-1]:
             if not types:
-                return self.search_scopes(LIST), self.search_scopes(ANY)
+                return self.search_scopes(node.type), self.search_scopes(ANY)
 
-            return self.search_scopes(LIST), types[0]
+            return self.search_scopes(node.type), types[0]
 
-        return self.search_scopes(TUPLE), self.search_scopes(ANY)
+        return self.search_scopes(node.type), self.search_scopes(ANY)
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
