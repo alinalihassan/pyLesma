@@ -14,6 +14,7 @@ class Parser(object):
         self.next_token()
         self.user_types = []
         self.in_class = False
+        self.func_args = False
 
     @property
     def line_num(self):
@@ -38,6 +39,19 @@ class Parser(object):
 
     def preview(self, num=1):
         return self.lexer.preview_token(num)
+
+    def find_until(self, to_find, until):
+        num = 0
+        x = None
+        while x != until:
+            num += 1
+            x = self.lexer.preview_token(num).value
+            if x == to_find:
+                return True
+            elif x == EOF:
+                error('file={} line={} Syntax Error: expected {}'.format(self.file_name, self.line_num, to_find))
+
+        return False
 
     def keep_indent(self):
         while self.current_token.type == NEWLINE:
@@ -244,8 +258,10 @@ class Parser(object):
 
     def function_call(self, token):
         if token.value == PRINT:
+            self.func_args = True
             return Print(self.expr(), self.line_num)
         elif token.value == INPUT:
+            self.func_args = True
             return Input(self.expr(), self.line_num)
 
         self.eat_value(LPAREN)
@@ -673,12 +689,18 @@ class Parser(object):
         elif token.type == TYPE:
             return self.type_spec()
         elif token.value == LPAREN:
-            if preview.value == RPAREN:
-                return []
+            if self.func_args or not self.find_until(COMMA, RPAREN):
+                self.func_args = False
+                if preview.value == RPAREN:
+                    return []
 
-            self.next_token()
-            node = self.expr()
-            self.eat_value(RPAREN)
+                self.next_token()
+                node = self.expr()
+                self.eat_value(RPAREN)
+            else:
+                token = self.next_token()
+                node = self.tuple_expression(token)
+
             return node
         elif preview.value == LPAREN:
             self.next_token()

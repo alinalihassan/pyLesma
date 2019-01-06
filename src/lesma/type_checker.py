@@ -180,10 +180,13 @@ class Preprocessor(NodeVisitor):
                 error('file={} line={}: Cannot redefine the type of a declared variable: {}'.format(self.file_name, node.line_num, var_name))
 
             if collection_assignment:
-                if lookup_var.item_types == value:
+                col = self.search_scopes(node.left.collection.value)
+                if col.type.name == TUPLE:
+                    error('file={} line={}: Cannot change the elements of a tuple: {}'.format(self.file_name, node.line_num, var_name))
+                elif lookup_var.item_types == value:
                     return
             if lookup_var.read_only:
-                error('file={} line={}: Cannot change the value of a variable declared constant: {}'.format(self.file_name, var_name, node.line_num))
+                error('file={} line={}: Cannot change the value of a variable declared constant: {}'.format(self.file_name, node.line_num, var_name))
 
             lookup_var.val_assigned = True
             if lookup_var.type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
@@ -488,11 +491,11 @@ class Preprocessor(NodeVisitor):
             types.append(self.visit(item))
         if types[1:] == types[:-1]:
             if not types:
-                return self.search_scopes(LIST), self.search_scopes(ANY)
+                return self.search_scopes(node.type), self.search_scopes(ANY)
 
-            return self.search_scopes(LIST), types[0]
+            return self.search_scopes(node.type), types[0]
 
-        return self.search_scopes(TUPLE), self.search_scopes(ANY)
+        return self.search_scopes(node.type), self.search_scopes(ANY)
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)

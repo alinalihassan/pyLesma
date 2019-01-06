@@ -21,15 +21,16 @@
 - [ ] Catch struct/class used parameters that are not initialized
 - [ ] Add support for functions with same name but different parameters
 - [ ] Fix local - global variable behaviour, currently there's an implicit main func
+- [ ] Allow strings to be used in equalities
 
 ## Features
 - [ ] Implement Null (maybe someday)
-- [ ] Implement Tuples
+- [x] Implement Tuples
 - [ ] Implement Dictionary
 - [ ] Implement 'in' as a boolean result
 - [x] Implement anonymous functions
 - [ ] Implement Closure
 - [ ] Implement string interpolation
 - [ ] Implement Enums
-- [ ] Implement defer keyword
+- [x] Implement defer keyword
 - [x] Implement fallthrough and change switch's behaviour

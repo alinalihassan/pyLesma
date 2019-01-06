@@ -629,7 +629,10 @@ class CodeGenerator(NodeVisitor):
         return array
 
     def define_tuple(self, node, elements):
-        raise NotImplementedError
+        array_ptr = self.create_array(node.items[0].val_type)
+        for element in elements:
+            self.call('dyn_array_append', [array_ptr, element])
+        return self.load(array_ptr)
 
     def visit_hashmap(self, node):
         raise NotImplementedError
