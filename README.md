@@ -8,21 +8,21 @@ ___
 [![CircleCI](https://circleci.com/gh/hassanalinali/Lesma/tree/master.svg?style=shield)](https://circleci.com/gh/hassanalinali/Lesma/tree/master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/90fcc06be70d4dd98f54f1bb2713d70c)](https://www.codacy.com/app/hassanalinali/Lesma?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hassanalinali/Lesma&amp;utm_campaign=Badge_Grade)
 
-**Lesma** is a compiled, gradually typed, imperative and object oriented programming language with a focused on expressiveness, elegancy, and simplicity, while not sacrificing on performance. The compiler is written in Python using LLVM as a backend.
+**Lesma** is a compiled, statically typed, imperative and object oriented programming language with a focus on expressiveness, elegancy, and simplicity, while not sacrificing on performance. The compiler is written in Python (for now, C++ coming) using LLVM as a backend.
 
 Currently an early Work in Progress, and **many thanks** to [Ayehavgunne](https://github.com/Ayehavgunne) and his [Mythril](https://github.com/Ayehavgunne/Mythril) project for helping me by showcasing advanced examples of llvmlite and providing a base code.
 
 ## Features
-- **it's fast**, because it should be so, but it won't ever oblige you to make an extra effort for the sake of performance 
-- **it's compiled**, so you can finally distribute your projects without dependencies, and because binary size also matters, a Hello World example would be around 8kb
+- **it's fast**, because it should be so, together with LLVM's state of the art optimizations, but it won't ever oblige you to make an extra effort from your side just for the sake of performance
+- **it's compiled** both AOT and JIT, so you can finally decide if you just want to run it or compile it and distribute your project without dependencies, and because binary size also matters, a Hello World example would be around 8kb
 - **it's statically typed** so you don't need to guess the type of the variable if your coworker didn't spend the time to use meaningful names and you can make use of compile-time checks, autocomplete and more
 - **it's simple and expressive** because the code should be easily readable and it shouldn't make you guess what it does
 
 ## Influences
 - Python
+- Swift
 - Typescript
 - Lua
-- Swift
 
 ## Installing
 You can pick up the latest release in the [Release tab](https://github.com/hassanalinali/Lesma/releases) and start using it. Lesma is currently being tested and provides binaries only on Unix. Compatibility between operating systems and architectures is not hard to achieve, but simply not a priority.
