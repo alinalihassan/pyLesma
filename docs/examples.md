@@ -197,17 +197,17 @@ print(cir.radius)
 # Classes
 class Vehicle
 	# Constructor
-	new(year: int, color: str)
+	def new(year: int, color: str)
 		this.year = year
 		this._color = color
 
 # Inheritance
 class Car(Vehicle)
-	new(year: int, color='green', hatchback=false)
+	def new(year: int, color='green', hatchback=false)
 		this.hatchback = hatchback
 		super.Vehicle(year, color)
 
-	print_year() -> void
+	def print_year() -> void
 		print('This car was made in {this.year}')
 
 ford = Car(1992)

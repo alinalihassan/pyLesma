@@ -436,35 +436,39 @@ class Preprocessor(NodeVisitor):
             func.accessed = True
             return func.type
 
-    def visit_methodcall(self, node):  # TODO: Not done here!
-        method_name = node.name
-        method = self.search_scopes(method_name)
-        for x, param in enumerate(method.parameters.values()):
-            if x < len(node.arguments):
-                var = self.visit(node.arguments[x])
-                param_ss = self.search_scopes(param.value)
-                if param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name:
-                    raise TypeError
-            else:
-                method_param_keys = list(method.parameters.keys())
-                if method_param_keys[x] not in node.named_arguments.keys() and method_param_keys[x] not in method.parameter_defaults.keys():
-                    raise TypeError('Missing arguments to method')
-                else:
-                    if method_param_keys[x] in node.named_arguments.keys():
-                        if param.value != self.visit(node.named_arguments[method_param_keys[x]]).name:
-                            raise TypeError
-        if method is None:
-            error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(method_name)))
-        else:
-            method.accessed = True
-            return method.type
+    def visit_methodcall(self, node):  # TODO: Finish this, make Symbols for Classes and Methods
+        pass
+        # method_name = node.name
+        # method = self.search_scopes("{}.{}".format(self.search_scopes(node.obj).type.name, method_name))
+        # for x, param in enumerate(method.parameters.values()):
+        #     if x < len(node.arguments):
+        #         var = self.visit(node.arguments[x])
+        #         param_ss = self.search_scopes(param.value)
+        #         if param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name:
+        #             raise TypeError
+        #     else:
+        #         method_param_keys = list(method.parameters.keys())
+        #         if method_param_keys[x] not in node.named_arguments.keys() and method_param_keys[x] not in method.parameter_defaults.keys():
+        #             raise TypeError('Missing arguments to method')
+        #         else:
+        #             if method_param_keys[x] in node.named_arguments.keys():
+        #                 if param.value != self.visit(node.named_arguments[method_param_keys[x]]).name:
+        #                     raise TypeError
+        # if method is None:
+        #     error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(method_name)))
+        # else:
+        #     method.accessed = True
+        #     return method.return_type
 
     def visit_structdeclaration(self, node):
         sym = StructSymbol(node.name, node.fields)
         self.define(sym.name, sym)
 
     def visit_classdeclaration(self, node):
-        sym = ClassSymbol(node.name, node.class_fields)
+        class_methods = [FuncSymbol(method.name, method.return_type, method.parameters, method.body) for method in node.methods]
+        sym = ClassSymbol(node.name, node.fields, class_methods)
+        for method in class_methods:
+            self.define(method.name, method)
         self.define(sym.name, sym)
 
     def visit_return(self, node):

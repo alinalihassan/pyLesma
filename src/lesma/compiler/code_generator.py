@@ -106,7 +106,12 @@ class CodeGenerator(NodeVisitor):
         func = self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
-            self.alloc_define_store(arg, arg.name, arg.type)
+
+            # TODO: a bit hacky, cannot handle pointers atm but we need them for class reference
+            if arg.name == 'self' and isinstance(arg.type, ir.PointerType):
+                self.define(arg.name, arg)
+            else:
+                self.alloc_define_store(arg, arg.name, arg.type)
         if self.current_function.function_type.return_type != type_map[VOID]:
             self.alloc_and_define(RET_VAR, self.current_function.function_type.return_type)
         ret = self.visit(node.body)
@@ -120,6 +125,51 @@ class CodeGenerator(NodeVisitor):
         self.branch(self.exit_blocks[-1])
         return True
 
+    def visit_methodcall(self, node):
+        obj = self.search_scopes(node.obj)
+        method = self.search_scopes(obj.type.pointee.name + '.' + node.name)
+        return self.methodcall(node, method, obj)
+
+    def methodcall(self, node, func, obj):
+        func_type = func.function_type
+        if len(node.arguments) + 1 < len(func_type.args):
+            args = []
+            args_supplied = []
+            arg_names = []
+
+            for i in func_type.parameters:
+                arg_names.append(i)
+
+            for x, arg in enumerate(func_type.args):
+                if x < len(node.arguments):
+                    args.append(self.visit(node.arguments[x]))
+                else:
+                    if node.named_arguments and arg_names[x] in node.named_arguments:
+                        args.append(self.comp_cast(
+                            self.visit(node.named_arguments[arg_names[x]]),
+                            self.visit(func_type.parameters[arg_names[x]]),
+                            node
+                        ))
+                    else:
+                        if set(node.named_arguments.keys()) & set(args_supplied):
+                            raise TypeError('got multiple values for argument(s) {}'.format(set(node.named_arguments.keys()) & set(args_supplied)))
+
+                        args.append(self.comp_cast(
+                            self.visit(func_type.parameter_defaults[arg_names[x]]),
+                            self.visit(func_type.parameters[arg_names[x]]),
+                            node
+                        ))
+                args_supplied.append(arg)
+        elif len(node.arguments) + len(node.named_arguments) > len(func_type.args) and func_type.var_arg is None:
+            raise SyntaxError('Unexpected arguments')
+        else:
+            args = []
+            for i, arg in enumerate(node.arguments):
+                args.append(self.comp_cast(self.visit(arg), func_type.args[i], node))
+
+        args.insert(0, obj)
+        return self.builder.call(func, args)
+
     def visit_funccall(self, node):
         func_type = self.search_scopes(node.name)
         isFunc = False
@@ -132,7 +182,12 @@ class CodeGenerator(NodeVisitor):
             name = self.search_scopes(node.name)
             name = name.name
         elif isinstance(func_type, ir.IdentifiedStructType):
-            return self.struct_assign(node)
+            typ = self.search_scopes(node.name)
+            if typ.type == STRUCT:
+                return self.struct_assign(node)
+            elif typ.type == CLASS:
+                return self.class_assign(node)
+            error("Unexpected Identified Struct Type")
         else:
             name = node.name
 
@@ -196,7 +251,8 @@ class CodeGenerator(NodeVisitor):
 
         struct = self.module.context.get_identified_type(node.name)
         struct.fields = [field for field in node.fields.keys()]
-        struct.name = 'struct.' + node.name
+        struct.name = node.name
+        struct.type = STRUCT
         struct.set_body([field for field in fields])
         self.define(node.name, struct)
 
@@ -204,13 +260,18 @@ class CodeGenerator(NodeVisitor):
         self.in_class = True
 
         fields = []
-        for field in node.class_fields.values():
+        for field in node.fields.values():
             fields.append(type_map[field.value])
 
         classdecl = self.module.context.get_identified_type(node.name)
-        classdecl.fields = [field for field in node.class_fields.keys()]
-        classdecl.name = 'class.' + node.name
+        classdecl.fields = [field for field in node.fields.keys()]
+        classdecl.name = node.name
+        classdecl.type = CLASS
         classdecl.set_body([field for field in fields])
+        self.define(node.name, classdecl)  # To make use of self in methods, we need to predefine our class
+        for method in node.methods:
+            self.funcdecl(method.name, method)
+        classdecl.methods = [self.search_scopes(method.name) for method in node.methods]
 
         self.in_class = False
         self.define(node.name, classdecl)
@@ -434,7 +495,7 @@ class CodeGenerator(NodeVisitor):
         self.call('create_range', [array_ptr, start, stop])
         return array_ptr
 
-    def visit_assign(self, node):  # TODO: Simplify this, it just keeps getting worse
+    def visit_assign(self, node):
         if hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
             self.define(node.left.value.value, self.visit(node.right))
         elif hasattr(node.right, 'value') and isinstance(self.search_scopes(node.right.value), ir.Function):
@@ -455,7 +516,7 @@ class CodeGenerator(NodeVisitor):
                     self.alloc_define_store(var, var_name, var.type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
-                obj_type = self.search_scopes(obj.struct_name)
+                obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])
                 idx = -1
                 for i, v in enumerate(obj_type.fields):
                     if v == node.left.field:
@@ -481,8 +542,18 @@ class CodeGenerator(NodeVisitor):
 
     def visit_fieldassignment(self, node):
         obj = self.search_scopes(node.obj)
-        obj_type = self.search_scopes(obj.struct_name)
+        obj_type = self.search_scopes(obj.name)
         return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
+
+    def class_assign(self, node):
+        class_type = self.search_scopes(node.name)
+        _class = self.builder.alloca(class_type)
+
+        for func in class_type.methods:
+            if func.name.split(".")[-1] == 'new':
+                self.methodcall(node, func, _class)
+
+        return _class
 
     def struct_assign(self, node):
         struct_type = self.search_scopes(node.name)
@@ -494,12 +565,12 @@ class CodeGenerator(NodeVisitor):
             elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields) - 1, width=INT32)], inbounds=True)
             self.builder.store(fields[len(fields) - 1], elem)
 
-        struct.struct_name = node.name
+        struct.name = node.name
         return struct
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
-        obj_type = self.search_scopes(obj.struct_name)
+        obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])
         return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
 
     def visit_opassign(self, node):
@@ -722,12 +793,20 @@ class CodeGenerator(NodeVisitor):
         args = []
         for param in parameters.values():
             if param.value == FUNC:
-                func_ret_type = type_map[param.func_ret_type.value]
+                if param.func_ret_type.value in type_map:
+                    func_ret_type = type_map[param.func_ret_type.value]
+                elif self.search_scopes(param.func_ret_type.value) is not None:
+                    func_ret_type = self.search_scopes(param.func_ret_type.value).as_pointer()
                 func_parameters = self.get_args(param.func_params)
                 func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
                 args.append(func_ty)
             else:
-                args.append(type_map[param.value])
+                if param.value in type_map:
+                    args.append(type_map[param.value])
+                elif self.search_scopes(param.value) is not None:
+                    args.append(self.search_scopes(param.value).as_pointer())
+                else:
+                    error("Parameter type not recognized: {}".format(param.value))
 
         return args
 

@@ -29,7 +29,7 @@ class Parser(object):
         if self.current_token.type in token_type:
             self.next_token()
         else:
-            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, node.line_num, ", ".join(token_type)))
+            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, self.line_num, ", ".join(token_type)))
 
     def eat_value(self, *token_value):
         if self.current_token.value in token_value:
@@ -83,9 +83,8 @@ class Parser(object):
 
     def class_declaration(self):
         base = None
-        constructor = None
-        methods = None
-        class_fields = OrderedDict()
+        methods = []
+        fields = OrderedDict()
         instance_fields = None
         self.in_class = True
         self.next_token()
@@ -105,13 +104,13 @@ class Parser(object):
                 self.eat_type(NAME)
                 self.eat_value(COLON)
                 field_type = self.type_spec()
-                class_fields[field] = field_type
+                fields[field] = field_type
                 self.eat_type(NEWLINE)
-            if self.current_token.value == NEW:
-                constructor = self.constructor_declaration(class_name)
+            if self.current_token.value == DEF:
+                methods.append(self.method_declaration(class_name))
         self.indent_level -= 1
         self.in_class = False
-        return ClassDeclaration(class_name.value, base, constructor, methods, class_fields, instance_fields)
+        return ClassDeclaration(class_name.value, base, methods, fields, instance_fields)
 
     def variable_declaration(self):
         var_node = Var(self.current_token.value, self.line_num)
@@ -210,12 +209,14 @@ class Parser(object):
 
         return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 
-    def constructor_declaration(self, class_name):
-        self.eat_value(NEW)
+    def method_declaration(self, class_name):
+        self.eat_value(DEF)
+        name = self.next_token()
         self.eat_value(LPAREN)
         params = OrderedDict()
         param_defaults = {}
         vararg = None
+        params['self'] = class_name
         while self.current_token.value != RPAREN:
             param_name = self.current_token.value
             self.eat_type(NAME)
@@ -225,7 +226,7 @@ class Parser(object):
             else:
                 param_type = self.variable(self.current_token)
 
-            params[self.current_token.value] = param_type
+            params[param_name] = param_type
             if self.current_token.value != RPAREN:
                 if self.current_token.value == ASSIGN:
                     self.eat_value(ASSIGN)
@@ -241,11 +242,23 @@ class Parser(object):
                 if self.current_token.value != RPAREN:
                     self.eat_value(COMMA)
         self.eat_value(RPAREN)
+
+        if self.current_token.value != ARROW:
+            return_type = Void()
+        else:
+            self.eat_value(ARROW)
+            if self.current_token.value == VOID:
+                return_type = Void()
+                self.next_token()
+            else:
+                return_type = self.type_spec()
+
         self.eat_type(NEWLINE)
         self.indent_level += 1
         stmts = self.compound_statement()
         self.indent_level -= 1
-        return FuncDecl('{}.constructor'.format(class_name), Void(), params, stmts, self.line_num, param_defaults, vararg)
+
+        return FuncDecl("{}.{}".format(class_name.value, name.value), return_type, params, stmts, self.line_num, param_defaults, vararg)
 
     def bracket_literal(self):
         token = self.next_token()

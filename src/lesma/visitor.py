@@ -74,9 +74,10 @@ class StructSymbol(Symbol):
 
 
 class ClassSymbol(Symbol):
-    def __init__(self, name, class_fields):
+    def __init__(self, name, fields, methods):
         super().__init__(name)
-        self.class_fields = class_fields
+        self.fields = fields
+        self.methods = methods
         self.accessed = False
         self.val_assigned = False
 
