@@ -212,7 +212,6 @@ class CodeGenerator(NodeVisitor):
         classdecl.name = 'class.' + node.name
         classdecl.set_body([field for field in fields])
 
-        # self.funcdecl('class.{}.new'.format(node.name), node.constructor)
         self.in_class = False
         self.define(node.name, classdecl)
 
@@ -258,9 +257,12 @@ class CodeGenerator(NodeVisitor):
         return ALIAS
 
     def visit_vardecl(self, node):
-        typ = type_map[node.type.value]
+        typ = type_map[node.type.value] if node.type.value in type_map else self.search_scopes(node.type.value)
         if node.type.value == FUNC:
-            func_ret_type = type_map[node.type.func_ret_type.value]
+            if node.type.func_ret_type.value in type_map:
+                func_ret_type = type_map[node.type.func_ret_type.value]
+            else:
+                func_ret_type = self.search_scopes(node.type.func_ret_type.value)
             func_parameters = self.get_args(node.type.func_params)
             func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
             typ = func_ty
