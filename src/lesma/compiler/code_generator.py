@@ -266,7 +266,6 @@ class CodeGenerator(NodeVisitor):
             typ = func_ty
         var_addr = self.allocate(typ, name=node.value.value)
         self.define(node.value.value, var_addr)
-        self.store(self.visit(node.value), node.value.value)
 
     @staticmethod
     def visit_type(node):
