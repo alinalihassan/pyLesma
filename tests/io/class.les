@@ -1,0 +1,20 @@
+class Thing
+    a_thing: int
+    def new()
+        self.a_thing = 1
+        print(5)
+
+    def another()
+        print(self.a_thing)
+        self.a_thing = 7
+        print(self.a_thing)
+
+    def just_demo() -> int
+        return 5
+
+x: Thing = Thing()
+print(x.a_thing)
+x.a_thing = 3
+print(x.a_thing)
+x.another()
+print(x.just_demo())
