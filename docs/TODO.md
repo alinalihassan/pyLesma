@@ -15,6 +15,8 @@
 - [ ] Improve warning messages
 - [ ] Add indentation related errors
 - [x] Add docs for as and is
+- [ ] Add docs for classes and structs
+- [ ] Add docs for return type casting and compatible casting
 - [ ] Remove clang as a dependency
 - [ ] Move error messages from source files to typechecker
 - [ ] Fix array types not working and empty lists
@@ -22,10 +24,14 @@
 - [ ] Add support for functions with same name but different parameters
 - [ ] Fix local - global variable behaviour, currently there's an implicit main func
 - [ ] Allow strings to be used in equalities
+- [ ] Allow default values for structs and classes
+- [ ] Use dataclasses and static typing as much as possible
 
 ## Features
 - [ ] Implement Null (maybe someday)
 - [x] Implement Tuples
+- [x] Implement Classes
+- [x] Implement class inheritance
 - [ ] Implement Dictionary
 - [ ] Implement 'in' as a boolean result
 - [x] Implement anonymous functions

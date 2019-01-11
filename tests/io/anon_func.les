@@ -4,5 +4,11 @@ x: func[int, int] -> int = def (x: int, y: int) -> int
 	else
 		return x * y
 
+y = def (x: int, y: int) -> int
+	if x > y
+		return x + y
+	else
+		return x * y
+
 print(x(2,1))
-print(x(2,4))
+print(y(2,4))
