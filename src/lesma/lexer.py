@@ -242,7 +242,7 @@ class Lexer(object):
                 return Token(KEYWORD, self.reset_word(), self.line_num, self.indent_level)
 
             elif self.word in TYPES:
-                return Token(TYPE, self.reset_word(), self.line_num, self.indent_level)
+                return Token(LTYPE, self.reset_word(), self.line_num, self.indent_level)
             elif self.word in CONSTANTS:
                 return Token(CONSTANT, self.reset_word(), self.line_num, self.indent_level)
 

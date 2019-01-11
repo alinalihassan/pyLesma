@@ -299,7 +299,7 @@ class Type(AST):
         self.line_num = line_num
 
 
-class AliasDeclaration(AST):
+class TypeDeclaration(AST):
     def __init__(self, name, collection, line_num):
         self.name = name
         self.collection = collection

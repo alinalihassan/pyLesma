@@ -1,6 +1,6 @@
 from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess
 from lesma.grammar import *
-from lesma.visitor import AliasSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, ClassSymbol, VarSymbol
+from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, ClassSymbol, VarSymbol
 from lesma.utils import warning, error
 
 
@@ -196,7 +196,7 @@ class Preprocessor(NodeVisitor):
                 return
             if lookup_var.type is value.type:
                 return
-            if isinstance(value, AliasSymbol):
+            if isinstance(value, TypeSymbol):
                 value.accessed = True
                 if value.type is self.search_scopes(FUNC):
                     if value.type.return_type == lookup_var.type:
@@ -295,11 +295,11 @@ class Preprocessor(NodeVisitor):
             typs = typs[0]
         else:
             typs = tuple(typs)
-        typ = AliasSymbol(node.name.value, typs)
+        typ = TypeSymbol(node.name.value, typs)
         self.define(typ.name, typ)
 
-    def visit_aliasdeclaration(self, node):
-        typ = AliasSymbol(node.name, node.collection.value)
+    def visit_typedeclaration(self, node):
+        typ = TypeSymbol(node.name, node.collection.value)
         self.define(typ.name, typ)
 
     def visit_externfuncdecl(self, node):
@@ -323,7 +323,7 @@ class Preprocessor(NodeVisitor):
             var_type = self.search_scopes(v.value)
             if var_type is self.search_scopes(FUNC):
                 sym = FuncSymbol(k, v.func_ret_type, None, None)
-            elif isinstance(var_type, AliasSymbol):
+            elif isinstance(var_type, TypeSymbol):
                 var_type.accessed = True
                 if var_type.type is self.search_scopes(FUNC):
                     sym = FuncSymbol(k, var_type.type.return_type, None, None)
@@ -359,7 +359,7 @@ class Preprocessor(NodeVisitor):
             var_type = self.search_scopes(v.value)
             if var_type is self.search_scopes(FUNC):
                 sym = FuncSymbol(k, v.func_ret_type, v.func_params, None)
-            elif isinstance(var_type, AliasSymbol):
+            elif isinstance(var_type, TypeSymbol):
                 var_type.accessed = True
                 if var_type.type is self.search_scopes(FUNC):
                     sym = FuncSymbol(k, var_type.type.return_type, v.func_params, None)

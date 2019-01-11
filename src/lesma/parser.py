@@ -125,12 +125,12 @@ class Parser(object):
     def variable_declaration_assignment(self, declaration):
         return Assign(declaration, self.next_token().value, self.expr(), self.line_num)
 
-    def alias_declaration(self):
-        self.eat_value(ALIAS)
+    def type_declaration(self):
+        self.eat_value(TYPE)
         name = self.next_token()
         self.user_types.append(name.value)
         self.eat_value(ASSIGN)
-        return AliasDeclaration(name.value, self.type_spec(), self.line_num)
+        return TypeDeclaration(name.value, self.type_spec(), self.line_num)
 
     def function_declaration(self):
         op_func = False
@@ -304,7 +304,7 @@ class Parser(object):
         if token.value in self.user_types:
             self.eat_type(NAME)
             return Type(token.value, self.line_num)
-        self.eat_type(TYPE)
+        self.eat_type(LTYPE)
         type_spec = Type(token.value, self.line_num)
         func_ret_type = None
         func_params = OrderedDict()
@@ -391,9 +391,9 @@ class Parser(object):
                 node = self.name_statement()
         elif self.current_token.value == DEF:
             node = self.function_declaration()
-        elif self.current_token.value == ALIAS:
-            node = self.alias_declaration()
-        elif self.current_token.type == TYPE:
+        elif self.current_token.value == TYPE:
+            node = self.type_declaration()
+        elif self.current_token.type == LTYPE:
             if self.current_token.value == STRUCT:
                 node = self.struct_declaration()
             elif self.current_token.value == CLASS:
@@ -416,7 +416,7 @@ class Parser(object):
                     break
             self.eat_value(RSQUAREBRACKET)
             return Collection(LIST, self.line_num, False, *items)
-        elif self.current_token.type == TYPE:
+        elif self.current_token.type == LTYPE:
             type_token = self.next_token()
             if self.current_token.value == COMMA:
                 return self.dictionary_assignment(token)
@@ -702,7 +702,7 @@ class Parser(object):
             return Str(token.value, self.line_num)
         elif token.value == DEF:
             return self.function_declaration()
-        elif token.type == TYPE:
+        elif token.type == LTYPE:
             return self.type_spec()
         elif token.value == LPAREN:
             if self.func_args or not self.find_until(COMMA, RPAREN):

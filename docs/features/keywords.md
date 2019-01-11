@@ -8,7 +8,7 @@ For reference, here are all the keywords categorized by type.
 | if | else | for | while |
 | switch | case | default | def |
 | const | break | continue | pass |
-| void | alias | extern | operator |
+| void | type | extern | operator |
 | fallthrough | defer
 
 ## Operator keywords

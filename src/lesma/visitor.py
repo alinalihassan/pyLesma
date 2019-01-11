@@ -105,7 +105,7 @@ class FuncSymbol(Symbol):
     __repr__ = __str__
 
 
-class AliasSymbol(Symbol):
+class TypeSymbol(Symbol):
     def __init__(self, name, types):
         super().__init__(name, types)
         self.accessed = False

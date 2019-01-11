@@ -2,7 +2,7 @@ Types are optional in Lesma, you can choose whether you specify them or not. Uns
 
 Operations between different types will either be casted to the larger type if the two types are compatible, or give an error otherwise. Two types are compatible if they are different sizes of the same group type (such as ints or floating points).
 
-The type must be either a user-defined alias, a struct or class, or a built-in type.
+The type must be either a user-defined type, a struct or class, or a built-in type.
 
 !!! warning
 	Types that are not specified are inferred, this is fundamentally different to dynamic types!

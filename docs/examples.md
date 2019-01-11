@@ -113,7 +113,7 @@ if my_var is int64
 else if my_var as int64 is int64
 	print("That works")
 
-# Type Aliasing
+# Type Declaration
 type fInt = func[int] -> int
 
 def do_stuff(x: int, callback: fInt) -> int

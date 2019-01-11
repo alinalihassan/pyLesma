@@ -313,9 +313,9 @@ class CodeGenerator(NodeVisitor):
         else:
             self.store(res, var_name)
 
-    def visit_aliasdeclaration(self, node):
+    def visit_typedeclaration(self, node):
         type_map[node.name] = type_map[node.collection.value]
-        return ALIAS
+        return TYPE
 
     def visit_vardecl(self, node):
         typ = type_map[node.type.value] if node.type.value in type_map else self.search_scopes(node.type.value)
