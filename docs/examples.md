@@ -188,9 +188,9 @@ enum Colors
 struct Circle
 	radius: int
 	x: int
-	y: int
+	y: int = 4
 
-cir: Circle = Circle(radius=5, x=2, y=4)
+cir: Circle = Circle(radius=5, x=2)
 
 print(cir.radius)
 
@@ -208,9 +208,10 @@ class Car(Vehicle)
 		super.Vehicle(year, color)
 
 	def print_year() -> void
-		print('This car was made in {this.year}')
+		print('This car was made in {self.year}')
 
 ford = Car(1992)
 
 print(ford.hatchback)
+ford.print_year()
 ```

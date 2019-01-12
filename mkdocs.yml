@@ -14,9 +14,11 @@ nav:
   - Features:
     - Syntax: features/syntax.md
     - Keywords: features/keywords.md
+    - Flow Control: features/flow_control.md
+    - Structs: features/structs.md
+    - Classes: features/classes.md
     - Types: features/types.md
     - Operators: features/operators.md
-    - Flow Control: features/flow_control.md
   - TODO: TODO.md
   - License: license.md
 

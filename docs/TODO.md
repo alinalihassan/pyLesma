@@ -8,6 +8,7 @@
 - [ ] Unicode doesn't print properly on Windows platforms
 - [ ] Fix string and list type declaration not working
 - [ ] Fix base unary operators being applied before user defined ones
+- [ ] Fix structs and classes types not being implicitly defined on assignment
 
 ## Improvements
 - [ ] Allow any type for lists/tuples (currently only int)
@@ -15,7 +16,7 @@
 - [ ] Improve warning messages
 - [ ] Add indentation related errors
 - [x] Add docs for as and is
-- [ ] Add docs for classes and structs
+- [x] Add docs for classes and structs
 - [ ] Add docs for return type casting and compatible casting
 - [ ] Remove clang as a dependency
 - [ ] Move error messages from source files to typechecker
@@ -23,15 +24,14 @@
 - [ ] Catch struct/class used parameters that are not initialized
 - [ ] Add support for functions with same name but different parameters
 - [ ] Fix local - global variable behaviour, currently there's an implicit main func
-- [ ] Allow strings to be used in equalities
-- [ ] Allow default values for structs and classes
+- [ ] Allow default values for struct and class fields
 - [ ] Use dataclasses and static typing as much as possible
 
 ## Features
 - [ ] Implement Null (maybe someday)
 - [x] Implement Tuples
 - [x] Implement Classes
-- [x] Implement class inheritance
+- [ ] Implement Class inheritance
 - [ ] Implement Dictionary
 - [ ] Implement 'in' as a boolean result
 - [x] Implement anonymous functions
