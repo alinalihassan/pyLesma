@@ -42,10 +42,9 @@ class CodeGenerator(NodeVisitor):
         llvm.initialize_native_asmprinter()
         self.anon_counter = 0
 
-        # Add argv and argc to main
-        for i in range(2):
-            func.args[i].name = '.argc' if i == 0 else '.argv'
-            self.alloc_define_store(func.args[i], func.args[i].name[1:], func.args[i].type)
+        # for i in range(2):
+        #     func.args[i].name = '.argc' if i == 0 else '.argv'
+        #     self.alloc_define_store(func.args[i], func.args[i].name[1:], func.args[i].type)
 
     def __str__(self):
         return str(self.module)
@@ -268,7 +267,7 @@ class CodeGenerator(NodeVisitor):
         classdecl.name = node.name
         classdecl.type = CLASS
         classdecl.set_body([field for field in fields])
-        self.define(node.name, classdecl)  # To make use of self in methods, we need to predefine our class
+        self.define(node.name, classdecl)
         for method in node.methods:
             self.funcdecl(method.name, method)
         classdecl.methods = [self.search_scopes(method.name) for method in node.methods]
@@ -327,8 +326,7 @@ class CodeGenerator(NodeVisitor):
             func_parameters = self.get_args(node.type.func_params)
             func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
             typ = func_ty
-        var_addr = self.allocate(typ, name=node.value.value)
-        self.define(node.value.value, var_addr)
+        self.alloc_and_define(typ, name=node.value.value)
 
     @staticmethod
     def visit_type(node):
@@ -884,9 +882,7 @@ class CodeGenerator(NodeVisitor):
             raise NotImplementedError
 
     def allocate(self, typ, name=''):
-        saved_block = self.builder.block
-        var_addr = self.create_entry_block_alloca(name, typ)
-        self.builder.position_at_end(saved_block)
+        var_addr = self.builder.alloca(typ, name=name)
         return var_addr
 
     def alloc_and_store(self, val, typ, name=''):
@@ -906,10 +902,6 @@ class CodeGenerator(NodeVisitor):
         self.builder.position_at_end(saved_block)
         self.builder.store(val, var_addr)
         return var_addr
-
-    def create_entry_block_alloca(self, name, typ):
-        self.builder.position_at_start(self.builder.function.entry_basic_block)
-        return self.builder.alloca(typ, size=None, name=name)
 
     def store(self, value, name):
         if isinstance(name, str):
