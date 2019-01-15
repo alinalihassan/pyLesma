@@ -75,11 +75,11 @@ class CodeGenerator(NodeVisitor):
 
     def visit_anonymousfunc(self, node):
         self.anon_counter += 1
-        self.funcdecl('anon_func.{}'.format(self.anon_counter), node, "private")
+        self.funcdef('anon_func.{}'.format(self.anon_counter), node, "private")
         return self.search_scopes('anon_func.{}'.format(self.anon_counter))
 
     def visit_funcdecl(self, node):
-        self.funcdecl(node.name, node)
+        self.funcdef(node.name, node)
 
     def visit_externfuncdecl(self, node):
         self.externfuncdecl(node.name, node)
@@ -102,6 +102,24 @@ class CodeGenerator(NodeVisitor):
         self.define(name, func, 1)
 
     def funcdecl(self, name, node, linkage=None):
+        func = self.func_decl(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
+
+    def funcimpl(self, name, node):
+        func = self.implement_func_body(name)
+        for i, arg in enumerate(self.current_function.args):
+            arg.name = list(node.parameters.keys())[i]
+
+            # TODO: a bit hacky, cannot handle pointers atm but we need them for class reference
+            if arg.name == 'self' and isinstance(arg.type, ir.PointerType):
+                self.define(arg.name, arg)
+            else:
+                self.alloc_define_store(arg, arg.name, arg.type)
+        if self.current_function.function_type.return_type != type_map[VOID]:
+            self.alloc_and_define(RET_VAR, self.current_function.function_type.return_type)
+        ret = self.visit(node.body)
+        self.end_function(ret)
+
+    def funcdef(self, name, node, linkage=None):
         func = self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
@@ -273,6 +291,9 @@ class CodeGenerator(NodeVisitor):
         self.define(node.name, classdecl)
         for method in node.methods:
             self.funcdecl(method.name, method)
+
+        for method in node.methods:
+            self.funcimpl(method.name, method)
         classdecl.methods = [self.search_scopes(method.name) for method in node.methods]
 
         self.in_class = False
@@ -817,6 +838,33 @@ class CodeGenerator(NodeVisitor):
                     error("Parameter type not recognized: {}".format(param.value))
 
         return args
+
+    def func_decl(self, name, return_type, parameters, parameter_defaults=None, varargs=None, linkage=None):
+        ret_type = type_map[return_type.value]
+        args = self.get_args(parameters)
+        func_type = ir.FunctionType(ret_type, args, varargs)
+        func_type.parameters = parameters
+        if parameter_defaults:
+            func_type.parameter_defaults = parameter_defaults
+        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
+            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
+        func = ir.Function(self.module, func_type, name)
+        func.linkage = linkage
+        self.define(name, func, 1)
+
+    def implement_func_body(self, name):
+        self.function_stack.append(self.current_function)
+        self.block_stack.append(self.builder.block)
+        self.new_scope()
+        self.defer_stack.append([])
+        for f in self.module.functions:
+            if f.name == name:
+                func = f
+                break
+        self.current_function = func
+        entry = self.add_block('entry')
+        self.exit_blocks.append(self.add_block('exit'))
+        self.position_at_end(entry)
 
     def start_function(self, name, return_type, parameters, parameter_defaults=None, varargs=None, linkage=None):
         self.function_stack.append(self.current_function)
