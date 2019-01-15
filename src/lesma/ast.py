@@ -112,10 +112,11 @@ class Return(AST):
 
 
 class StructDeclaration(AST):
-    def __init__(self, name, fields, line_num):
+    def __init__(self, name, fields, defaults, line_num):
         self.name = name
         self.fields = fields
         self.line_num = line_num
+        self.defaults = defaults
 
 
 class ClassDeclaration(AST):

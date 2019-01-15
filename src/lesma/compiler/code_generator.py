@@ -250,6 +250,7 @@ class CodeGenerator(NodeVisitor):
 
         struct = self.module.context.get_identified_type(node.name)
         struct.fields = [field for field in node.fields.keys()]
+        struct.defaults = node.defaults
         struct.name = node.name
         struct.type = STRUCT
         struct.set_body([field for field in fields])
@@ -554,11 +555,21 @@ class CodeGenerator(NodeVisitor):
         struct_type = self.search_scopes(node.name)
         struct = self.builder.alloca(struct_type)
 
+        # Once for defaults
         fields = []
-        for field in node.named_arguments.values():
+        for index, field in struct_type.defaults.items():
             fields.append(self.visit(field))
-            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(len(fields) - 1, width=INT32)], inbounds=True)
-            self.builder.store(fields[len(fields) - 1], elem)
+            pos = struct_type.fields.index(index)
+            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
+            self.builder.store(fields[-1], elem)
+
+        # Another one for calling values
+        fields.clear()
+        for index, field in enumerate(node.named_arguments.values()):
+            fields.append(self.visit(field))
+            pos = struct_type.fields.index(list(node.named_arguments.keys())[index])
+            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
+            self.builder.store(fields[-1], elem)
 
         struct.name = node.name
         return struct

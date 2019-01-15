@@ -72,14 +72,19 @@ class Parser(object):
         self.eat_type(NEWLINE)
         self.indent_level += 1
         fields = OrderedDict()
+        defaults = {}
         while self.current_token.indent_level > name.indent_level:
             field = self.next_token().value
             self.eat_value(COLON)
             field_type = self.type_spec()
             fields[field] = field_type
+            if self.current_token.value == ASSIGN:
+                self.eat_value(ASSIGN)
+                defaults[field] = self.expr()
+
             self.eat_type(NEWLINE)
         self.indent_level -= 1
-        return StructDeclaration(name.value, fields, self.line_num)
+        return StructDeclaration(name.value, fields, defaults, self.line_num)
 
     def class_declaration(self):
         base = None

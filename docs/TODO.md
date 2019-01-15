@@ -1,12 +1,11 @@
 # TODO
 
 ## Fixes
-- [ ] Fix Type declaration not expecting square brackets (for lists)
+- [ ] Fix type declaration for lists and tuples
 - [ ] Fix input function
 - [ ] Fix not being able to return user-defined structs and classes
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [ ] Unicode doesn't print properly on Windows platforms
-- [ ] Fix string and list type declaration not working
 - [ ] Fix base unary operators being applied before user defined ones
 - [ ] Fix structs and classes types not being implicitly defined on assignment
 
