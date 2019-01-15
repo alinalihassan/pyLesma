@@ -140,6 +140,8 @@ class CodeGenerator(NodeVisitor):
                 arg_names.append(i)
 
             for x, arg in enumerate(func_type.args):
+                if x == 0:
+                    continue
                 if x < len(node.arguments):
                     args.append(self.visit(node.arguments[x]))
                 else:

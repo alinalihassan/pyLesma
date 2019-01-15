@@ -23,7 +23,7 @@
 - [ ] Catch struct/class used parameters that are not initialized
 - [ ] Add support for functions with same name but different parameters
 - [ ] Fix local - global variable behaviour, currently there's an implicit main func
-- [ ] Allow default values for struct and class fields
+- [x] Allow default values for struct and class fields
 - [ ] Use dataclasses and static typing as much as possible
 
 ## Features
