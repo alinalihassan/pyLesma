@@ -1,7 +1,9 @@
 class Thing
     a_thing: int
-    def new()
+    b_thing: float
+    def new(b_thing: float = 3.14)
         self.a_thing = 1
+        self.b_thing = b_thing
         print(5)
 
     def another()
@@ -18,3 +20,4 @@ x.a_thing = 3
 print(x.a_thing)
 x.another()
 print(x.just_demo())
+print(x.b_thing)
