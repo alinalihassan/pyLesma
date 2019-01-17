@@ -23,7 +23,7 @@ class CodeGenerator(NodeVisitor):
         self.module = ir.Module()
         self.builder = None
         self._add_builtins()
-        func_ty = ir.FunctionType(ir.VoidType(), [])  # [type_map[INT32], type_map[INT8].as_pointer().as_pointer()])
+        func_ty = ir.FunctionType(ir.IntType(64), [])  # [type_map[INT32], type_map[INT8].as_pointer().as_pointer()])
         func = ir.Function(self.module, func_ty, 'main')
         entry_block = func.append_basic_block('entry')
         exit_block = func.append_basic_block('exit')
@@ -55,7 +55,7 @@ class CodeGenerator(NodeVisitor):
             self.visit(stat)
         self.branch(self.exit_blocks[0])
         self.position_at_end(self.exit_blocks[0])
-        self.builder.ret_void()
+        self.builder.ret(self.const(0))
 
     @staticmethod
     def visit_num(node):
