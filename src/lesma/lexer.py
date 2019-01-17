@@ -252,7 +252,8 @@ class Lexer(object):
             base = 10
             dot_preset = False
             while self.char_type == NUMERIC or (self.current_char == DOT and not dot_preset) or \
-                  (self.current_char in ('a', 'b', 'c', 'd', 'e', 'f', 'x', 'o')):
+                    self.current_char in ('a', 'b', 'c', 'd', 'e', 'f', 'x', 'o'):
+
                 self.word += self.current_char
                 self.next_char()
                 if self.current_char == '.':
