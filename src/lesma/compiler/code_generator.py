@@ -137,7 +137,7 @@ class CodeGenerator(NodeVisitor):
     def visit_return(self, node):
         val = self.visit(node.value)
         if val.type != ir.VoidType():
-            val = self.comp_cast(val, self.search_scopes(RET_VAR).type.pointee, node)
+            # val = self.comp_cast(val, self.search_scopes(RET_VAR).type.pointee, node)
             self.store(val, RET_VAR)
         self.branch(self.exit_blocks[-1])
         return True
