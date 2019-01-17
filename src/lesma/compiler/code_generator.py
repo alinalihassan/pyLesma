@@ -192,7 +192,7 @@ class CodeGenerator(NodeVisitor):
     def visit_funccall(self, node):
         func_type = self.search_scopes(node.name)
         isFunc = False
-        if type(func_type) == ir.AllocaInstr:
+        if isinstance(func_type, ir.AllocaInstr):
             name = self.load(func_type)
             func_type = name.type.pointee
             isFunc = True
@@ -806,11 +806,7 @@ class CodeGenerator(NodeVisitor):
     def visit_input(self, node):
         # Print text if it exists
         if isinstance(node.value, Str):
-            stringz = self.stringz(node.value.value)
-            str_ptr = self.alloc_and_store(stringz, ir.ArrayType(stringz.type.element, stringz.type.count))
-            str_ptr = self.gep(str_ptr, [self.const(0), self.const(0)])
-            str_ptr = self.builder.bitcast(str_ptr, type_map[INT].as_pointer())
-            self.call('puts', [str_ptr])
+            self.print_string(node.value.value)
 
         percent_d = self.stringz('%d')
         percent_ptr = self.alloc_and_store(percent_d, ir.ArrayType(percent_d.type.element, percent_d.type.count))

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Pytest
 echo "Running pre-commit hooks"
