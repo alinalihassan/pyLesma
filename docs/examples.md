@@ -15,6 +15,11 @@ print('夜のコンサートは最高でした。')
 
 a_number: int # Initialize an Integer
 
+# Binary, Hex and Octal numbers supported
+bin_num = 0b101010
+octo_num = 0o1272
+hex_num = 0x1272
+
 π: float = 3.14 # Support for utf-8 variable names
 number = 23 # Type Inference, int in this case
 number = number + 5 // 2 ^ 3 # Number operations

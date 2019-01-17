@@ -249,17 +249,33 @@ class Lexer(object):
             return Token(NAME, self.utf8ToAscii(self.reset_word()), self.line_num, self.indent_level)
 
         if self.word_type == NUMERIC:
-            while self.char_type == NUMERIC or self.current_char == DOT and self.peek(1) != DOT:
+            base = 10
+            dot_preset = False
+            while self.char_type == NUMERIC or (self.current_char == DOT and not dot_preset) or \
+                  (self.current_char in ('a', 'b', 'c', 'd', 'e', 'f', 'x', 'o')):
                 self.word += self.current_char
                 self.next_char()
-                if self.char_type == ALPHANUMERIC:
-                    raise SyntaxError('Variables cannot start with numbers')
+                if self.current_char == '.':
+                    dot_preset = True
+                elif self.char_type == ALPHANUMERIC:
+                    if self.current_char in ('b', 'x', 'o') and self.word == '0':
+                        if self.current_char == 'b':
+                            base = 2
+                        elif self.current_char == 'x':
+                            base = 16
+                        elif self.current_char == 'o':
+                            base = 8
+
+                        self.next_char()
+                        self.word = ""
+                    elif not (base == 16 and self.current_char in ('a', 'b', 'c', 'd', 'e', 'f')):
+                        raise SyntaxError('Variables cannot start with numbers')
             value = self.reset_word()
             if '.' in value:
                 value = Decimal(value)
                 value_type = DOUBLE
             else:
-                value = int(value)
+                value = int(value, base)
                 value_type = INT
             return Token(NUMBER, value, self.line_num, self.indent_level, value_type=value_type)
 
