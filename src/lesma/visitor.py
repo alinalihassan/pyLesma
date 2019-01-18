@@ -180,6 +180,8 @@ class NodeVisitor(object):
         return self._scope[-2] if len(self._scope) >= 2 else None
 
     def search_scopes(self, name, level=None):
+        if name in (None, []):
+            return None
         if level:
             if name in self._scope[level]:
                 return self._scope[level][name]

@@ -521,7 +521,10 @@ class CodeGenerator(NodeVisitor):
             self.define(node.left.value, self.search_scopes(node.right.value))
         else:
             if isinstance(node.right, Input):
-                node.right.type = node.left.type_node.value
+                if hasattr(node.left, 'type'):
+                    node.right.type = node.left.type
+                else:
+                    node.right.type = str
             var = self.visit(node.right)
             if not var:
                 return
@@ -803,16 +806,44 @@ class CodeGenerator(NodeVisitor):
         self.call('printf', [percent_d, num])
         self.call('putchar', [ir.Constant(type_map[INT], 10)])
 
+    @staticmethod
+    def typeToFormat(typ):
+        fmt = None
+
+        if isinstance(typ, ir.IntType):
+            if int(str(typ).split("i")[1]) == 8:
+                fmt = "%c"
+            elif typ.signed:
+                if int(str(typ).split("i")[1]) <= 32:
+                    fmt = "%d"
+                else:
+                    fmt = "%lld"
+            else:
+                if int(str(typ).split("i")[1]) <= 32:
+                    fmt = "%u"
+                else:
+                    fmt = "%llu"
+        elif isinstance(typ, ir.FloatType):
+            fmt = "%f"
+        elif isinstance(typ, ir.DoubleType):
+            fmt = "%lf"
+        else:
+            fmt = "%s"
+
+        return fmt
+
     def visit_input(self, node):
         # Print text if it exists
         if isinstance(node.value, Str):
             self.print_string(node.value.value)
 
-        percent_d = self.stringz('%d')
+        percent_d = self.stringz(self.typeToFormat(type_map[node.type.value]))
         percent_ptr = self.alloc_and_store(percent_d, ir.ArrayType(percent_d.type.element, percent_d.type.count))
         percent_ptr_gep = self.gep(percent_ptr, [self.const(0), self.const(0)])
         percent_ptr_gep = self.builder.bitcast(percent_ptr_gep, type_map[INT8].as_pointer())
-        return self.call('scanf', [percent_ptr_gep, self.allocate(type_map[INT])])
+        var = self.allocate(type_map[node.type.value])
+        self.call('scanf', [percent_ptr_gep, var])
+        return self.builder.load(var)
 
     def get_args(self, parameters):
         args = []
@@ -999,7 +1030,7 @@ class CodeGenerator(NodeVisitor):
         printf_ty = ir.FunctionType(type_map[INT32], [type_map[INT8].as_pointer()], var_arg=True)
         ir.Function(self.module, printf_ty, 'printf')
 
-        scanf_ty = ir.FunctionType(type_map[INT], [type_map[INT8].as_pointer(), type_map[INT].as_pointer()], var_arg=True)
+        scanf_ty = ir.FunctionType(type_map[INT], [type_map[INT8].as_pointer()], var_arg=True)
         ir.Function(self.module, scanf_ty, 'scanf')
 
         getchar_ty = ir.FunctionType(ir.IntType(8), [])

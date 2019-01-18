@@ -223,7 +223,7 @@ def cast_ops(compiler, left, right, node):
             elif cast_type == 'float' and orig_type == 'double':
                 return compiler.builder.fptrunc(left, llvm_type_map[cast_type])
 
-    elif cast_type == STR:
+    elif cast_type == str(type_map[STR]):
         raise NotImplementedError
 
     elif cast_type in (ANY, FUNC, ENUM, DICT, TUPLE):

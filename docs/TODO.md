@@ -2,7 +2,7 @@
 
 ## Fixes
 - [ ] Fix type declaration for lists and tuples
-- [ ] Fix input function
+- [x] Fix input function
 - [ ] Fix not being able to return user-defined structs and classes
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [ ] Unicode doesn't print properly on Windows platforms
