@@ -36,7 +36,7 @@ def unary_op(self, node):
     expr = self.visit(node.expr)
     if hasFunction(self, userdef_unary_str(op, expr)):
         return self.builder.call(self.module.get_global(userdef_unary_str(op, expr)),
-                                     [expr], "unop")
+                                 [expr], "unop")
     elif op == MINUS:
         if isinstance(expr.type, ir.IntType):
             return self.builder.neg(expr)
@@ -56,7 +56,7 @@ def binary_op(self, node):
     right = self.visit(node.right)
     if hasFunction(self, userdef_binary_str(op, left, right)):
         return self.builder.call(self.module.get_global(userdef_binary_str(op, left, right)),
-                                     (left, right), "binop")
+                                 (left, right), "binop")
     elif op == CAST:
         return cast_ops(self, left, right, node)
     elif op in (IS, IS_NOT):
@@ -107,7 +107,7 @@ def int_ops(self, op, left, right, node):
             return self.builder.udiv(left, right, 'divtmp')
     elif op == DIV:
         return (self.builder.fdiv(cast_ops(self, left, type_map[DOUBLE], node),
-                                      cast_ops(self, right, type_map[DOUBLE], node), 'fdivtmp'))
+                                  cast_ops(self, right, type_map[DOUBLE], node), 'fdivtmp'))
     elif op == MOD:
         if left.type.signed:
             return self.builder.srem(left, right, 'modtmp')
@@ -162,7 +162,7 @@ def float_ops(self, op, left, right, node):
         return self.builder.fmul(left, right, 'fmultmp')
     elif op == FLOORDIV:
         return (self.builder.sdiv(cast_ops(self, left, ir.IntType(64), node),
-                                      cast_ops(self, right, ir.IntType(64), node), 'ffloordivtmp'))
+                                  cast_ops(self, right, ir.IntType(64), node), 'ffloordivtmp'))
     elif op == DIV:
         return self.builder.fdiv(left, right, 'fdivtmp')
     elif op == MOD:
