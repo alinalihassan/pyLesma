@@ -251,12 +251,12 @@ class Lexer(object):
         if self.word_type == NUMERIC:
             base = 10
             dot_preset = False
-            while self.char_type == NUMERIC or (self.current_char == DOT and not dot_preset) or \
+            while self.char_type == NUMERIC or (self.current_char == DOT) or \
                     self.current_char in ('a', 'b', 'c', 'd', 'e', 'f', 'x', 'o'):
 
                 self.word += self.current_char
                 self.next_char()
-                if self.current_char == '.':
+                if self.current_char == '.' and base == 10 and not dot_preset:
                     dot_preset = True
                 elif self.char_type == ALPHANUMERIC:
                     if self.current_char in ('b', 'x', 'o') and self.word == '0':
