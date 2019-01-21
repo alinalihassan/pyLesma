@@ -7,7 +7,7 @@ import subprocess
 from llvmlite import ir
 from lesma.grammar import *
 from lesma.ast import CollectionAccess, DotAccess, Input, VarDecl, Str
-from lesma.compiler import RET_VAR, type_map, llvm_to_lesma_type
+from lesma.compiler import RET_VAR, type_map, llvm_to_lesma_type, llvm_type_map
 from lesma.compiler.operations import unary_op, binary_op, cast_ops
 from lesma.compiler.builtins import define_builtins
 from lesma.compiler.builtins import create_dynamic_array_methods
@@ -420,7 +420,7 @@ class CodeGenerator(NodeVisitor):
             iterator = self.visit(node.iterator)
         else:
             iterator = self.search_scopes(node.iterator.value)
-        stop = self.call('int_array_length', [iterator])
+        stop = self.call('i64_array_length', [iterator])
         self.branch(zero_length_block)
 
         self.position_at_end(zero_length_block)
@@ -429,7 +429,7 @@ class CodeGenerator(NodeVisitor):
 
         self.position_at_end(non_zero_length_block)
         varname = node.elements[0].value
-        val = self.call('int_array_get', [iterator, zero])
+        val = self.call('i64_array_get', [iterator, zero])
         self.alloc_define_store(val, varname, iterator.type.pointee.elements[2].pointee)
         position = self.alloc_define_store(zero, 'position', type_map[INT])
         self.branch(cond_block)
@@ -439,7 +439,7 @@ class CodeGenerator(NodeVisitor):
         self.cbranch(cond, body_block, end_block)
 
         self.position_at_end(body_block)
-        self.store(self.call('int_array_get', [iterator, self.load(position)]), varname)
+        self.store(self.call('i64_array_get', [iterator, self.load(position)]), varname)
         self.store(self.builder.add(one, self.load(position)), position)
         self.visit(node.block)
         if not self.is_break:
@@ -551,10 +551,7 @@ class CodeGenerator(NodeVisitor):
                 self.builder.store(self.visit(node.right), elem)
             elif isinstance(node.left, CollectionAccess):
                 right = self.visit(node.right)
-                # Fix this ugly shit, maybe make identified struct types
                 array_type = str(self.search_scopes(node.left.collection.value).type.pointee.elements[-1].pointee)
-                if array_type in llvm_to_lesma_type.keys():
-                    array_type = llvm_to_lesma_type[array_type]
                 self.call('{}_array_set'.format(array_type), [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
             else:
                 var_name = node.left.value
@@ -618,10 +615,7 @@ class CodeGenerator(NodeVisitor):
         if isinstance(node.left, CollectionAccess):
             collection_access = True
             var_name = self.search_scopes(node.left.collection.value)
-            # Fix this ugly shit
             array_type = str(self.search_scopes(node.left.collection.value).type.pointee.elements[-1].pointee)
-            if array_type in llvm_to_lesma_type.keys():
-                array_type = llvm_to_lesma_type[array_type]
             key = self.const(node.left.key.value)
             var = self.call('{}_array_get'.format(array_type), [var_name, key])
             pointee = var.type
@@ -727,15 +721,14 @@ class CodeGenerator(NodeVisitor):
         array_type = node.items[0].val_type
         array_ptr = self.create_array(array_type)
         for element in elements:
-            self.call('{}_array_append'.format(array_type), [array_ptr, element])
+            self.call('{}_array_append'.format(str(type_map[array_type])), [array_ptr, element])
         return self.load(array_ptr)
 
     def create_array(self, array_type):
-        # dyn_array_type = self.module.context.get_identified_type('{}_Array'.format(array_type))
-        # dyn_array_type.set_body([type_map[INT], type_map[INT], type_map[array_type].as_pointer()])
-        dyn_array_type = ir.LiteralStructType([type_map[INT], type_map[INT], type_map[array_type].as_pointer()])
+        array_type = str(type_map[array_type])
+        dyn_array_type = ir.LiteralStructType([type_map[INT], type_map[INT], llvm_type_map[array_type].as_pointer()])
         self.define('{}_Array'.format(array_type), dyn_array_type)
-        array = dyn_array_type([self.const(0), self.const(0), self.const(0).inttoptr(type_map[array_type].as_pointer())])
+        array = dyn_array_type([self.const(0), self.const(0), self.const(0).inttoptr(llvm_type_map[array_type].as_pointer())])
         array = self.alloc_and_store(array, dyn_array_type)
         create_dynamic_array_methods(self, array_type)
         self.call('{}_array_init'.format(array_type), [array])
@@ -745,7 +738,7 @@ class CodeGenerator(NodeVisitor):
         array_type = node.items[0].val_type
         array_ptr = self.create_array(array_type)
         for element in elements:
-            self.call('{}_array_append'.format(array_type), [array_ptr, element])
+            self.call('{}_array_append'.format(str(type_map[array_type])), [array_ptr, element])
         return self.load(array_ptr)
 
     def visit_hashmap(self, node):
@@ -764,7 +757,7 @@ class CodeGenerator(NodeVisitor):
         array = self.create_array(INT)
         string = node.value.encode('utf-8')
         for char in string:
-            self.call('int_array_append', [array, self.const(char)])
+            self.call('i64_array_append', [array, self.const(char)])
         return array
 
     def visit_print(self, node):

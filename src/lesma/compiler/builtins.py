@@ -1,5 +1,5 @@
 from llvmlite import ir
-from lesma.compiler import type_map
+from lesma.compiler import type_map, llvm_type_map
 from lesma.grammar import *
 import lesma.compiler.llvmlite_custom
 
@@ -14,7 +14,7 @@ zero_32 = ir.Constant(type_map[INT32], 0)
 one_32 = ir.Constant(type_map[INT32], 1)
 two_32 = ir.Constant(type_map[INT32], 2)
 
-array_types = [INT]
+array_types = [str(type_map[INT])]
 
 
 def define_builtins(self):
@@ -26,15 +26,16 @@ def define_builtins(self):
     str_struct_ptr = str_struct.as_pointer()
     self.define('Str_ptr', str_struct_ptr)
     type_map[STR] = str_struct
+    lint = str(type_map[INT])
 
-    dynamic_array_init(self, str_struct_ptr, INT)
-    dynamic_array_double_if_full(self, str_struct_ptr, INT)
-    dynamic_array_append(self, str_struct_ptr, INT)
-    dynamic_array_get(self, str_struct_ptr, INT)
-    dynamic_array_set(self, str_struct_ptr, INT)
-    dynamic_array_length(self, str_struct_ptr, INT)
+    dynamic_array_init(self, str_struct_ptr, lint)
+    dynamic_array_double_if_full(self, str_struct_ptr, lint)
+    dynamic_array_append(self, str_struct_ptr, lint)
+    dynamic_array_get(self, str_struct_ptr, lint)
+    dynamic_array_set(self, str_struct_ptr, lint)
+    dynamic_array_length(self, str_struct_ptr, lint)
 
-    define_create_range(self, str_struct_ptr, INT)
+    define_create_range(self, str_struct_ptr, lint)
 
     define_int_to_str(self, str_struct_ptr)
     define_bool_to_str(self, str_struct_ptr)
@@ -119,7 +120,7 @@ def dynamic_array_init(self, dyn_array_ptr, array_type):
     data_ptr = builder.gep(builder.load(array_ptr), [zero_32, two_32], inbounds=True)
     size_of = builder.mul(builder.load(capacity_ptr), eight)
     mem_alloc = builder.call(self.module.get_global('malloc'), [size_of])
-    mem_alloc = builder.bitcast(mem_alloc, type_map[array_type].as_pointer())
+    mem_alloc = builder.bitcast(mem_alloc, llvm_type_map[array_type].as_pointer())
     builder.store(mem_alloc, data_ptr)
 
     builder.branch(dyn_array_init_exit)
@@ -164,7 +165,7 @@ def dynamic_array_double_if_full(self, dyn_array_ptr, array_type):
 
     data_ptr_8 = builder.bitcast(builder.load(data_ptr), type_map[INT8].as_pointer())
     re_alloc = builder.call(self.module.get_global('realloc'), [data_ptr_8, size_of])
-    re_alloc = builder.bitcast(re_alloc, type_map[array_type].as_pointer())
+    re_alloc = builder.bitcast(re_alloc, llvm_type_map[array_type].as_pointer())
     builder.store(re_alloc, data_ptr)
 
     builder.branch(dyn_array_double_capacity_if_full_exit)
@@ -176,7 +177,7 @@ def dynamic_array_double_if_full(self, dyn_array_ptr, array_type):
 
 def dynamic_array_append(self, dyn_array_ptr, array_type):
     # START
-    dyn_array_append_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, type_map[array_type]])
+    dyn_array_append_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, llvm_type_map[array_type]])
     dyn_array_append = ir.Function(self.module, dyn_array_append_type, '{}_array_append'.format(array_type))
     dyn_array_append_entry = dyn_array_append.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_append_entry)
@@ -185,7 +186,7 @@ def dynamic_array_append(self, dyn_array_ptr, array_type):
     builder.position_at_end(dyn_array_append_entry)
     array_ptr = builder.alloca(dyn_array_ptr)
     builder.store(dyn_array_append.args[0], array_ptr)
-    value_ptr = builder.alloca(type_map[array_type])
+    value_ptr = builder.alloca(llvm_type_map[array_type])
     builder.store(dyn_array_append.args[1], value_ptr)
 
     # BODY
@@ -212,7 +213,7 @@ def dynamic_array_append(self, dyn_array_ptr, array_type):
 
 def dynamic_array_get(self, dyn_array_ptr, array_type):
     # START
-    dyn_array_get_type = ir.FunctionType(type_map[array_type], [dyn_array_ptr, type_map[INT]])
+    dyn_array_get_type = ir.FunctionType(llvm_type_map[array_type], [dyn_array_ptr, type_map[INT]])
     dyn_array_get = ir.Function(self.module, dyn_array_get_type, '{}_array_get'.format(array_type))
     dyn_array_get_entry = dyn_array_get.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_get_entry)
@@ -272,7 +273,7 @@ def dynamic_array_get(self, dyn_array_ptr, array_type):
 
 def dynamic_array_set(self, dyn_array_ptr, array_type):
     # START
-    dyn_array_set_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, type_map[INT], type_map[array_type]])
+    dyn_array_set_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, type_map[INT], llvm_type_map[array_type]])
     dyn_array_set = ir.Function(self.module, dyn_array_set_type, '{}_array_set'.format(array_type))
     dyn_array_set_entry = dyn_array_set.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_set_entry)
@@ -287,7 +288,7 @@ def dynamic_array_set(self, dyn_array_ptr, array_type):
     builder.store(dyn_array_set.args[0], array_ptr)
     index_ptr = builder.alloca(type_map[INT])
     builder.store(dyn_array_set.args[1], index_ptr)
-    value_ptr = builder.alloca(type_map[array_type])
+    value_ptr = builder.alloca(llvm_type_map[array_type])
     builder.store(dyn_array_set.args[2], value_ptr)
 
     # BODY
@@ -382,7 +383,7 @@ def define_print(self, dyn_array_ptr):
 
     # BODY
     builder.position_at_end(entry_block)
-    length = builder.call(self.module.get_global('int_array_length'), [builder.load(array_ptr)])
+    length = builder.call(self.module.get_global('i64_array_length'), [builder.load(array_ptr)])
     builder.branch(zero_length_check_block)
 
     builder.position_at_end(zero_length_check_block)
@@ -399,7 +400,7 @@ def define_print(self, dyn_array_ptr):
     builder.cbranch(cond, body_block, exit_block)
 
     builder.position_at_end(body_block)
-    char = builder.call(self.module.get_global('int_array_get'), [builder.load(array_ptr), builder.load(position_ptr)])
+    char = builder.call(self.module.get_global('i64_array_get'), [builder.load(array_ptr), builder.load(position_ptr)])
     builder.call(self.module.get_global('putchar'), [char])
     add_one = builder.add(one, builder.load(position_ptr))
     builder.store(add_one, position_ptr)
@@ -437,7 +438,7 @@ def define_int_to_str(self, dyn_array_ptr):
         builder.call(self.module.get_global('int_to_str'), [builder.load(array_ptr), div_ten])
 
     char = builder.add(fourtyeight, builder.load(x_addr))
-    builder.call(self.module.get_global('int_array_append'), [builder.load(array_ptr), char])
+    builder.call(self.module.get_global('i64_array_append'), [builder.load(array_ptr), char])
     builder.branch(exit_block)
 
     # CLOSE
@@ -458,7 +459,7 @@ def define_bool_to_str(self, dyn_array_ptr):
 
     # BODY
     equalszero = builder.icmp_signed(EQUALS, func.args[1], ir.Constant(type_map[BOOL], 0))
-    dyn_array_append = self.module.get_global('int_array_append')
+    dyn_array_append = self.module.get_global('i64_array_append')
 
     with builder.if_else(equalszero) as (then, otherwise):
         with then:
