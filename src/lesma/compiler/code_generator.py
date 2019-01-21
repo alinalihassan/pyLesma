@@ -265,6 +265,14 @@ class CodeGenerator(NodeVisitor):
                 ret = temp
         return ret
 
+    def visit_enumdeclaration(self, node):
+        enum = self.module.context.get_identified_type(node.name)
+        enum.fields = [field for field in node.fields]
+        enum.name = node.name
+        enum.type = ENUM
+        enum.set_body([ir.IntType(64, signed=False)])
+        self.define(node.name, enum)
+
     def visit_structdeclaration(self, node):
         fields = []
         for field in node.fields.values():
@@ -349,7 +357,8 @@ class CodeGenerator(NodeVisitor):
             func_parameters = self.get_args(node.type.func_params)
             func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
             typ = func_ty
-        self.alloc_and_define(typ, name=node.value.value)
+
+        self.alloc_and_define(node.value.value, typ)
 
     @staticmethod
     def visit_type(node):
@@ -517,7 +526,8 @@ class CodeGenerator(NodeVisitor):
         return array_ptr
 
     def visit_assign(self, node):
-        if hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
+        if isinstance(node.right, DotAccess) and self.search_scopes(node.right.obj).type == ENUM or \
+           hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
             self.define(node.left.value.value, self.visit(node.right))
         elif hasattr(node.right, 'value') and isinstance(self.search_scopes(node.right.value), ir.Function):
             self.define(node.left.value, self.search_scopes(node.right.value))
@@ -605,8 +615,15 @@ class CodeGenerator(NodeVisitor):
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
-        obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])
-        return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
+        if obj.type == ENUM:
+            enum = self.builder.alloca(obj)
+            idx = obj.fields.index(node.field)
+            val = self.builder.gep(enum, [self.const(0, width=INT32), self.const(0, width=INT32)], inbounds=True)
+            self.builder.store(self.const(idx), val)
+            return enum
+        else:
+            obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])
+            return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
 
     def visit_opassign(self, node):
         right = self.visit(node.right)

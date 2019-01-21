@@ -65,6 +65,14 @@ class VarSymbol(Symbol):
     __repr__ = __str__
 
 
+class EnumSymbol(Symbol):
+    def __init__(self, name, fields):
+        super().__init__(name)
+        self.fields = fields
+        self.accessed = False
+        self.val_assigned = False
+
+
 class StructSymbol(Symbol):
     def __init__(self, name, fields):
         super().__init__(name)

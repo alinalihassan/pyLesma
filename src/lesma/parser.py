@@ -65,6 +65,22 @@ class Parser(object):
             root.children.extend(comp.children)
         return Program(root)
 
+    def enum_declaration(self):
+        self.eat_value(ENUM)
+        name = self.next_token()
+        self.user_types.append(name.value)
+        self.eat_type(NEWLINE)
+        self.indent_level += 1
+        fields = []
+        while self.current_token.indent_level > name.indent_level:
+            field = self.next_token().value
+            fields.append(field)
+
+            self.eat_type(NEWLINE)
+
+        self.indent_level -= 1
+        return EnumDeclaration(name.value, fields, self.line_num)
+
     def struct_declaration(self):
         self.eat_value(STRUCT)
         name = self.next_token()
@@ -403,6 +419,8 @@ class Parser(object):
                 node = self.struct_declaration()
             elif self.current_token.value == CLASS:
                 node = self.class_declaration()
+            elif self.current_token.value == ENUM:
+                node = self.enum_declaration()
         elif self.current_token.value == EOF:
             return
         else:

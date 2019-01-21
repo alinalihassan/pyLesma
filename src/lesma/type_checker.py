@@ -1,6 +1,6 @@
 from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess
 from lesma.grammar import *
-from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, ClassSymbol, VarSymbol
+from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, EnumSymbol, ClassSymbol, VarSymbol
 from lesma.utils import warning, error
 
 
@@ -129,7 +129,7 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
-        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, ClassSymbol)):
+        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, EnumSymbol, ClassSymbol)):
             var_name = node.left.value
             value = self.infer_type(self.search_scopes(node.right.name))
             value.accessed = True
@@ -408,7 +408,7 @@ class Preprocessor(NodeVisitor):
         func = self.search_scopes(func_name)
         parameters = None
         parameter_defaults = None
-        if isinstance(func, (StructSymbol, ClassSymbol)):
+        if isinstance(func, (StructSymbol, ClassSymbol, EnumSymbol)):
             parameters = func.fields
             parameter_defaults = func.fields
         else:
@@ -462,6 +462,10 @@ class Preprocessor(NodeVisitor):
 
     def visit_structdeclaration(self, node):
         sym = StructSymbol(node.name, node.fields)
+        self.define(sym.name, sym)
+
+    def visit_enumdeclaration(self, node):
+        sym = EnumSymbol(node.name, node.fields)
         self.define(sym.name, sym)
 
     def visit_classdeclaration(self, node):

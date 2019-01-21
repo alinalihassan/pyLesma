@@ -111,6 +111,13 @@ class Return(AST):
         self.line_num = line_num
 
 
+class EnumDeclaration(AST):
+    def __init__(self, name, fields, line_num):
+        self.name = name
+        self.fields = fields
+        self.line_num = line_num
+
+
 class StructDeclaration(AST):
     def __init__(self, name, fields, defaults, line_num):
         self.name = name
