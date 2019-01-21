@@ -24,10 +24,7 @@ class Token(object):
 
 class Lexer(object):
     def __init__(self, text, file_name=None):
-        if len(text) == 0:
-            error('empty input')
-
-        self.text = text
+        self.text = self.sanitize_text(text)
         self.file_name = file_name
         self.pos = 0
         self.current_char = self.text[self.pos]
@@ -46,6 +43,14 @@ class Lexer(object):
         else:
             self.current_char = self.text[self.pos]
             self.char_type = self.get_type(self.current_char)
+
+    def sanitize_text(self, text):
+        if len(text) == 0:
+            error('empty input')
+        elif text[-1] != '\n':
+            text += '\n'
+
+        return text
 
     def reset_word(self):
         old_word = self.word
