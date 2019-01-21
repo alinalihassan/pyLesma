@@ -208,7 +208,7 @@ class Parser(object):
             if len(params) not in (1, 2):  # TODO: move this to type checker
                 error("Operators can either be unary or binary, and the number of parameters do not match")
 
-            name.value = 'operator' + '.' + name.value
+            name.value = OPERATOR + '.' + name.value
             for param in params:
                 name.value += '.' + str(type_map[str(params[param].value)])
 

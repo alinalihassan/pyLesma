@@ -9,7 +9,7 @@ For reference, here are all the keywords categorized by type.
 | switch | case | default | def |
 | const | break | continue | pass |
 | void | type | extern | operator |
-| fallthrough | defer
+| fallthrough | defer | self
 
 ## Operator keywords
 
