@@ -30,6 +30,6 @@ struct thing
 
 class Example
 	new(x: int)
-		this.x = x
+		self.x = x
 ```
 

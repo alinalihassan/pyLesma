@@ -112,7 +112,7 @@ class CodeGenerator(NodeVisitor):
             arg.name = list(node.parameters.keys())[i]
 
             # TODO: a bit hacky, cannot handle pointers atm but we need them for class reference
-            if arg.name == 'self' and isinstance(arg.type, ir.PointerType):
+            if arg.name == SELF and isinstance(arg.type, ir.PointerType):
                 self.define(arg.name, arg)
             else:
                 self.alloc_define_store(arg, arg.name, arg.type)
@@ -127,7 +127,7 @@ class CodeGenerator(NodeVisitor):
             arg.name = list(node.parameters.keys())[i]
 
             # TODO: a bit hacky, cannot handle pointers atm but we need them for class reference
-            if arg.name == 'self' and isinstance(arg.type, ir.PointerType):
+            if arg.name == SELF and isinstance(arg.type, ir.PointerType):
                 self.define(arg.name, arg)
             else:
                 self.alloc_define_store(arg, arg.name, arg.type)

@@ -221,7 +221,7 @@ class Parser(object):
         params = OrderedDict()
         param_defaults = {}
         vararg = None
-        params['self'] = class_name
+        params[SELF] = class_name
         while self.current_token.value != RPAREN:
             param_name = self.current_token.value
             self.eat_type(NAME)
