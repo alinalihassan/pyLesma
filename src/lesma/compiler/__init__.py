@@ -26,6 +26,22 @@ type_map = {
     VOID: ir.VoidType(),
 }
 
+llvm_to_lesma_type = {
+    "u1": BOOL,
+    "u8": UINT8,
+    "u16": UINT16,
+    "u32": UINT32,
+    "u64": UINT64,
+    "u128": UINT128,
+    "i8": INT8,
+    "i16": INT16,
+    "i32": INT32,
+    "i64": INT,
+    "i128": INT128,
+    "double": DOUBLE,
+    "float": FLOAT,
+}
+
 llvm_type_map = {
     "u1": ir.IntType(1, signed=False),
     "u8": ir.IntType(8, signed=False),

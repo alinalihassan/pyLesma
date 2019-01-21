@@ -5,7 +5,7 @@ class Thing
         self.a_thing = 1
         self.b_thing = b_thing
         print(5)
-        print(just_demo())
+        print(self.just_demo())
 
     def another()
         print(self.a_thing)

@@ -17,9 +17,9 @@ def get_tests():
 @pytest.mark.parametrize("test_name", get_tests())
 def test_base(test_name):
     path = os.path.join(os.path.dirname(__file__), os.pardir)
-    proc = Popen(["python", os.path.join(path, "src", "les.py"),
+    proc = Popen(["python3", os.path.join(path, "src", "les.py"),
                  "run", os.path.join(path, "tests", "io", test_name + ".les")],
-                 stdout=PIPE, stderr=PIPE, shell=True)
+                 stdout=PIPE, stderr=PIPE)
     out, err = proc.communicate()
     output = out.decode('utf-8').strip()
     error = err.decode('utf-8').strip()
@@ -32,4 +32,3 @@ def test_base(test_name):
         with open(os.path.join(path, "tests", "io", test_name + ".output")) as expected:
             exp_str = "".join(expected.readlines())
             assert output == exp_str
-            expected.close()

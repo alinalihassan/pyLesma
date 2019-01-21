@@ -19,10 +19,10 @@ def get_tests():
 def test_base(test_name):
     path = os.path.join(os.path.dirname(__file__), os.pardir)
     with tempfile.TemporaryDirectory() as dirpath:
-        proc = Popen(["python", os.path.join(path, "src", "les.py"),
+        proc = Popen(["python3", os.path.join(path, "src", "les.py"),
                       "compile", os.path.join(path, "tests", "io", test_name + ".les"),
                       "-l", "-o", os.path.join(dirpath, "temp")],
-                     stdout=PIPE, stderr=PIPE, shell=True)
+                     stdout=PIPE, stderr=PIPE)
         out, err = proc.communicate()
         output = out.decode('utf-8').strip()
         error = err.decode('utf-8').strip()

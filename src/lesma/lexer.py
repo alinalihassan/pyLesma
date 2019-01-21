@@ -250,15 +250,10 @@ class Lexer(object):
 
         if self.word_type == NUMERIC:
             base = 10
-            dot_preset = False
-            while self.char_type == NUMERIC or (self.current_char == DOT) or \
+            while self.char_type == NUMERIC or (self.current_char == DOT and self.peek(1) != DOT) or \
                     self.current_char in ('a', 'b', 'c', 'd', 'e', 'f', 'x', 'o'):
-
                 self.word += self.current_char
-                self.next_char()
-                if self.current_char == '.' and base == 10 and not dot_preset:
-                    dot_preset = True
-                elif self.char_type == ALPHANUMERIC:
+                if self.char_type == ALPHANUMERIC:
                     if self.current_char in ('b', 'x', 'o') and self.word == '0':
                         if self.current_char == 'b':
                             base = 2
@@ -270,7 +265,12 @@ class Lexer(object):
                         self.next_char()
                         self.word = ""
                     elif not (base == 16 and self.current_char in ('a', 'b', 'c', 'd', 'e', 'f')):
-                        raise SyntaxError('Variables cannot start with numbers')
+                        print(self.word, self.current_char)
+                    else:
+                        error("Unexpected number parsing")
+
+                self.next_char()
+
             value = self.reset_word()
             if '.' in value:
                 value = Decimal(value)
