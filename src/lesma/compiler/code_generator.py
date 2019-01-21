@@ -7,7 +7,7 @@ import subprocess
 from llvmlite import ir
 from lesma.grammar import *
 from lesma.ast import CollectionAccess, DotAccess, Input, VarDecl, Str
-from lesma.compiler import RET_VAR, type_map
+from lesma.compiler import RET_VAR, type_map, llvm_to_lesma_type
 from lesma.compiler.operations import unary_op, binary_op, cast_ops
 from lesma.compiler.builtins import define_builtins
 from lesma.compiler.builtins import create_dynamic_array_methods
@@ -553,6 +553,8 @@ class CodeGenerator(NodeVisitor):
                 right = self.visit(node.right)
                 # Fix this ugly shit, maybe make identified struct types
                 array_type = str(self.search_scopes(node.left.collection.value).type.pointee.elements[-1].pointee)
+                if array_type in llvm_to_lesma_type.keys():
+                    array_type = llvm_to_lesma_type[array_type]
                 self.call('{}_array_set'.format(array_type), [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
             else:
                 var_name = node.left.value
@@ -616,7 +618,10 @@ class CodeGenerator(NodeVisitor):
         if isinstance(node.left, CollectionAccess):
             collection_access = True
             var_name = self.search_scopes(node.left.collection.value)
+            # Fix this ugly shit
             array_type = str(self.search_scopes(node.left.collection.value).type.pointee.elements[-1].pointee)
+            if array_type in llvm_to_lesma_type.keys():
+                array_type = llvm_to_lesma_type[array_type]
             key = self.const(node.left.key.value)
             var = self.call('{}_array_get'.format(array_type), [var_name, key])
             pointee = var.type
@@ -764,13 +769,16 @@ class CodeGenerator(NodeVisitor):
 
     def visit_print(self, node):
         if node.value:
+            # print(node)
+            # print(node.value)
+            # exit()
             val = self.visit(node.value)
         else:
             self.call('putchar', [ir.Constant(type_map[INT32], 10)])
             return
         if isinstance(val.type, ir.IntType):
             if val.type.width == 1:
-                array = self.create_array(BOOL)
+                array = self.create_array(INT)
                 self.call('bool_to_str', [array, val])
                 val = array
             else:
