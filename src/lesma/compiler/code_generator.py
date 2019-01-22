@@ -543,12 +543,17 @@ class CodeGenerator(NodeVisitor):
                 return
             if isinstance(node.left, VarDecl):
                 var_name = node.left.value.value
-                var_type = type_map[node.left.type.value]
-                if not var.type.is_pointer:
-                    casted_value = cast_ops(self, var, var_type, node)
-                    self.alloc_define_store(casted_value, var_name, var_type)
-                else:  # TODO: Not able currently to deal with pointers, such as functions
+                if node.left.type.value in (LIST, TUPLE):
+                    # TODO: Currently only supporting one type for lists and tuples
+                    var_type = type_map[list(node.left.type.func_params.items())[0][1].value]
                     self.alloc_define_store(var, var_name, var.type)
+                else:
+                    var_type = type_map[node.left.type.value]
+                    if not var.type.is_pointer:
+                        casted_value = cast_ops(self, var, var_type, node)
+                        self.alloc_define_store(casted_value, var_name, var_type)
+                    else:  # TODO: Not able currently to deal with pointers, such as functions
+                        self.alloc_define_store(var, var_name, var.type)
             elif isinstance(node.left, DotAccess):
                 obj = self.search_scopes(node.left.obj)
                 obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])

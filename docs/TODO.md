@@ -1,7 +1,7 @@
 # TODO
 
 ## Fixes
-- [ ] Fix type declaration for lists and tuples
+- [x] Fix type declaration for lists and tuples
 - [x] Fix input function
 - [ ] Fix not being able to return user-defined structs and classes
 - [ ] Fix not being able to overload operators on user-defined structs and classes

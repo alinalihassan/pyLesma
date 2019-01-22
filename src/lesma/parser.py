@@ -330,7 +330,19 @@ class Parser(object):
         func_ret_type = None
         func_params = OrderedDict()
         param_num = 0
-        if self.current_token.value == LSQUAREBRACKET and token.value == FUNC:
+        if self.current_token.value == LSQUAREBRACKET and token.value in (LIST, TUPLE):
+            self.next_token()
+            while self.current_token.value != RSQUAREBRACKET:
+                param_type = self.type_spec()
+                func_params[str(param_num)] = param_type
+                param_num += 1
+                if self.current_token.value != RSQUAREBRACKET:
+                    self.eat_value(COMMA)
+
+            self.eat_value(RSQUAREBRACKET)
+            type_spec.func_params = func_params
+
+        elif self.current_token.value == LSQUAREBRACKET and token.value == FUNC:
             self.next_token()
             while self.current_token.value != RSQUAREBRACKET:
                 param_type = self.type_spec()
