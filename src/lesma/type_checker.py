@@ -129,6 +129,8 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
+            if value.name in (TUPLE, LIST) and node.right.type != value.type:
+                error('file={} line={}: Contradicting {}-{} declaration'.format(self.file_name, node.line_num, value.name, node.right.type))
         elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, EnumSymbol, ClassSymbol)):
             var_name = node.left.value
             value = self.search_scopes(node.right.name)
