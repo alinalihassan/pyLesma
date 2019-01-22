@@ -1,3 +1,10 @@
+class DemoClass
+    def new()
+        pass
+
+y = DemoClass()
+
+
 class Thing
     a_thing: int
     b_thing: float
@@ -14,6 +21,7 @@ class Thing
 
     def just_demo() -> int
         return 5
+
 
 x: Thing = Thing()
 print(x.a_thing)
