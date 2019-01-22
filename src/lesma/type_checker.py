@@ -131,8 +131,9 @@ class Preprocessor(NodeVisitor):
             value.accessed = True
         elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, EnumSymbol, ClassSymbol)):
             var_name = node.left.value
-            value = self.infer_type(self.search_scopes(node.right.name))
+            value = self.search_scopes(node.right.name)
             value.accessed = True
+            value = self.infer_type(value)
         elif isinstance(node.right, Collection):
             var_name = node.left.value
             value, collection_type = self.visit(node.right)
@@ -140,6 +141,11 @@ class Preprocessor(NodeVisitor):
             field_assignment = True
             var_name = self.visit(node.left)
             value = self.visit(node.right)
+        elif isinstance(node.right, DotAccess):
+            var_name = node.left.value
+            value = self.search_scopes(node.right.obj)
+            value.accessed = True
+            value = self.infer_type(value)
         elif isinstance(node.left, CollectionAccess):
             collection_assignment = True
             var_name = node.left.collection.value

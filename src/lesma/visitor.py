@@ -247,6 +247,8 @@ class NodeVisitor(object):
             return self.search_scopes(STR)
         if isinstance(value, StructSymbol):
             return self.search_scopes(STRUCT)
+        if isinstance(value, EnumSymbol):
+            return self.search_scopes(ENUM)
         if isinstance(value, ClassSymbol):
             return self.search_scopes(CLASS)
         if isinstance(value, bool):

@@ -528,7 +528,8 @@ class CodeGenerator(NodeVisitor):
     def visit_assign(self, node):
         if isinstance(node.right, DotAccess) and self.search_scopes(node.right.obj).type == ENUM or \
            hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), ir.IdentifiedStructType):
-            self.define(node.left.value.value, self.visit(node.right))
+            var_name = node.left.value if isinstance(node.left.value, str) else node.left.value.value
+            self.define(var_name, self.visit(node.right))
         elif hasattr(node.right, 'value') and isinstance(self.search_scopes(node.right.value), ir.Function):
             self.define(node.left.value, self.search_scopes(node.right.value))
         else:

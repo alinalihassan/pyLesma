@@ -1,0 +1,5 @@
+enum Color
+    Red
+    White
+
+x: Color = Color.White

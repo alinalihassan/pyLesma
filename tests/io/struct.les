@@ -4,6 +4,7 @@ struct Circle
 	y: int = 99
 
 cir: Circle = Circle(radius=5, x=2)
+anotherCir = Circle(radius=1, x=3)
 
 print(cir.radius + cir.x)
 cir.x = 20
