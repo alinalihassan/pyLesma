@@ -270,7 +270,7 @@ class CodeGenerator(NodeVisitor):
         enum.fields = [field for field in node.fields]
         enum.name = node.name
         enum.type = ENUM
-        enum.set_body([ir.IntType(64, signed=False)])
+        enum.set_body([ir.IntType(8, signed=False)])
         self.define(node.name, enum)
 
     def visit_structdeclaration(self, node):
@@ -619,7 +619,7 @@ class CodeGenerator(NodeVisitor):
             enum = self.builder.alloca(obj)
             idx = obj.fields.index(node.field)
             val = self.builder.gep(enum, [self.const(0, width=INT32), self.const(0, width=INT32)], inbounds=True)
-            self.builder.store(self.const(idx), val)
+            self.builder.store(self.const(idx, width=INT8), val)
             return enum
         else:
             obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])
