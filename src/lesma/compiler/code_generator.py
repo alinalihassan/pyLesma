@@ -139,7 +139,7 @@ class CodeGenerator(NodeVisitor):
     def visit_return(self, node):
         val = self.visit(node.value)
         if val.type != ir.VoidType():
-            # val = self.comp_cast(val, self.search_scopes(RET_VAR).type.pointee, node)
+            val = self.comp_cast(val, self.search_scopes(RET_VAR).type.pointee, node)
             self.store(val, RET_VAR)
         self.branch(self.exit_blocks[-1])
         return True
@@ -521,7 +521,7 @@ class CodeGenerator(NodeVisitor):
     def visit_range(self, node):
         start = self.visit(node.left)
         stop = self.visit(node.right)
-        array_ptr = self.create_array(INT)  # TODO: This should be changed to allow any type
+        array_ptr = self.create_array(INT)
         self.call('create_range', [array_ptr, start, stop])
         return array_ptr
 
@@ -780,9 +780,6 @@ class CodeGenerator(NodeVisitor):
 
     def visit_print(self, node):
         if node.value:
-            # print(node)
-            # print(node.value)
-            # exit()
             val = self.visit(node.value)
         else:
             self.call('putchar', [ir.Constant(type_map[INT32], 10)])
@@ -858,8 +855,7 @@ class CodeGenerator(NodeVisitor):
         return fmt
 
     def visit_input(self, node):
-        # Print text if it exists
-        if isinstance(node.value, Str):
+        if isinstance(node.value, Str):  # Print text if it exists
             self.print_string(node.value.value)
 
         percent_d = self.stringz(self.typeToFormat(type_map[node.type.value]))

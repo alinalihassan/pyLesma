@@ -218,9 +218,6 @@ class Preprocessor(NodeVisitor):
         left_type = self.infer_type(left)
         right_type = self.infer_type(right)
         any_type = self.search_scopes(ANY)
-        # if left_type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-        # 	if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-        # 		return left_type
         if types_compatible(left_type, right_type) or left_type is any_type or right_type is any_type:
             return left_type
         else:

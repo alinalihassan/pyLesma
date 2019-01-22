@@ -6,7 +6,7 @@
 - [ ] Fix not being able to return user-defined structs and classes
 - [ ] Fix not being able to overload operators on user-defined structs and classes
 - [ ] Fix base unary operators being applied before user defined ones
-- [ ] Fix structs and classes types not being implicitly defined on assignment
+- [x] Fix structs and classes types not being implicitly defined on assignment
 
 ## Improvements
 - [ ] Improve warning messages
@@ -25,6 +25,7 @@
 - [x] Allow any type for lists/tuples (currently only int)
 - [ ] String/Lists are currently unsupported on: type declaration with assignment, input function, operators, etc.
 - [ ] Find a way to use pointers and null for FFI but restrict or not allow it in normal Lesma
+- [ ] Add basic operators for Enums
 
 ## Features
 - [x] Implement Tuples
@@ -35,7 +36,7 @@
 - [x] Implement anonymous functions
 - [ ] Implement Closure
 - [ ] Implement string interpolation
-- [ ] Implement Enums
+- [x] Implement Enums
 - [ ] Implement lambda functions
 - [x] Implement defer keyword
 - [x] Implement fallthrough and change switch's behaviour
