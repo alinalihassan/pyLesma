@@ -3,6 +3,7 @@ from llvmlite import ir
 from lesma.compiler import NUM_TYPES
 from lesma.compiler import type_map, llvm_type_map
 from lesma.grammar import *
+from lesma.utils import error
 import lesma.compiler.llvmlite_custom
 
 # TODO: Determine size using a comparison function
@@ -54,6 +55,7 @@ def binary_op(self, node):
     op = node.op
     left = self.visit(node.left)
     right = self.visit(node.right)
+
     if hasFunction(self, userdef_binary_str(op, left, right)):
         return self.builder.call(self.module.get_global(userdef_binary_str(op, left, right)),
                                  (left, right), "binop")
@@ -69,6 +71,14 @@ def binary_op(self, node):
         elif isinstance(right.type, ir.IntType):
             left = cast_ops(self, right, left.type, node)
         return float_ops(self, op, left, right, node)
+    elif hasattr(left.type, 'type') and left.type.type == ENUM and hasattr(right.type, 'type') and right.type.type == ENUM:
+        return enum_ops(self, op, left, right, node)
+    else:
+        error('file={} line={}: Unknown operator {} for {} and {}'.format(
+            self.file_name,
+            node.line_num,
+            op, node.left, node.right
+        ))
 
 
 def is_ops(self, op, left, right, node):
@@ -80,6 +90,15 @@ def is_ops(self, op, left, right, node):
         return self.const(orig != compare, BOOL)
     else:
         raise SyntaxError('Unknown identity operator', node.op)
+
+
+def enum_ops(self, op, left, right, node):
+    if op == EQUALS:
+        left_val = self.builder.extract_value(left, 0)
+        right_val = self.builder.extract_value(right, 0)
+        return self.builder.icmp_unsigned(op, left_val, right_val, 'cmptmp')
+    else:
+        raise SyntaxError('Unknown binary operator', node.op)
 
 
 def int_ops(self, op, left, right, node):
