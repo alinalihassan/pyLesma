@@ -17,7 +17,7 @@
 - [ ] Remove clang as a dependency
 - [ ] Move error messages from source files to typechecker
 - [ ] Fix array types not working and empty lists
-- [ ] Catch struct/class used parameters that are not initialized
+- [x] Catch struct/class used parameters that are not initialized
 - [ ] Add support for functions with same name but different parameters
 - [ ] Fix local - global variable behaviour, currently there's an implicit main func
 - [x] Allow default values for struct and class fields

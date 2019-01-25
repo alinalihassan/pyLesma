@@ -600,21 +600,24 @@ class CodeGenerator(NodeVisitor):
         struct_type = self.search_scopes(node.name)
         struct = self.builder.alloca(struct_type)
 
-        # Once for defaults
-        fields = []
+        fields = set()
         for index, field in struct_type.defaults.items():
-            fields.append(self.visit(field))
+            val = self.visit(field)
             pos = struct_type.fields.index(index)
+            fields.add(index)
             elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
-            self.builder.store(fields[-1], elem)
+            self.builder.store(val, elem)
 
-        # Another one for calling values
-        fields.clear()
         for index, field in enumerate(node.named_arguments.values()):
-            fields.append(self.visit(field))
+            val = self.visit(field)
             pos = struct_type.fields.index(list(node.named_arguments.keys())[index])
+            fields.add((list(node.named_arguments.keys())[index]))
             elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
-            self.builder.store(fields[-1], elem)
+            self.builder.store(val, elem)
+
+        if len(fields) < len(struct_type.fields):
+            error('file={} line={} Syntax Error: struct declaration doesn\'t initialize all fields ({})'.format(
+                self.file_name, node.line_num, ','.join(fields.symmetric_difference(set(struct_type.fields)))))
 
         struct.name = node.name
         return struct
