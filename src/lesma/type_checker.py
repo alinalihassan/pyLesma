@@ -21,7 +21,7 @@ def types_compatible(left_type, right_type):
     int_type = ('i8', 'i16', 'i32', 'i64', 'int8', 'int16', 'int32', 'int64', 'int')
     float_type = ('float', 'double')
     num_type = int_type + float_type
-    if (left_type is right_type) or \
+    if (left_type == right_type) or \
        (left_type in num_type and right_type in num_type):
         return True
 
