@@ -6,6 +6,7 @@ struct Circle
 cir: Circle = Circle(radius=5, x=2)
 anotherCir = Circle(radius=1, x=3)
 
+print(anotherCir.x)
 print(cir.radius + cir.x)
 cir.x = 20
 print(cir.x)

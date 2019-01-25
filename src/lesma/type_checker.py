@@ -135,7 +135,6 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value
             value = self.search_scopes(node.right.name)
             value.accessed = True
-            value = self.infer_type(value)
         elif isinstance(node.right, Collection):
             var_name = node.left.value
             value, collection_type = self.visit(node.right)
