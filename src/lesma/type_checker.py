@@ -106,6 +106,8 @@ class Preprocessor(NodeVisitor):
     def visit_constant(self, node):
         if node.value == TRUE or node.value == FALSE:
             return self.search_scopes(BOOL)
+        elif node.value == INF:
+            return self.search_scopes(DOUBLE)
 
         return NotImplementedError
 

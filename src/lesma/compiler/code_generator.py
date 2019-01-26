@@ -3,6 +3,7 @@ from decimal import Decimal
 from time import time
 import llvmlite.binding as llvm
 import os
+from math import inf
 import subprocess
 from llvmlite import ir
 from lesma.grammar import *
@@ -730,6 +731,8 @@ class CodeGenerator(NodeVisitor):
             return self.const(1, BOOL)
         elif node.value == FALSE:
             return self.const(0, BOOL)
+        elif node.value == INF:
+            return self.const(inf, DOUBLE)
         else:
             raise NotImplementedError('file={} line={}'.format(self.file_name, node.line_num))
 
