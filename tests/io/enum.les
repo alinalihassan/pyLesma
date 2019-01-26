@@ -3,3 +3,7 @@ enum Color
     White
 
 x: Color = Color.White
+y: Color = Color.Red
+print(x == Color.White)
+print(x == Color.Red)
+print(x == y)
