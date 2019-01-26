@@ -515,7 +515,9 @@ class Preprocessor(NodeVisitor):
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
         obj.accessed = True
-        if node.field not in obj.type.fields:
+        if isinstance(obj, EnumSymbol):
+            return obj
+        elif node.field not in obj.type.fields:
             error('file={} line={}: Invalid property {} of variable {}'.format(
                 self.file_name, node.line_num, node.field, node.obj))
         return self.visit(obj.type.fields[node.field])

@@ -72,6 +72,9 @@ class EnumSymbol(Symbol):
         self.accessed = False
         self.val_assigned = False
 
+    def __str__(self):
+        return ENUM
+
 
 class StructSymbol(Symbol):
     def __init__(self, name, fields):

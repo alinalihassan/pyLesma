@@ -71,7 +71,11 @@ def binary_op(self, node):
         elif isinstance(right.type, ir.IntType):
             left = cast_ops(self, right, left.type, node)
         return float_ops(self, op, left, right, node)
-    elif hasattr(left.type, 'type') and left.type.type == ENUM and hasattr(right.type, 'type') and right.type.type == ENUM:
+    elif is_enum(left.type) and is_enum(right.type):
+        if left.type.is_pointer:
+            left = self.builder.load(left)
+        if right.type.is_pointer:
+            right = self.builder.load(right)
         return enum_ops(self, op, left, right, node)
     else:
         error('file={} line={}: Unknown operator {} for {} and {}'.format(
@@ -79,6 +83,12 @@ def binary_op(self, node):
             node.line_num,
             op, node.left, node.right
         ))
+
+
+def is_enum(typ):
+    if typ.is_pointer:
+        typ = typ.pointee
+    return hasattr(typ, 'type') and typ.type == ENUM
 
 
 def is_ops(self, op, left, right, node):
