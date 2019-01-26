@@ -25,7 +25,7 @@
 - [x] Allow any type for lists/tuples (currently only int)
 - [ ] String/Lists are currently unsupported on: type declaration with assignment, input function, operators, etc.
 - [ ] Find a way to use pointers and null for FFI but restrict or not allow it in normal Lesma
-- [ ] Add basic operators for Enums
+- [x] Add basic operators for Enums
 
 ## Features
 - [x] Implement Tuples

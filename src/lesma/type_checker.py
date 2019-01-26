@@ -295,18 +295,7 @@ class Preprocessor(NodeVisitor):
         return results
 
     def visit_typedeclaration(self, node):
-        typs = []
-        for t in node.collection:
-            typs.append(self.visit(t))
-        if len(typs) == 1:
-            typs = typs[0]
-        else:
-            typs = tuple(typs)
-        typ = TypeSymbol(node.name.value, typs)
-        self.define(typ.name, typ)
-
-    def visit_typedeclaration(self, node):
-        typ = TypeSymbol(node.name, node.collection.value)
+        typ = TypeSymbol(node.name, self.search_scopes(node.collection.value))
         self.define(typ.name, typ)
 
     def visit_externfuncdecl(self, node):

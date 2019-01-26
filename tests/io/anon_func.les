@@ -10,7 +10,7 @@ y = def (x: int, y: int) -> int
 	else
 		return x * y
 
-z: func[] = def ()
+z: func = def ()
     print(5)
 
 
