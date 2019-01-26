@@ -69,7 +69,7 @@ def binary_op(self, node):
         if isinstance(left.type, ir.IntType):
             left = cast_ops(self, left, right.type, node)
         elif isinstance(right.type, ir.IntType):
-            left = cast_ops(self, right, left.type, node)
+            right = cast_ops(self, right, left.type, node)
         return float_ops(self, op, left, right, node)
     elif is_enum(left.type) and is_enum(right.type):
         if left.type.is_pointer:
