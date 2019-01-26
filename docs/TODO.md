@@ -38,5 +38,6 @@
 - [ ] Implement string interpolation
 - [x] Implement Enums
 - [ ] Implement lambda functions
+- [x] Implement inf
 - [x] Implement defer keyword
 - [x] Implement fallthrough and change switch's behaviour
