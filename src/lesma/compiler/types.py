@@ -34,7 +34,8 @@ class Int(Number):
         super().__init__()
         self.name = INT
 
-    def type(self):
+    @staticmethod
+    def type():
         return ir.IntType(64)
 
 
@@ -93,7 +94,8 @@ class UInt(Number):
         super().__init__()
         self.name = UINT
 
-    def type(self):
+    @staticmethod
+    def type():
         return ir.IntType(64, False)
 
 

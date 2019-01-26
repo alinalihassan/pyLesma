@@ -7,7 +7,7 @@ import subprocess
 from llvmlite import ir
 from lesma.grammar import *
 from lesma.ast import CollectionAccess, DotAccess, Input, VarDecl, Str
-from lesma.compiler import RET_VAR, type_map, llvm_to_lesma_type, llvm_type_map
+from lesma.compiler import RET_VAR, type_map, llvm_type_map
 from lesma.compiler.operations import unary_op, binary_op, cast_ops
 from lesma.compiler.builtins import define_builtins
 from lesma.compiler.builtins import create_dynamic_array_methods
@@ -104,10 +104,10 @@ class CodeGenerator(NodeVisitor):
         self.define(name, func, 1)
 
     def funcdecl(self, name, node, linkage=None):
-        func = self.func_decl(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
+        self.func_decl(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
 
     def funcimpl(self, name, node):
-        func = self.implement_func_body(name)
+        self.implement_func_body(name)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
 
@@ -122,7 +122,7 @@ class CodeGenerator(NodeVisitor):
         self.end_function(ret)
 
     def funcdef(self, name, node, linkage=None):
-        func = self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
+        self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
 
@@ -343,7 +343,8 @@ class CodeGenerator(NodeVisitor):
         else:
             self.store(res, var_name)
 
-    def visit_typedeclaration(self, node):
+    @staticmethod
+    def visit_typedeclaration(node):
         type_map[node.name] = type_map[node.collection.value]
         return TYPE
 

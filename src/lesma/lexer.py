@@ -44,7 +44,8 @@ class Lexer(object):
             self.current_char = self.text[self.pos]
             self.char_type = self.get_type(self.current_char)
 
-    def sanitize_text(self, text):
+    @staticmethod
+    def sanitize_text(text):
         if len(text) == 0:
             error('empty input')
         elif text[-1] != '\n':
