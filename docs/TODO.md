@@ -23,7 +23,7 @@
 - [x] Allow default values for struct and class fields
 - [ ] Use dataclasses and static typing as much as possible in source code
 - [x] Allow any type for lists/tuples (currently only int)
-- [ ] String/Lists are currently unsupported on: type declaration with assignment, input function, operators, etc.
+- [ ] String/Lists are currently unsupported on: input function, operators, etc.
 - [ ] Find a way to use pointers and null for FFI but restrict or not allow it in normal Lesma
 - [x] Add basic operators for Enums
 
