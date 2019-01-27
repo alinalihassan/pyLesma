@@ -132,6 +132,18 @@ z: func = def()
     print(5)
 ```
 
+### Void
+Void is used only for function return types and are used to illustrate that the function does not return a value. If the return type of a function is omitted, void will be used by default. 
+
+```py
+def example() -> void
+	pass
+
+def example2()	# Here the return type is omitted
+	pass
+
+```
+
 ## Type Operations
 
 ### Is

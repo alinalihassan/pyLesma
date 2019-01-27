@@ -21,15 +21,15 @@ def hasFunction(self, func_name):
 
 
 def userdef_unary_str(op, expr):
-    return OPERATOR + '.' + op + '.' + str(expr.type)
+    type_name = expr.type.name if hasattr(expr.type, 'name') else str(expr.type)
+    return OPERATOR + '.' + op + '.' + type_name
 
 
 # Hacky way of checking if it's an expression or type
 def userdef_binary_str(op, left, right):
-    try:
-        return OPERATOR + '.' + op + '.' + str(left.type) + '.' + str(right.type)
-    except Exception:
-        return OPERATOR + '.' + op + '.' + str(left.type) + '.' + str(right)
+    ltype_name = str(left) if not hasattr(left, 'type') else (str(left.type) if not hasattr(left.type, 'name') else left.type.name)
+    rtype_name = str(right) if not hasattr(right, 'type') else (str(right.type) if not hasattr(right.type, 'name') else right.type.name)
+    return OPERATOR + '.' + op + '.' + ltype_name + '.' + rtype_name
 
 
 def unary_op(self, node):

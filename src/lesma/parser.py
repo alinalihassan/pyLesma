@@ -226,7 +226,8 @@ class Parser(object):
 
             name.value = OPERATOR + '.' + name.value
             for param in params:
-                name.value += '.' + str(type_map[str(params[param].value)])
+                type_name = str(type_map[str(params[param].value)]) if str(params[param].value) in type_map else str(params[param].value)
+                name.value += '.' + type_name
 
         return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 

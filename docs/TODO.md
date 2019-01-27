@@ -3,8 +3,8 @@
 ## Fixes
 - [x] Fix type declaration for lists and tuples
 - [x] Fix input function
-- [ ] Fix not being able to return user-defined structs and classes
-- [ ] Fix not being able to overload operators on user-defined structs and classes
+- [x] Fix not being able to return user-defined structs and classes
+- [x] Fix not being able to overload operators on user-defined structs and classes
 - [ ] Fix base unary operators being applied before user defined ones
 - [x] Fix structs and classes types not being implicitly defined on assignment
 
