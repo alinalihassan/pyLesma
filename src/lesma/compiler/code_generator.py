@@ -937,7 +937,7 @@ class CodeGenerator(NodeVisitor):
         self.block_stack.append(self.builder.block)
         self.new_scope()
         self.defer_stack.append([])
-        ret_type = type_map[return_type.value]
+        ret_type = type_map[return_type.value] if return_type.value in type_map else self.search_scopes(return_type.value)
         args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
