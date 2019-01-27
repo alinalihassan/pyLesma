@@ -360,8 +360,13 @@ class CodeGenerator(NodeVisitor):
             func_parameters = self.get_args(node.type.func_params)
             func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
             typ = func_ty
-
-        self.alloc_and_define(node.value.value, typ)
+            self.alloc_and_define(node.value.value, typ)
+        elif node.type.value in (LIST, TUPLE):
+            array_type = node.type.func_params['0'].value
+            typ = ir.LiteralStructType([type_map[INT], type_map[INT], type_map[array_type].as_pointer()])
+            self.alloc_and_define(node.value.value, typ)
+        else:
+            self.alloc_and_define(node.value.value, typ)
 
     @staticmethod
     def visit_type(node):

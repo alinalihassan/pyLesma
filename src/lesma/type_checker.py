@@ -488,7 +488,11 @@ class Preprocessor(NodeVisitor):
         type_name = node.type.value
         type_symbol = self.search_scopes(type_name)
         var_name = node.value.value
-        var_symbol = VarSymbol(var_name, type_symbol)
+        if type_name in (LIST, TUPLE):
+            var_symbol = CollectionSymbol(var_name, type_symbol, node.type.func_params['0'].value)
+            var_symbol.read_only = type_name == TUPLE
+        else:
+            var_symbol = VarSymbol(var_name, type_symbol)
         self.define(var_symbol.name, var_symbol)
 
     def visit_collection(self, node):

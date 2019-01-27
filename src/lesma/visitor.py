@@ -99,6 +99,7 @@ class CollectionSymbol(Symbol):
         self.item_types = item_types
         self.accessed = False
         self.val_assigned = False
+        self.read_only = False
 
 
 class FuncSymbol(Symbol):
