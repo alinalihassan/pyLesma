@@ -10,23 +10,23 @@ import lesma.compiler.llvmlite_custom
 int_types = ('i1', 'i8', 'i16', 'i32', 'i64', 'i128')
 float_types = ('float', 'double')
 
-false = ir.Constant(type_map[BOOL], 0)
-true = ir.Constant(type_map[BOOL], 1)
-
 
 def hasFunction(self, func_name):
     for func in self.module.functions:
         if func.name == func_name:
             return True
 
+    return False
+
 
 def userdef_unary_str(op, expr):
+    # Check first if it's an built in type, then user defined type
     type_name = expr.type.name if hasattr(expr.type, 'name') else str(expr.type)
     return OPERATOR + '.' + op + '.' + type_name
 
 
-# Hacky way of checking if it's an expression or type
 def userdef_binary_str(op, left, right):
+    # Check first if it's a type, then if it's an built in type, then user defined type
     ltype_name = str(left) if not hasattr(left, 'type') else (str(left.type) if not hasattr(left.type, 'name') else left.type.name)
     rtype_name = str(right) if not hasattr(right, 'type') else (str(right.type) if not hasattr(right.type, 'name') else right.type.name)
     return OPERATOR + '.' + op + '.' + ltype_name + '.' + rtype_name
@@ -49,6 +49,13 @@ def unary_op(self, node):
     elif op == BINARY_ONES_COMPLIMENT:
         if isinstance(expr.type, ir.IntType):
             return self.builder.not_(expr)
+    else:
+        error('file={} line={}: Unknown operator {} for {}'.format(
+            self.file_name,
+            node.line_num,
+            op,
+            expr
+        ))
 
 
 def binary_op(self, node):
@@ -72,10 +79,6 @@ def binary_op(self, node):
             right = cast_ops(self, right, left.type, node)
         return float_ops(self, op, left, right, node)
     elif is_enum(left.type) and is_enum(right.type):
-        if left.type.is_pointer:
-            left = self.builder.load(left)
-        if right.type.is_pointer:
-            right = self.builder.load(right)
         return enum_ops(self, op, left, right, node)
     else:
         error('file={} line={}: Unknown operator {} for {} and {}'.format(
@@ -103,6 +106,11 @@ def is_ops(self, op, left, right, node):
 
 
 def enum_ops(self, op, left, right, node):
+    if left.type.is_pointer:
+        left = self.builder.load(left)
+    if right.type.is_pointer:
+        right = self.builder.load(right)
+
     if op == EQUALS:
         left_val = self.builder.extract_value(left, 0)
         right_val = self.builder.extract_value(right, 0)
@@ -255,7 +263,7 @@ def cast_ops(self, left, right, node):
     elif cast_type == str(type_map[STR]):
         raise NotImplementedError
 
-    elif cast_type in (ANY, FUNC, ENUM, DICT, TUPLE):
+    elif cast_type in (ANY, FUNC, STRUCT, CLASS, ENUM, DICT, LIST, TUPLE):
         raise TypeError('file={} line={}: Cannot cast from {} to type {}'.format(
             self.file_name,
             node.line_num,
