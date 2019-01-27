@@ -3,6 +3,8 @@ print(things[0])
 print(things[1*1+1])
 things[2] = 1002
 print(things[2])
+things[2]++
+print(things[2])
 
 x: list[double] = [1.5]
 print(x[0])

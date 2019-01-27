@@ -316,8 +316,9 @@ class CodeGenerator(NodeVisitor):
         if isinstance(node.left, CollectionAccess):
             collection_access = True
             var_name = self.search_scopes(node.left.collection.value)
+            array_type = str(var_name.type.pointee.elements[-1].pointee)
             key = self.const(node.left.key.value)
-            var = self.call('dyn_array_get', [var_name, key])
+            var = self.call('{}_array_get'.format(array_type), [var_name, key])
             pointee = var.type
         else:
             var_name = node.left.value
@@ -340,7 +341,7 @@ class CodeGenerator(NodeVisitor):
             raise NotImplementedError()
 
         if collection_access:
-            self.call('dyn_array_set', [var_name, key, res])
+            self.call('{}_array_set'.format(array_type), [var_name, key, res])
         else:
             self.store(res, var_name)
 
