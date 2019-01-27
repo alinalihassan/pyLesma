@@ -30,3 +30,11 @@ print(x.a_thing)
 x.another()
 print(x.just_demo())
 print(x.b_thing)
+
+def giveMeAThing(some: Thing) -> Thing
+    some.a_thing = 99
+    return some
+
+z = giveMeAThing(x)
+print(z.b_thing)
+print(z.a_thing)

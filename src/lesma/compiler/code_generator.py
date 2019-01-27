@@ -898,8 +898,10 @@ class CodeGenerator(NodeVisitor):
             else:
                 if param.value in type_map:
                     args.append(type_map[param.value])
-                elif self.search_scopes(param.value) is not None:
+                elif list(parameters.keys())[list(parameters.values()).index(param)] == SELF:
                     args.append(self.search_scopes(param.value).as_pointer())
+                elif self.search_scopes(param.value) is not None:
+                    args.append(self.search_scopes(param.value))
                 else:
                     error("Parameter type not recognized: {}".format(param.value))
 

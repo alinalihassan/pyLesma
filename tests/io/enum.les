@@ -7,3 +7,11 @@ y: Color = Color.Red
 print(x == Color.White)
 print(x == Color.Red)
 print(x == y)
+
+# Testing enums as parameters and return values
+def giveMeSomeColor(some: Color) -> Color
+    return some
+
+cir: Color = Color.Red
+xy = giveMeSomeColor(cir)
+print(xy == Color.Red)
