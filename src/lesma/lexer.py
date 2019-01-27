@@ -260,7 +260,7 @@ class Lexer(object):
                     self.current_char in ('a', 'b', 'c', 'd', 'e', 'f', 'x', 'o'):
                 self.word += self.current_char
                 if self.char_type == ALPHANUMERIC:
-                    if self.current_char in ('b', 'x', 'o') and self.word == '0':
+                    if self.current_char in ('b', 'x', 'o') and self.word.startswith('0') and len(self.word) == 2:
                         if self.current_char == 'b':
                             base = 2
                         elif self.current_char == 'x':
@@ -268,15 +268,11 @@ class Lexer(object):
                         elif self.current_char == 'o':
                             base = 8
 
-                        self.next_char()
                         self.word = ""
                     elif not (base == 16 and self.current_char in ('a', 'b', 'c', 'd', 'e', 'f')):
-                        print(self.word, self.current_char)
-                    else:
                         error("Unexpected number parsing")
 
                 self.next_char()
-
             value = self.reset_word()
             if '.' in value:
                 value = Decimal(value)
