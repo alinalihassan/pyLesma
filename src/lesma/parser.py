@@ -702,12 +702,14 @@ class Parser(object):
             node = IncrementAssign(left, token.value, self.line_num)
         elif token.value == COLON:
             type_node = self.type_spec()
-
             var = VarDecl(left, type_node, self.line_num)
             node = self.variable_declaration_assignment(var)
         else:
             raise SyntaxError('Unknown assignment operator: {}'.format(token.value))
         return node
+
+    def typ(self, token):
+        return Type(token.value, self.line_num)
 
     def variable(self, token, read_only=False):
         return Var(token.value, self.line_num, read_only)
@@ -768,6 +770,8 @@ class Parser(object):
             return self.curly_bracket_expression(token)
         elif token.type == NAME:
             self.next_token()
+            if token.value in self.user_types:
+                return self.typ(token)
             return self.variable(token)
         elif token.type == CONSTANT:
             self.next_token()

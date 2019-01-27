@@ -19,3 +19,4 @@ def giveMeACircle(some: Circle) -> Circle
 a_circle = giveMeACircle(cir)
 print(a_circle.x)
 print(a_circle.y)
+print(a_circle is Circle)

@@ -38,3 +38,4 @@ def giveMeAThing(some: Thing) -> Thing
 z = giveMeAThing(x)
 print(z.b_thing)
 print(z.a_thing)
+print(z is Thing)

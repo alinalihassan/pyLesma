@@ -368,9 +368,8 @@ class CodeGenerator(NodeVisitor):
         else:
             self.alloc_and_define(node.value.value, typ)
 
-    @staticmethod
-    def visit_type(node):
-        return type_map[node.value]
+    def visit_type(self, node):
+        return type_map[node.value] if node.value in type_map else self.search_scopes(node.value)
 
     def visit_if(self, node):
         start_block = self.add_block('if.start')

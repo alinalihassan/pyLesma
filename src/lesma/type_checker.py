@@ -250,14 +250,14 @@ class Preprocessor(NodeVisitor):
             error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(var_name)))
         else:
             if not val.val_assigned:
-                error('file={} line={}: {} is being accessed before it was defined'.format(self.file_name, var_name, node.line_num))
+                error('file={} line={}: {} is being accessed before it was defined'.format(self.file_name, node.line_num, var_name))
             val.accessed = True
             return val
 
     def visit_binop(self, node):
         if node.op == CAST or node.op in (IS, IS_NOT):
             self.visit(node.left)
-            if node.right.value not in TYPES:
+            if node.right.value not in TYPES and not isinstance(self.search_scopes(node.right.value), (EnumSymbol, ClassSymbol, StructSymbol)):
                 error('file={} line={}: type expected for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, node.left, node.right))
             return self.infer_type(self.visit(node.right))
         else:
