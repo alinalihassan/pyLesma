@@ -7,6 +7,8 @@
 - [x] Fix not being able to overload operators on user-defined structs and classes
 - [ ] Fix base unary operators being applied before user defined ones
 - [x] Fix structs and classes types not being implicitly defined on assignment
+- [x] Fix pytest for windows
+- [ ] Fix unicode on windows bash
 
 ## Improvements
 - [ ] Improve warning messages
