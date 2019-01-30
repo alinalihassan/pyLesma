@@ -4,7 +4,7 @@
 
 ___
 [![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-0.3.0-brightgreen.svg)](https://github.com/hassanalinali/Lesma/blob/master/LICENSE.md)
+[![Version](https://img.shields.io/badge/version-0.4.0-brightgreen.svg)](https://github.com/hassanalinali/Lesma/blob/master/LICENSE.md)
 [![CircleCI](https://circleci.com/gh/hassanalinali/Lesma/tree/master.svg?style=shield)](https://circleci.com/gh/hassanalinali/Lesma/tree/master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/90fcc06be70d4dd98f54f1bb2713d70c)](https://www.codacy.com/app/hassanalinali/Lesma?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hassanalinali/Lesma&amp;utm_campaign=Badge_Grade)
 
