@@ -65,6 +65,17 @@ class VarSymbol(Symbol):
     __repr__ = __str__
 
 
+class EnumSymbol(Symbol):
+    def __init__(self, name, fields):
+        super().__init__(name)
+        self.fields = fields
+        self.accessed = False
+        self.val_assigned = False
+
+    def __str__(self):
+        return ENUM
+
+
 class StructSymbol(Symbol):
     def __init__(self, name, fields):
         super().__init__(name)
@@ -74,9 +85,10 @@ class StructSymbol(Symbol):
 
 
 class ClassSymbol(Symbol):
-    def __init__(self, name, class_fields):
+    def __init__(self, name, fields, methods):
         super().__init__(name)
-        self.class_fields = class_fields
+        self.fields = fields
+        self.methods = methods
         self.accessed = False
         self.val_assigned = False
 
@@ -87,6 +99,7 @@ class CollectionSymbol(Symbol):
         self.item_types = item_types
         self.accessed = False
         self.val_assigned = False
+        self.read_only = False
 
 
 class FuncSymbol(Symbol):
@@ -104,7 +117,7 @@ class FuncSymbol(Symbol):
     __repr__ = __str__
 
 
-class AliasSymbol(Symbol):
+class TypeSymbol(Symbol):
     def __init__(self, name, types):
         super().__init__(name, types)
         self.accessed = False
@@ -179,6 +192,8 @@ class NodeVisitor(object):
         return self._scope[-2] if len(self._scope) >= 2 else None
 
     def search_scopes(self, name, level=None):
+        if name in (None, []):
+            return None
         if level:
             if name in self._scope[level]:
                 return self._scope[level][name]
@@ -236,6 +251,8 @@ class NodeVisitor(object):
             return self.search_scopes(STR)
         if isinstance(value, StructSymbol):
             return self.search_scopes(STRUCT)
+        if isinstance(value, EnumSymbol):
+            return self.search_scopes(ENUM)
         if isinstance(value, ClassSymbol):
             return self.search_scopes(CLASS)
         if isinstance(value, bool):

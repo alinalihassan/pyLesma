@@ -15,17 +15,24 @@ print('夜のコンサートは最高でした。')
 
 a_number: int # Initialize an Integer
 
+# Binary, Hex and Octal numbers supported
+bin_num = 0b101010
+octo_num = 0o1272
+hex_num = 0x1272
+
 π: float = 3.14 # Support for utf-8 variable names
 number = 23 # Type Inference, int in this case
 number = number + 5 // 2 ^ 3 # Number operations
 number+=5 # Operating Assignment
 
+still_inf = inf - 999999 # Still infinity
+
 question = 'what\'s going on' # Escaping
 
-things = [1, 2, 3] # List, homogeneous
-other_things = (1, 'Hello') # Tuple, non-homogeneous
+things = [1, 2, 3] # List, mutable
+other_things = (1.5, 9.5) # Tuple, immutable
 stuff = {'first_name': 'Samus', 'last_name': 'Aran'} # Dictionary
-other_stuff: int[] = [] # Empty Array of Ints
+other_stuff: list[int] = [] # Empty Array of ints
 
 print(things[1 + 1])
 
@@ -113,7 +120,7 @@ if my_var is int64
 else if my_var as int64 is int64
 	print("That works")
 
-# Type Aliasing
+# Type Declaration
 type fInt = func[int] -> int
 
 def do_stuff(x: int, callback: fInt) -> int
@@ -178,39 +185,43 @@ def defer_demo()
 defer_demo() # prints Hello World!
 
 # Enums
-enum Colors
+enum Color
 	GREEN
 	RED
 	BLUE
 	YELLOW
 
+x: Colors = Color.GREEN
+print(x == Color.GREEN)
+
 # Structs
 struct Circle
 	radius: int
 	x: int
-	y: int
+	y: int = 4
 
-cir: Circle = Circle(radius=5, x=2, y=4)
+cir: Circle = Circle(radius=5, x=2)
 
 print(cir.radius)
 
 # Classes
 class Vehicle
 	# Constructor
-	new(year: int, color: str)
+	def new(year: int, color: str)
 		this.year = year
 		this._color = color
 
 # Inheritance
 class Car(Vehicle)
-	new(year: int, color='green', hatchback=false)
+	def new(year: int, color='green', hatchback=false)
 		this.hatchback = hatchback
 		super.Vehicle(year, color)
 
-	print_year() -> void
-		print('This car was made in {this.year}')
+	def print_year() -> void
+		print('This car was made in {self.year}')
 
 ford = Car(1992)
 
 print(ford.hatchback)
+ford.print_year()
 ```

@@ -111,20 +111,27 @@ class Return(AST):
         self.line_num = line_num
 
 
-class StructDeclaration(AST):
+class EnumDeclaration(AST):
     def __init__(self, name, fields, line_num):
         self.name = name
         self.fields = fields
         self.line_num = line_num
 
 
-class ClassDeclaration(AST):
-    def __init__(self, name, base=None, constructor=None, methods=None, class_fields=None, instance_fields=None):
+class StructDeclaration(AST):
+    def __init__(self, name, fields, defaults, line_num):
         self.name = name
-        self.constructor = constructor
+        self.fields = fields
+        self.line_num = line_num
+        self.defaults = defaults
+
+
+class ClassDeclaration(AST):
+    def __init__(self, name, base=None, methods=None, fields=None, instance_fields=None):
+        self.name = name
         self.base = base
         self.methods = methods
-        self.class_fields = class_fields
+        self.fields = fields
         self.instance_fields = instance_fields
 
 
@@ -300,7 +307,7 @@ class Type(AST):
         self.line_num = line_num
 
 
-class AliasDeclaration(AST):
+class TypeDeclaration(AST):
     def __init__(self, name, collection, line_num):
         self.name = name
         self.collection = collection

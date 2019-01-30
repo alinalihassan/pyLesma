@@ -4,12 +4,17 @@ For reference, here are all the keywords categorized by type.
 
 |   |   |   |   | 
 |---|---|---|---|
-| struct | class | true | false |
-| if | else | for | while |
-| switch | case | default | def |
-| const | break | continue | pass |
-| void | alias | extern | operator |
-| fallthrough | defer
+| struct | class | if | else | 
+| for | while | switch | case |
+| default | def | const | break |
+| continue | pass | type | extern | 
+| operator | fallthrough | defer | self |
+
+## Constant keywords
+
+|   |   |   |   | 
+|---|---|---|---|
+| true | false | inf |
 
 ## Operator keywords
 
@@ -26,3 +31,4 @@ For reference, here are all the keywords categorized by type.
 | int64 | int128 | uint | uint8 |
 | uint16 | uint32 | uint64 | uint128 |
 | double | float | str | bool |
+| func | list | tuple | void |

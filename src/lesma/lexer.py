@@ -24,10 +24,7 @@ class Token(object):
 
 class Lexer(object):
     def __init__(self, text, file_name=None):
-        if len(text) == 0:
-            error('empty input')
-
-        self.text = text
+        self.text = self.sanitize_text(text)
         self.file_name = file_name
         self.pos = 0
         self.current_char = self.text[self.pos]
@@ -46,6 +43,15 @@ class Lexer(object):
         else:
             self.current_char = self.text[self.pos]
             self.char_type = self.get_type(self.current_char)
+
+    @staticmethod
+    def sanitize_text(text):
+        if len(text) == 0:
+            error('empty input')
+        elif text[-1] != '\n':
+            text += '\n'
+
+        return text
 
     def reset_word(self):
         old_word = self.word
@@ -242,24 +248,37 @@ class Lexer(object):
                 return Token(KEYWORD, self.reset_word(), self.line_num, self.indent_level)
 
             elif self.word in TYPES:
-                return Token(TYPE, self.reset_word(), self.line_num, self.indent_level)
+                return Token(LTYPE, self.reset_word(), self.line_num, self.indent_level)
             elif self.word in CONSTANTS:
                 return Token(CONSTANT, self.reset_word(), self.line_num, self.indent_level)
 
             return Token(NAME, self.utf8ToAscii(self.reset_word()), self.line_num, self.indent_level)
 
         if self.word_type == NUMERIC:
-            while self.char_type == NUMERIC or self.current_char == DOT and self.peek(1) != DOT:
+            base = 10
+            while self.char_type == NUMERIC or (self.current_char == DOT and self.peek(1) != DOT) or \
+                    self.current_char in ('a', 'b', 'c', 'd', 'e', 'f', 'x', 'o'):
                 self.word += self.current_char
-                self.next_char()
                 if self.char_type == ALPHANUMERIC:
-                    raise SyntaxError('Variables cannot start with numbers')
+                    if self.current_char in ('b', 'x', 'o') and self.word.startswith('0') and len(self.word) == 2:
+                        if self.current_char == 'b':
+                            base = 2
+                        elif self.current_char == 'x':
+                            base = 16
+                        elif self.current_char == 'o':
+                            base = 8
+
+                        self.word = ""
+                    elif not (base == 16 and self.current_char in ('a', 'b', 'c', 'd', 'e', 'f')):
+                        error("Unexpected number parsing")
+
+                self.next_char()
             value = self.reset_word()
             if '.' in value:
                 value = Decimal(value)
                 value_type = DOUBLE
             else:
-                value = int(value)
+                value = int(value, base)
                 value_type = INT
             return Token(NUMBER, value, self.line_num, self.indent_level, value_type=value_type)
 
@@ -281,7 +300,8 @@ class Lexer(object):
             token = self.get_next_token()
         yield token
 
-    def utf8ToAscii(self, string):
+    @staticmethod
+    def utf8ToAscii(string):
         unicode = "{}".format(string.encode("unicode_escape"))
         unicode = unicode[2:len(unicode) - 1]
 

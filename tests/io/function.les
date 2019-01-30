@@ -1,3 +1,4 @@
+# Basic function
 def fib(n: int) -> int
 	a = 0
 	b = 1
@@ -7,6 +8,7 @@ def fib(n: int) -> int
 		b = prev_a + b
 	return a
 
+# Recursive
 def fib_rec(n: int) -> int
 	if n == 0
 		return 0
@@ -14,11 +16,13 @@ def fib_rec(n: int) -> int
 		return 1
 	return fib_rec(n - 1) + fib_rec(n - 2)
 
+# Default value
 def factorial(n: int = 5) -> int
 	if n <= 1
 		return 1
 	return n * factorial(n - 1)
 
+# Function as parameter
 def do_stuff(x: int, callback: func[int] -> int) -> int
     return callback(5)
 

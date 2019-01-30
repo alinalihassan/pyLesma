@@ -137,7 +137,7 @@ class VectorType(ir.Type):
         if not isinstance(values, (list, tuple)):
             if isinstance(values, ir.Constant):
                 if values.type != self.elementtype:
-                    raise TypeError("expected % for %"
+                    raise TypeError("expected %s for %s"
                                     % (self.elementtype, values.type))
                 return (values, ) * self.count
             return (ir.Constant(self.elementtype, values), ) * self.count

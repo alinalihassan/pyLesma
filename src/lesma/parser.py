@@ -29,7 +29,7 @@ class Parser(object):
         if self.current_token.type in token_type:
             self.next_token()
         else:
-            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, node.line_num, ", ".join(token_type)))
+            error('file={} line={} Syntax Error: expected {}'.format(self.file_name, self.line_num, ", ".join(token_type)))
 
     def eat_value(self, *token_value):
         if self.current_token.value in token_value:
@@ -65,6 +65,22 @@ class Parser(object):
             root.children.extend(comp.children)
         return Program(root)
 
+    def enum_declaration(self):
+        self.eat_value(ENUM)
+        name = self.next_token()
+        self.user_types.append(name.value)
+        self.eat_type(NEWLINE)
+        self.indent_level += 1
+        fields = []
+        while self.current_token.indent_level > name.indent_level:
+            field = self.next_token().value
+            fields.append(field)
+
+            self.eat_type(NEWLINE)
+
+        self.indent_level -= 1
+        return EnumDeclaration(name.value, fields, self.line_num)
+
     def struct_declaration(self):
         self.eat_value(STRUCT)
         name = self.next_token()
@@ -72,20 +88,24 @@ class Parser(object):
         self.eat_type(NEWLINE)
         self.indent_level += 1
         fields = OrderedDict()
+        defaults = {}
         while self.current_token.indent_level > name.indent_level:
             field = self.next_token().value
             self.eat_value(COLON)
             field_type = self.type_spec()
             fields[field] = field_type
+            if self.current_token.value == ASSIGN:
+                self.eat_value(ASSIGN)
+                defaults[field] = self.expr()
+
             self.eat_type(NEWLINE)
         self.indent_level -= 1
-        return StructDeclaration(name.value, fields, self.line_num)
+        return StructDeclaration(name.value, fields, defaults, self.line_num)
 
     def class_declaration(self):
         base = None
-        constructor = None
-        methods = None
-        class_fields = OrderedDict()
+        methods = []
+        fields = OrderedDict()
         instance_fields = None
         self.in_class = True
         self.next_token()
@@ -105,13 +125,13 @@ class Parser(object):
                 self.eat_type(NAME)
                 self.eat_value(COLON)
                 field_type = self.type_spec()
-                class_fields[field] = field_type
+                fields[field] = field_type
                 self.eat_type(NEWLINE)
-            if self.current_token.value == NEW:
-                constructor = self.constructor_declaration(class_name)
+            if self.current_token.value == DEF:
+                methods.append(self.method_declaration(class_name))
         self.indent_level -= 1
         self.in_class = False
-        return ClassDeclaration(class_name.value, base, constructor, methods, class_fields, instance_fields)
+        return ClassDeclaration(class_name.value, base, methods, fields, instance_fields)
 
     def variable_declaration(self):
         var_node = Var(self.current_token.value, self.line_num)
@@ -126,12 +146,12 @@ class Parser(object):
     def variable_declaration_assignment(self, declaration):
         return Assign(declaration, self.next_token().value, self.expr(), self.line_num)
 
-    def alias_declaration(self):
-        self.eat_value(ALIAS)
+    def type_declaration(self):
+        self.eat_value(TYPE)
         name = self.next_token()
         self.user_types.append(name.value)
         self.eat_value(ASSIGN)
-        return AliasDeclaration(name.value, self.type_spec(), self.line_num)
+        return TypeDeclaration(name.value, self.type_spec(), self.line_num)
 
     def function_declaration(self):
         op_func = False
@@ -204,18 +224,21 @@ class Parser(object):
             if len(params) not in (1, 2):  # TODO: move this to type checker
                 error("Operators can either be unary or binary, and the number of parameters do not match")
 
-            name.value = 'operator' + '.' + name.value
+            name.value = OPERATOR + '.' + name.value
             for param in params:
-                name.value += '.' + str(type_map[str(params[param].value)])
+                type_name = str(type_map[str(params[param].value)]) if str(params[param].value) in type_map else str(params[param].value)
+                name.value += '.' + type_name
 
         return FuncDecl(name.value, return_type, params, stmts, self.line_num, param_defaults, vararg)
 
-    def constructor_declaration(self, class_name):
-        self.eat_value(NEW)
+    def method_declaration(self, class_name):
+        self.eat_value(DEF)
+        name = self.next_token()
         self.eat_value(LPAREN)
         params = OrderedDict()
         param_defaults = {}
         vararg = None
+        params[SELF] = class_name
         while self.current_token.value != RPAREN:
             param_name = self.current_token.value
             self.eat_type(NAME)
@@ -225,7 +248,7 @@ class Parser(object):
             else:
                 param_type = self.variable(self.current_token)
 
-            params[self.current_token.value] = param_type
+            params[param_name] = param_type
             if self.current_token.value != RPAREN:
                 if self.current_token.value == ASSIGN:
                     self.eat_value(ASSIGN)
@@ -241,11 +264,23 @@ class Parser(object):
                 if self.current_token.value != RPAREN:
                     self.eat_value(COMMA)
         self.eat_value(RPAREN)
+
+        if self.current_token.value != ARROW:
+            return_type = Void()
+        else:
+            self.eat_value(ARROW)
+            if self.current_token.value == VOID:
+                return_type = Void()
+                self.next_token()
+            else:
+                return_type = self.type_spec()
+
         self.eat_type(NEWLINE)
         self.indent_level += 1
         stmts = self.compound_statement()
         self.indent_level -= 1
-        return FuncDecl('{}.constructor'.format(class_name), Void(), params, stmts, self.line_num, param_defaults, vararg)
+
+        return FuncDecl("{}.{}".format(class_name.value, name.value), return_type, params, stmts, self.line_num, param_defaults, vararg)
 
     def bracket_literal(self):
         token = self.next_token()
@@ -291,12 +326,24 @@ class Parser(object):
         if token.value in self.user_types:
             self.eat_type(NAME)
             return Type(token.value, self.line_num)
-        self.eat_type(TYPE)
+        self.eat_type(LTYPE)
         type_spec = Type(token.value, self.line_num)
         func_ret_type = None
         func_params = OrderedDict()
         param_num = 0
-        if self.current_token.value == LSQUAREBRACKET and token.value == FUNC:
+        if self.current_token.value == LSQUAREBRACKET and token.value in (LIST, TUPLE):
+            self.next_token()
+            while self.current_token.value != RSQUAREBRACKET:
+                param_type = self.type_spec()
+                func_params[str(param_num)] = param_type
+                param_num += 1
+                if self.current_token.value != RSQUAREBRACKET:
+                    self.eat_value(COMMA)
+
+            self.eat_value(RSQUAREBRACKET)
+            type_spec.func_params = func_params
+
+        elif self.current_token.value == LSQUAREBRACKET and token.value == FUNC:
             self.next_token()
             while self.current_token.value != RSQUAREBRACKET:
                 param_type = self.type_spec()
@@ -378,13 +425,15 @@ class Parser(object):
                 node = self.name_statement()
         elif self.current_token.value == DEF:
             node = self.function_declaration()
-        elif self.current_token.value == ALIAS:
-            node = self.alias_declaration()
-        elif self.current_token.type == TYPE:
+        elif self.current_token.value == TYPE:
+            node = self.type_declaration()
+        elif self.current_token.type == LTYPE:
             if self.current_token.value == STRUCT:
                 node = self.struct_declaration()
             elif self.current_token.value == CLASS:
                 node = self.class_declaration()
+            elif self.current_token.value == ENUM:
+                node = self.enum_declaration()
         elif self.current_token.value == EOF:
             return
         else:
@@ -403,7 +452,7 @@ class Parser(object):
                     break
             self.eat_value(RSQUAREBRACKET)
             return Collection(LIST, self.line_num, False, *items)
-        elif self.current_token.type == TYPE:
+        elif self.current_token.type == LTYPE:
             type_token = self.next_token()
             if self.current_token.value == COMMA:
                 return self.dictionary_assignment(token)
@@ -653,12 +702,14 @@ class Parser(object):
             node = IncrementAssign(left, token.value, self.line_num)
         elif token.value == COLON:
             type_node = self.type_spec()
-
             var = VarDecl(left, type_node, self.line_num)
             node = self.variable_declaration_assignment(var)
         else:
             raise SyntaxError('Unknown assignment operator: {}'.format(token.value))
         return node
+
+    def typ(self, token):
+        return Type(token.value, self.line_num)
 
     def variable(self, token, read_only=False):
         return Var(token.value, self.line_num, read_only)
@@ -670,6 +721,9 @@ class Parser(object):
         token = self.current_token
         preview = self.preview()
         if preview.value == DOT:
+            if self.preview(2).type == NAME and self.preview(3).value == LPAREN:
+                return self.property_or_method(self.next_token())
+
             self.next_token()
             return self.dot_access(token)
         elif token.value in (PLUS, MINUS, BINARY_ONES_COMPLIMENT):
@@ -686,7 +740,7 @@ class Parser(object):
             return Str(token.value, self.line_num)
         elif token.value == DEF:
             return self.function_declaration()
-        elif token.type == TYPE:
+        elif token.type == LTYPE:
             return self.type_spec()
         elif token.value == LPAREN:
             if self.func_args or not self.find_until(COMMA, RPAREN):
@@ -716,6 +770,8 @@ class Parser(object):
             return self.curly_bracket_expression(token)
         elif token.type == NAME:
             self.next_token()
+            if token.value in self.user_types:
+                return self.typ(token)
             return self.variable(token)
         elif token.type == CONSTANT:
             self.next_token()

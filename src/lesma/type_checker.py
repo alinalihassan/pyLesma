@@ -1,6 +1,6 @@
 from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess
 from lesma.grammar import *
-from lesma.visitor import AliasSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, ClassSymbol, VarSymbol
+from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, EnumSymbol, ClassSymbol, VarSymbol
 from lesma.utils import warning, error
 
 
@@ -21,7 +21,7 @@ def types_compatible(left_type, right_type):
     int_type = ('i8', 'i16', 'i32', 'i64', 'int8', 'int16', 'int32', 'int64', 'int')
     float_type = ('float', 'double')
     num_type = int_type + float_type
-    if (left_type is right_type) or \
+    if (left_type == right_type) or \
        (left_type in num_type and right_type in num_type):
         return True
 
@@ -106,6 +106,8 @@ class Preprocessor(NodeVisitor):
     def visit_constant(self, node):
         if node.value == TRUE or node.value == FALSE:
             return self.search_scopes(BOOL)
+        elif node.value == INF:
+            return self.search_scopes(DOUBLE)
 
         return NotImplementedError
 
@@ -129,9 +131,14 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
-        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, ClassSymbol)):
+            if isinstance(node.right, Collection):
+                _, collection_type = self.visit(node.right)
+
+            if value.name in (TUPLE, LIST) and node.right.type != value.name:
+                error('file={} line={}: Contradicting {}-{} declaration'.format(self.file_name, node.line_num, value.name, node.right.type))
+        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, EnumSymbol, ClassSymbol)):
             var_name = node.left.value
-            value = self.infer_type(self.search_scopes(node.right.name))
+            value = self.search_scopes(node.right.name)
             value.accessed = True
         elif isinstance(node.right, Collection):
             var_name = node.left.value
@@ -140,6 +147,11 @@ class Preprocessor(NodeVisitor):
             field_assignment = True
             var_name = self.visit(node.left)
             value = self.visit(node.right)
+        elif isinstance(node.right, DotAccess):
+            var_name = node.left.value
+            value = self.search_scopes(node.right.obj)
+            value.accessed = True
+            value = self.infer_type(value)
         elif isinstance(node.left, CollectionAccess):
             collection_assignment = True
             var_name = node.left.collection.value
@@ -196,7 +208,7 @@ class Preprocessor(NodeVisitor):
                 return
             if lookup_var.type is value.type:
                 return
-            if isinstance(value, AliasSymbol):
+            if isinstance(value, TypeSymbol):
                 value.accessed = True
                 if value.type is self.search_scopes(FUNC):
                     if value.type.return_type == lookup_var.type:
@@ -212,9 +224,6 @@ class Preprocessor(NodeVisitor):
         left_type = self.infer_type(left)
         right_type = self.infer_type(right)
         any_type = self.search_scopes(ANY)
-        # if left_type in (self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-        # 	if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-        # 		return left_type
         if types_compatible(left_type, right_type) or left_type is any_type or right_type is any_type:
             return left_type
         else:
@@ -241,14 +250,14 @@ class Preprocessor(NodeVisitor):
             error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(var_name)))
         else:
             if not val.val_assigned:
-                error('file={} line={}: {} is being accessed before it was defined'.format(self.file_name, var_name, node.line_num))
+                error('file={} line={}: {} is being accessed before it was defined'.format(self.file_name, node.line_num, var_name))
             val.accessed = True
             return val
 
     def visit_binop(self, node):
         if node.op == CAST or node.op in (IS, IS_NOT):
             self.visit(node.left)
-            if node.right.value not in TYPES:
+            if node.right.value not in TYPES and not isinstance(self.search_scopes(node.right.value), (EnumSymbol, ClassSymbol, StructSymbol)):
                 error('file={} line={}: type expected for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, node.left, node.right))
             return self.infer_type(self.visit(node.right))
         else:
@@ -288,18 +297,7 @@ class Preprocessor(NodeVisitor):
         return results
 
     def visit_typedeclaration(self, node):
-        typs = []
-        for t in node.collection:
-            typs.append(self.visit(t))
-        if len(typs) == 1:
-            typs = typs[0]
-        else:
-            typs = tuple(typs)
-        typ = AliasSymbol(node.name.value, typs)
-        self.define(typ.name, typ)
-
-    def visit_aliasdeclaration(self, node):
-        typ = AliasSymbol(node.name, node.collection.value)
+        typ = TypeSymbol(node.name, self.search_scopes(node.collection.value))
         self.define(typ.name, typ)
 
     def visit_externfuncdecl(self, node):
@@ -323,7 +321,7 @@ class Preprocessor(NodeVisitor):
             var_type = self.search_scopes(v.value)
             if var_type is self.search_scopes(FUNC):
                 sym = FuncSymbol(k, v.func_ret_type, None, None)
-            elif isinstance(var_type, AliasSymbol):
+            elif isinstance(var_type, TypeSymbol):
                 var_type.accessed = True
                 if var_type.type is self.search_scopes(FUNC):
                     sym = FuncSymbol(k, var_type.type.return_type, None, None)
@@ -359,7 +357,7 @@ class Preprocessor(NodeVisitor):
             var_type = self.search_scopes(v.value)
             if var_type is self.search_scopes(FUNC):
                 sym = FuncSymbol(k, v.func_ret_type, v.func_params, None)
-            elif isinstance(var_type, AliasSymbol):
+            elif isinstance(var_type, TypeSymbol):
                 var_type.accessed = True
                 if var_type.type is self.search_scopes(FUNC):
                     sym = FuncSymbol(k, var_type.type.return_type, v.func_params, None)
@@ -408,7 +406,7 @@ class Preprocessor(NodeVisitor):
         func = self.search_scopes(func_name)
         parameters = None
         parameter_defaults = None
-        if isinstance(func, (StructSymbol, ClassSymbol)):
+        if isinstance(func, (StructSymbol, ClassSymbol, EnumSymbol)):
             parameters = func.fields
             parameter_defaults = func.fields
         else:
@@ -436,35 +434,43 @@ class Preprocessor(NodeVisitor):
             func.accessed = True
             return func.type
 
-    def visit_methodcall(self, node):  # TODO: Not done here!
-        method_name = node.name
-        method = self.search_scopes(method_name)
-        for x, param in enumerate(method.parameters.values()):
-            if x < len(node.arguments):
-                var = self.visit(node.arguments[x])
-                param_ss = self.search_scopes(param.value)
-                if param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name:
-                    raise TypeError
-            else:
-                method_param_keys = list(method.parameters.keys())
-                if method_param_keys[x] not in node.named_arguments.keys() and method_param_keys[x] not in method.parameter_defaults.keys():
-                    raise TypeError('Missing arguments to method')
-                else:
-                    if method_param_keys[x] in node.named_arguments.keys():
-                        if param.value != self.visit(node.named_arguments[method_param_keys[x]]).name:
-                            raise TypeError
-        if method is None:
-            error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(method_name)))
-        else:
-            method.accessed = True
-            return method.type
+    def visit_methodcall(self, node):  # TODO: Finish this, make Symbols for Classes and Methods
+        pass
+        # method_name = node.name
+        # method = self.search_scopes("{}.{}".format(self.search_scopes(node.obj).type.name, method_name))
+        # for x, param in enumerate(method.parameters.values()):
+        #     if x < len(node.arguments):
+        #         var = self.visit(node.arguments[x])
+        #         param_ss = self.search_scopes(param.value)
+        #         if param_ss != self.search_scopes(ANY) and param.value != var.name and param.value != var.type.name:
+        #             raise TypeError
+        #     else:
+        #         method_param_keys = list(method.parameters.keys())
+        #         if method_param_keys[x] not in node.named_arguments.keys() and method_param_keys[x] not in method.parameter_defaults.keys():
+        #             raise TypeError('Missing arguments to method')
+        #         else:
+        #             if method_param_keys[x] in node.named_arguments.keys():
+        #                 if param.value != self.visit(node.named_arguments[method_param_keys[x]]).name:
+        #                     raise TypeError
+        # if method is None:
+        #     error('file={} line={}: Name Error: {}'.format(self.file_name, node.line_num, repr(method_name)))
+        # else:
+        #     method.accessed = True
+        #     return method.return_type
 
     def visit_structdeclaration(self, node):
         sym = StructSymbol(node.name, node.fields)
         self.define(sym.name, sym)
 
+    def visit_enumdeclaration(self, node):
+        sym = EnumSymbol(node.name, node.fields)
+        self.define(sym.name, sym)
+
     def visit_classdeclaration(self, node):
-        sym = ClassSymbol(node.name, node.class_fields)
+        class_methods = [FuncSymbol(method.name, method.return_type, method.parameters, method.body) for method in node.methods]
+        sym = ClassSymbol(node.name, node.fields, class_methods)
+        for method in class_methods:
+            self.define(method.name, method)
         self.define(sym.name, sym)
 
     def visit_return(self, node):
@@ -482,7 +488,11 @@ class Preprocessor(NodeVisitor):
         type_name = node.type.value
         type_symbol = self.search_scopes(type_name)
         var_name = node.value.value
-        var_symbol = VarSymbol(var_name, type_symbol)
+        if type_name in (LIST, TUPLE):
+            var_symbol = CollectionSymbol(var_name, type_symbol, node.type.func_params['0'].value)
+            var_symbol.read_only = type_name == TUPLE
+        else:
+            var_symbol = VarSymbol(var_name, type_symbol)
         self.define(var_symbol.name, var_symbol)
 
     def visit_collection(self, node):
@@ -500,7 +510,9 @@ class Preprocessor(NodeVisitor):
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
         obj.accessed = True
-        if node.field not in obj.type.fields:
+        if isinstance(obj, EnumSymbol):
+            return obj
+        elif node.field not in obj.type.fields:
             error('file={} line={}: Invalid property {} of variable {}'.format(
                 self.file_name, node.line_num, node.field, node.obj))
         return self.visit(obj.type.fields[node.field])
