@@ -25,6 +25,8 @@ number = 23 # Type Inference, int in this case
 number = number + 5 // 2 ^ 3 # Number operations
 number+=5 # Operating Assignment
 
+still_inf = inf - 999999 # Still infinity
+
 question = 'what\'s going on' # Escaping
 
 things = [1, 2, 3] # List, mutable
@@ -183,11 +185,14 @@ def defer_demo()
 defer_demo() # prints Hello World!
 
 # Enums
-enum Colors
+enum Color
 	GREEN
 	RED
 	BLUE
 	YELLOW
+
+x: Colors = Color.GREEN
+print(x == Color.GREEN)
 
 # Structs
 struct Circle
