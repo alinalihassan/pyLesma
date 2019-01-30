@@ -637,9 +637,9 @@ class CodeGenerator(NodeVisitor):
             val = self.builder.gep(enum, [self.const(0, width=INT32), self.const(0, width=INT32)], inbounds=True)
             self.builder.store(self.const(idx, width=INT8), val)
             return enum
-        else:
-            obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])
-            return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
+
+        obj_type = self.search_scopes(obj.type.pointee.name.split('.')[-1])
+        return self.builder.extract_value(self.load(node.obj), obj_type.fields.index(node.field))
 
     def visit_opassign(self, node):
         right = self.visit(node.right)

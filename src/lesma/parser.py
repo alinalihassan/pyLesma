@@ -723,9 +723,9 @@ class Parser(object):
         if preview.value == DOT:
             if self.preview(2).type == NAME and self.preview(3).value == LPAREN:
                 return self.property_or_method(self.next_token())
-            else:
-                self.next_token()
-                return self.dot_access(token)
+
+            self.next_token()
+            return self.dot_access(token)
         elif token.value in (PLUS, MINUS, BINARY_ONES_COMPLIMENT):
             self.next_token()
             return UnaryOp(token.value, self.factor(), self.line_num)

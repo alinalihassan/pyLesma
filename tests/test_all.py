@@ -7,9 +7,9 @@ from subprocess import Popen, PIPE
 def get_tests():
     tests = []
     path = os.path.dirname(__file__)
-    for file in os.listdir(os.path.join(path, "io")):
-        if file.endswith(".les"):
-            tests.append(os.path.basename(file).split('.')[0])
+    for unittest in os.listdir(os.path.join(path, "io")):
+        if unittest.endswith(".les"):
+            tests.append(os.path.basename(unittest).split('.')[0])
     return tests
 
 
