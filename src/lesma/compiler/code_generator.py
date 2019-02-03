@@ -271,7 +271,7 @@ class CodeGenerator(NodeVisitor):
         enum.fields = [field for field in node.fields]
         enum.name = node.name
         enum.type = ENUM
-        enum.set_body([ir.IntType(8, signed=False)])
+        enum.set_body(ir.IntType(8, signed=False))
         self.define(node.name, enum)
 
     def visit_structdeclaration(self, node):
@@ -284,7 +284,7 @@ class CodeGenerator(NodeVisitor):
         struct.defaults = node.defaults
         struct.name = node.name
         struct.type = STRUCT
-        struct.set_body([field for field in fields])
+        struct.set_body(*[field for field in fields])
         self.define(node.name, struct)
 
     def visit_classdeclaration(self, node):
@@ -298,7 +298,7 @@ class CodeGenerator(NodeVisitor):
         classdecl.fields = [field for field in node.fields.keys()]
         classdecl.name = node.name
         classdecl.type = CLASS
-        classdecl.set_body([field for field in fields])
+        classdecl.set_body(*[field for field in fields])
         self.define(node.name, classdecl)
         for method in node.methods:
             self.funcdecl(method.name, method)
