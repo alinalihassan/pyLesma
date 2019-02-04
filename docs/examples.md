@@ -208,13 +208,13 @@ print(cir.radius)
 class Vehicle
 	# Constructor
 	def new(year: int, color: str)
-		this.year = year
-		this._color = color
+		self.year = year
+		self._color = color
 
 # Inheritance
 class Car(Vehicle)
 	def new(year: int, color='green', hatchback=false)
-		this.hatchback = hatchback
+		self.hatchback = hatchback
 		super.Vehicle(year, color)
 
 	def print_year() -> void

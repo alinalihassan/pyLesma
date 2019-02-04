@@ -8,6 +8,7 @@
 - [ ] Improve warning messages
 - [ ] Add indentation related errors
 - [ ] Add docs for mixed arithmetic
+- [ ] Improve docs as much as possible for v0.5
 - [ ] Remove clang as a dependency
 - [ ] Move error messages from source files to typechecker
 - [ ] Add support for functions with same name but different parameters
@@ -23,3 +24,7 @@
 - [ ] Implement Closure
 - [ ] Implement string interpolation
 - [ ] Implement lambda functions
+
+## Ecosystem
+- [ ] Implement a functional Visual Studio Code plugin
+
