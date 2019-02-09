@@ -1,7 +1,7 @@
 # TODO
 
 ## Fixes
-- [ ] Fix base unary operators being applied before user defined ones
+- [x] Fix operator overloading going through an infinite loop if used in def function
 - [ ] Fix unicode on windows
 
 ## Improvements
@@ -23,8 +23,12 @@
 - [ ] Implement 'in' as a boolean result
 - [ ] Implement Closure
 - [ ] Implement string interpolation
+- [ ] Implement string operators
 - [ ] Implement lambda functions
 
 ## Ecosystem
-- [ ] Implement a functional Visual Studio Code plugin
+- [x] Implement a functional Visual Studio Code plugin
+- [x] Implement syntax highlighting
+- [ ] Implement autocomplete
+- [ ] Implement go to definition, etc
 

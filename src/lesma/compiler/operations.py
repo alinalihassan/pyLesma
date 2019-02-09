@@ -35,7 +35,8 @@ def userdef_binary_str(op, left, right):
 def unary_op(self, node):
     op = node.op
     expr = self.visit(node.expr)
-    if hasFunction(self, userdef_unary_str(op, expr)):
+    if hasFunction(self, userdef_unary_str(op, expr)) and \
+       self.current_function.name != userdef_unary_str(op, expr):
         return self.builder.call(self.module.get_global(userdef_unary_str(op, expr)),
                                  [expr], "unop")
     elif op == MINUS:
