@@ -1,4 +1,4 @@
-from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess
+from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess, Range
 from lesma.grammar import *
 from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, EnumSymbol, ClassSymbol, VarSymbol
 from lesma.utils import warning, error
@@ -131,16 +131,16 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
-            if isinstance(node.right, Collection):
+            if isinstance(node.right, Collection) or isinstance(node.right, Range):
                 _, collection_type = self.visit(node.right)
 
-            if value.name in (TUPLE, LIST) and node.right.type != value.name:
+            if value.name in (TUPLE, LIST) and (not isinstance(node.right, Range) and node.right.type != value.name):
                 error('file={} line={}: Contradicting {}-{} declaration'.format(self.file_name, node.line_num, value.name, node.right.type))
         elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, EnumSymbol, ClassSymbol)):
             var_name = node.left.value
             value = self.search_scopes(node.right.name)
             value.accessed = True
-        elif isinstance(node.right, Collection):
+        elif isinstance(node.right, Collection) or isinstance(node.right, Range):
             var_name = node.left.value
             value, collection_type = self.visit(node.right)
         elif isinstance(node.left, DotAccess):
@@ -280,11 +280,12 @@ class Preprocessor(NodeVisitor):
         left_type = self.infer_type(left)
         right_type = self.infer_type(right)
         any_type = self.search_scopes(ANY)
-        if left_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-            if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-                return left_type
-        if right_type is left_type or left_type is any_type or right_type is any_type:
-            return left_type
+
+        if left_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)) and \
+           right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
+                return self.search_scopes(LIST), left_type
+        elif right_type is left_type or left_type is any_type or right_type is any_type:
+            return self.search_scopes(LIST), left_type
         else:
             error('file={} line={}: Please don\'t do what you just did there ever again. It bad (fix this message)'.format(self.file_name, node.line_num))
 

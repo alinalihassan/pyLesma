@@ -30,6 +30,7 @@ still_inf = inf - 999999 # Still infinity
 question = 'what\'s going on' # Escaping
 
 things = [1, 2, 3] # List, mutable
+same_things = 0..4 # Same as before, defaults as a list
 other_things = (1.5, 9.5) # Tuple, immutable
 stuff = {'first_name': 'Samus', 'last_name': 'Aran'} # Dictionary
 other_stuff: list[int] = [] # Empty Array of ints

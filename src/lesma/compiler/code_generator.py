@@ -433,7 +433,7 @@ class CodeGenerator(NodeVisitor):
         zero = self.const(0)
         one = self.const(1)
         if node.iterator.value == RANGE:
-            iterator = self.visit(node.iterator)
+            iterator = self.alloc_and_store(self.visit(node.iterator), type_map[STR])
         else:
             iterator = self.search_scopes(node.iterator.value)
         stop = self.call('i64_array_length', [iterator])
@@ -530,7 +530,7 @@ class CodeGenerator(NodeVisitor):
         stop = self.visit(node.right)
         array_ptr = self.create_array(INT)
         self.call('create_range', [array_ptr, start, stop])
-        return array_ptr
+        return self.load(array_ptr)
 
     def visit_assign(self, node):
         if isinstance(node.right, DotAccess) and self.search_scopes(node.right.obj).type == ENUM or \
