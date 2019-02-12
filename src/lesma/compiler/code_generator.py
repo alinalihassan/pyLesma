@@ -432,11 +432,15 @@ class CodeGenerator(NodeVisitor):
         self.position_at_end(init_block)
         zero = self.const(0)
         one = self.const(1)
+        array_type = None
         if node.iterator.value == RANGE:
             iterator = self.alloc_and_store(self.visit(node.iterator), type_map[STR])
+            array_type = "i64"
         else:
             iterator = self.search_scopes(node.iterator.value)
-        stop = self.call('i64_array_length', [iterator])
+            array_type = str(iterator.type.pointee.elements[-1].pointee)
+
+        stop = self.call('{}_array_length'.format(array_type), [iterator])
         self.branch(zero_length_block)
 
         self.position_at_end(zero_length_block)
@@ -445,7 +449,7 @@ class CodeGenerator(NodeVisitor):
 
         self.position_at_end(non_zero_length_block)
         varname = node.elements[0].value
-        val = self.call('i64_array_get', [iterator, zero])
+        val = self.call('{}_array_get'.format(array_type), [iterator, zero])
         self.alloc_define_store(val, varname, iterator.type.pointee.elements[2].pointee)
         position = self.alloc_define_store(zero, 'position', type_map[INT])
         self.branch(cond_block)
@@ -455,7 +459,7 @@ class CodeGenerator(NodeVisitor):
         self.cbranch(cond, body_block, end_block)
 
         self.position_at_end(body_block)
-        self.store(self.call('i64_array_get', [iterator, self.load(position)]), varname)
+        self.store(self.call('{}_array_get'.format(array_type), [iterator, self.load(position)]), varname)
         self.store(self.builder.add(one, self.load(position)), position)
         self.visit(node.block)
         if not self.is_break:
