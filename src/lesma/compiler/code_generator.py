@@ -906,6 +906,26 @@ class CodeGenerator(NodeVisitor):
 
         return args
 
+    def get_type(self, param):
+        typ = None
+        if param.value == FUNC:
+            if param.func_ret_type.value in type_map:
+                func_ret_type = type_map[param.func_ret_type.value]
+            elif self.search_scopes(param.func_ret_type.value) is not None:
+                func_ret_type = self.search_scopes(param.func_ret_type.value).as_pointer()
+            func_parameters = self.get_args(param.func_params)
+            func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
+            typ = func_ty
+        else:
+            if param.value in type_map:
+                typ = type_map[param.value]
+            elif self.search_scopes(param.value) is not None:
+                typ = self.search_scopes(param.value)
+            else:
+                error("Type not recognized: {}".format(param.value))
+
+        return typ
+
     def func_decl(self, name, return_type, parameters, parameter_defaults=None, varargs=None, linkage=None):
         ret_type = type_map[return_type.value]
         args = self.get_args(parameters)
@@ -938,14 +958,13 @@ class CodeGenerator(NodeVisitor):
         self.block_stack.append(self.builder.block)
         self.new_scope()
         self.defer_stack.append([])
-        ret_type = type_map[return_type.value] if return_type.value in type_map else self.search_scopes(return_type.value)
+        ret_type = self.get_type(return_type)
         args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
-        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
-            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
+
         func = ir.Function(self.module, func_type, name)
         func.linkage = linkage
         self.define(name, func, 1)
