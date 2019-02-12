@@ -25,7 +25,6 @@
 - [ ] Implement Closure
 - [ ] Implement string interpolation
 - [ ] Implement string operators
-- [ ] Implement lambda functions
 
 ## Ecosystem
 - [x] Implement a functional Visual Studio Code plugin
