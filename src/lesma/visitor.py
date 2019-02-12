@@ -11,10 +11,10 @@ class Symbol(object):
 
 
 class BuiltinTypeSymbol(Symbol):
-    def __init__(self, name, llvm_type=None, return_type=None):
+    def __init__(self, name, llvm_type=None, func=None):
         super().__init__(name)
         self.llvm_type = llvm_type
-        self.return_type = return_type
+        self.func = func
 
     def type(self):
         return self.llvm_type.type()
@@ -103,10 +103,10 @@ class CollectionSymbol(Symbol):
 
 
 class FuncSymbol(Symbol):
-    def __init__(self, name, return_type, parameters, body, parameter_defaults=None):
+    def __init__(self, name, return_type, parameters, body, parameter_defaults={}):
         super().__init__(name, return_type)
         self.parameters = parameters
-        self.parameter_defaults = parameter_defaults or {}
+        self.parameter_defaults = parameter_defaults
         self.body = body
         self.accessed = False
         self.val_assigned = True

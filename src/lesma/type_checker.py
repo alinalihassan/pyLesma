@@ -1,6 +1,6 @@
 from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess, Range
 from lesma.grammar import *
-from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, EnumSymbol, ClassSymbol, VarSymbol
+from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, EnumSymbol, ClassSymbol, VarSymbol, BuiltinTypeSymbol
 from lesma.utils import warning, error
 
 
@@ -179,6 +179,8 @@ class Preprocessor(NodeVisitor):
                 var = self.visit(node.right)
                 if isinstance(var, FuncSymbol):
                     self.define(var_name, var)
+                elif isinstance(var, BuiltinTypeSymbol):
+                    self.define(var_name, var.func)
                 else:
                     val_info = self.search_scopes(node.right.value)
                     func_sym = FuncSymbol(var_name, val_info.type.return_type, val_info.parameters, val_info.body, val_info.parameter_defaults)
@@ -308,7 +310,8 @@ class Preprocessor(NodeVisitor):
             error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
 
         if func_type and func_type.name == FUNC:
-            func_type.return_type = self.visit(node.return_type.func_ret_type)
+            func_type.func = FuncSymbol(ANON, self.visit(node.return_type.func_ret_type), node.parameters, node.body, node.parameter_defaults)
+
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, None))
         self.new_scope()
         if node.varargs:
@@ -344,7 +347,8 @@ class Preprocessor(NodeVisitor):
             error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
 
         if func_type and func_type.name == FUNC:
-            func_type.return_type = self.visit(node.return_type.func_ret_type)
+            func_type.func = FuncSymbol(ANON, self.visit(node.return_type.func_ret_type), node.parameters, node.body, node.parameter_defaults)
+
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults))
         self.new_scope()
         if node.varargs:
