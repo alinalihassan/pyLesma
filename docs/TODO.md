@@ -16,6 +16,8 @@
 - [ ] Use dataclasses and static typing as much as possible in source code
 - [ ] String/Lists are currently unsupported on: input function, operators, etc.
 - [ ] Find a way to use pointers and null for FFI but restrict or disallow it in normal Lesma
+- [x] Allow functions to be used as return types
+- [ ] Implement type checking for function return types
 - [x] Allow ranges to be used as list expressions
 
 ## Features
