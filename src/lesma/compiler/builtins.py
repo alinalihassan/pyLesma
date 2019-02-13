@@ -14,7 +14,7 @@ zero_32 = ir.Constant(type_map[INT32], 0)
 one_32 = ir.Constant(type_map[INT32], 1)
 two_32 = ir.Constant(type_map[INT32], 2)
 
-array_types = [str(type_map[INT])]
+array_types = [type_map[INT]]
 
 
 def define_builtins(self):
@@ -26,7 +26,7 @@ def define_builtins(self):
     str_struct_ptr = str_struct.as_pointer()
     self.define('Str_ptr', str_struct_ptr)
     type_map[STR] = str_struct
-    lint = str(type_map[INT])
+    lint = type_map[INT]
 
     dynamic_array_init(self, str_struct_ptr, lint)
     dynamic_array_double_if_full(self, str_struct_ptr, lint)
@@ -45,7 +45,7 @@ def define_builtins(self):
 def create_dynamic_array_methods(self, array_type):
     if array_type in array_types:
         return
-    array = self.search_scopes('{}_Array'.format(array_type))
+    array = self.search_scopes('{}_Array'.format(str(array_type)))
     array_ptr = array.as_pointer()
 
     current_block = self.builder.block
@@ -89,7 +89,7 @@ def define_create_range(self, dyn_array_ptr, array_type):
     builder.cbranch(cond, create_range_body, create_range_exit)
 
     builder.position_at_end(create_range_body)
-    builder.call(self.module.get_global('{}_array_append'.format(array_type)), [builder.load(array_ptr), builder.load(num_ptr)])
+    builder.call(self.module.get_global('{}_array_append'.format(str(array_type))), [builder.load(array_ptr), builder.load(num_ptr)])
     builder.store(builder.add(one, builder.load(num_ptr)), num_ptr)
 
     builder.branch(create_range_test)
@@ -101,7 +101,7 @@ def define_create_range(self, dyn_array_ptr, array_type):
 def dynamic_array_init(self, dyn_array_ptr, array_type):
     # START
     dyn_array_init_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr])
-    dyn_array_init = ir.Function(self.module, dyn_array_init_type, '{}_array_init'.format(array_type))
+    dyn_array_init = ir.Function(self.module, dyn_array_init_type, '{}_array_init'.format(str(array_type)))
     dyn_array_init_entry = dyn_array_init.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_init_entry)
     self.builder = builder
@@ -120,7 +120,7 @@ def dynamic_array_init(self, dyn_array_ptr, array_type):
     data_ptr = builder.gep(builder.load(array_ptr), [zero_32, two_32], inbounds=True)
     size_of = builder.mul(builder.load(capacity_ptr), eight)
     mem_alloc = builder.call(self.module.get_global('malloc'), [size_of])
-    mem_alloc = builder.bitcast(mem_alloc, llvm_type_map[array_type].as_pointer())
+    mem_alloc = builder.bitcast(mem_alloc, array_type.as_pointer())
     builder.store(mem_alloc, data_ptr)
 
     builder.branch(dyn_array_init_exit)
@@ -133,7 +133,7 @@ def dynamic_array_init(self, dyn_array_ptr, array_type):
 def dynamic_array_double_if_full(self, dyn_array_ptr, array_type):
     # START
     dyn_array_double_capacity_if_full_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr])
-    dyn_array_double_capacity_if_full = ir.Function(self.module, dyn_array_double_capacity_if_full_type, '{}_array_double_capacity_if_full'.format(array_type))
+    dyn_array_double_capacity_if_full = ir.Function(self.module, dyn_array_double_capacity_if_full_type, '{}_array_double_capacity_if_full'.format(str(array_type)))
     dyn_array_double_capacity_if_full_entry = dyn_array_double_capacity_if_full.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_double_capacity_if_full_entry)
     self.builder = builder
@@ -165,7 +165,7 @@ def dynamic_array_double_if_full(self, dyn_array_ptr, array_type):
 
     data_ptr_8 = builder.bitcast(builder.load(data_ptr), type_map[INT8].as_pointer())
     re_alloc = builder.call(self.module.get_global('realloc'), [data_ptr_8, size_of])
-    re_alloc = builder.bitcast(re_alloc, llvm_type_map[array_type].as_pointer())
+    re_alloc = builder.bitcast(re_alloc, array_type.as_pointer())
     builder.store(re_alloc, data_ptr)
 
     builder.branch(dyn_array_double_capacity_if_full_exit)
@@ -177,8 +177,8 @@ def dynamic_array_double_if_full(self, dyn_array_ptr, array_type):
 
 def dynamic_array_append(self, dyn_array_ptr, array_type):
     # START
-    dyn_array_append_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, llvm_type_map[array_type]])
-    dyn_array_append = ir.Function(self.module, dyn_array_append_type, '{}_array_append'.format(array_type))
+    dyn_array_append_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, array_type])
+    dyn_array_append = ir.Function(self.module, dyn_array_append_type, '{}_array_append'.format(str(array_type)))
     dyn_array_append_entry = dyn_array_append.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_append_entry)
     self.builder = builder
@@ -186,11 +186,11 @@ def dynamic_array_append(self, dyn_array_ptr, array_type):
     builder.position_at_end(dyn_array_append_entry)
     array_ptr = builder.alloca(dyn_array_ptr)
     builder.store(dyn_array_append.args[0], array_ptr)
-    value_ptr = builder.alloca(llvm_type_map[array_type])
+    value_ptr = builder.alloca(array_type)
     builder.store(dyn_array_append.args[1], value_ptr)
 
     # BODY
-    builder.call(self.module.get_global('{}_array_double_capacity_if_full'.format(array_type)), [builder.load(array_ptr)])
+    builder.call(self.module.get_global('{}_array_double_capacity_if_full'.format(str(array_type))), [builder.load(array_ptr)])
 
     size_ptr = builder.gep(builder.load(array_ptr), [zero_32, zero_32], inbounds=True)
     size_val = builder.load(size_ptr)
@@ -213,8 +213,8 @@ def dynamic_array_append(self, dyn_array_ptr, array_type):
 
 def dynamic_array_get(self, dyn_array_ptr, array_type):
     # START
-    dyn_array_get_type = ir.FunctionType(llvm_type_map[array_type], [dyn_array_ptr, type_map[INT]])
-    dyn_array_get = ir.Function(self.module, dyn_array_get_type, '{}_array_get'.format(array_type))
+    dyn_array_get_type = ir.FunctionType(array_type, [dyn_array_ptr, type_map[INT]])
+    dyn_array_get = ir.Function(self.module, dyn_array_get_type, '{}_array_get'.format(str(array_type)))
     dyn_array_get_entry = dyn_array_get.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_get_entry)
     self.builder = builder
@@ -273,8 +273,8 @@ def dynamic_array_get(self, dyn_array_ptr, array_type):
 
 def dynamic_array_set(self, dyn_array_ptr, array_type):
     # START
-    dyn_array_set_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, type_map[INT], llvm_type_map[array_type]])
-    dyn_array_set = ir.Function(self.module, dyn_array_set_type, '{}_array_set'.format(array_type))
+    dyn_array_set_type = ir.FunctionType(type_map[VOID], [dyn_array_ptr, type_map[INT], array_type])
+    dyn_array_set = ir.Function(self.module, dyn_array_set_type, '{}_array_set'.format(str(array_type)))
     dyn_array_set_entry = dyn_array_set.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_set_entry)
     self.builder = builder
@@ -288,7 +288,7 @@ def dynamic_array_set(self, dyn_array_ptr, array_type):
     builder.store(dyn_array_set.args[0], array_ptr)
     index_ptr = builder.alloca(type_map[INT])
     builder.store(dyn_array_set.args[1], index_ptr)
-    value_ptr = builder.alloca(llvm_type_map[array_type])
+    value_ptr = builder.alloca(array_type)
     builder.store(dyn_array_set.args[2], value_ptr)
 
     # BODY
@@ -340,7 +340,7 @@ def dynamic_array_set(self, dyn_array_ptr, array_type):
 def dynamic_array_length(self, dyn_array_ptr, array_type):
     # START
     dyn_array_length_type = ir.FunctionType(type_map[INT], [dyn_array_ptr])
-    dyn_array_length = ir.Function(self.module, dyn_array_length_type, '{}_array_length'.format(array_type))
+    dyn_array_length = ir.Function(self.module, dyn_array_length_type, '{}_array_length'.format(str(array_type)))
     dyn_array_length_entry = dyn_array_length.append_basic_block('entry')
     builder = ir.IRBuilder(dyn_array_length_entry)
     self.builder = builder

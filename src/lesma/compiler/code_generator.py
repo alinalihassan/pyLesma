@@ -532,7 +532,7 @@ class CodeGenerator(NodeVisitor):
     def visit_range(self, node):
         start = self.visit(node.left)
         stop = self.visit(node.right)
-        array_ptr = self.create_array(INT)
+        array_ptr = self.create_array(type_map[INT])
         self.call('create_range', [array_ptr, start, stop])
         return self.load(array_ptr)
 
@@ -757,27 +757,32 @@ class CodeGenerator(NodeVisitor):
             raise NotImplementedError
 
     def define_array(self, node, elements):
-        array_type = node.items[0].val_type
+        if hasattr(node.items[0], 'val_type'):
+            array_type = type_map[node.items[0].val_type]
+        else:
+            array_type = self.visit(node.items[0]).type
         array_ptr = self.create_array(array_type)
         for element in elements:
-            self.call('{}_array_append'.format(str(type_map[array_type])), [array_ptr, element])
+            self.call('{}_array_append'.format(str(array_type)), [array_ptr, element])
         return self.load(array_ptr)
 
     def create_array(self, array_type):
-        array_type = str(type_map[array_type])
-        dyn_array_type = ir.LiteralStructType([type_map[INT], type_map[INT], llvm_type_map[array_type].as_pointer()])
-        self.define('{}_Array'.format(array_type), dyn_array_type)
-        array = dyn_array_type([self.const(0), self.const(0), self.const(0).inttoptr(llvm_type_map[array_type].as_pointer())])
+        dyn_array_type = ir.LiteralStructType([type_map[INT], type_map[INT], array_type.as_pointer()])
+        self.define('{}_Array'.format(str(array_type)), dyn_array_type)
+        array = dyn_array_type([self.const(0), self.const(0), self.const(0).inttoptr(array_type.as_pointer())])
         array = self.alloc_and_store(array, dyn_array_type)
         create_dynamic_array_methods(self, array_type)
-        self.call('{}_array_init'.format(array_type), [array])
+        self.call('{}_array_init'.format(str(array_type)), [array])
         return array
 
     def define_tuple(self, node, elements):
-        array_type = node.items[0].val_type
+        if hasattr(node.items[0], 'val_type'):
+            array_type = type_map[node.items[0].val_type]
+        else:
+            array_type = self.visit(node.items[0]).type
         array_ptr = self.create_array(array_type)
         for element in elements:
-            self.call('{}_array_append'.format(str(type_map[array_type])), [array_ptr, element])
+            self.call('{}_array_append'.format(str(array_type)), [array_ptr, element])
         return self.load(array_ptr)
 
     def visit_hashmap(self, node):
@@ -793,7 +798,7 @@ class CodeGenerator(NodeVisitor):
         return self.builder.extract_value(self.load(collection.name), [key])
 
     def visit_str(self, node):
-        array = self.create_array(INT)
+        array = self.create_array(type_map[INT])
         string = node.value.encode('utf-8')
         for char in string:
             self.call('i64_array_append', [array, self.const(char)])
@@ -807,7 +812,7 @@ class CodeGenerator(NodeVisitor):
             return
         if isinstance(val.type, ir.IntType):
             if val.type.width == 1:
-                array = self.create_array(INT)
+                array = self.create_array(type_map[INT])
                 self.call('bool_to_str', [array, val])
                 val = array
             else:
