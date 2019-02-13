@@ -45,7 +45,7 @@ def define_builtins(self):
 def create_dynamic_array_methods(self, array_type):
     if array_type in array_types:
         return
-    array = self.search_scopes('{}_Array'.format(str(array_type)))
+    array = self.search_scopes('{}_array'.format(str(array_type)))
     array_ptr = array.as_pointer()
 
     current_block = self.builder.block
