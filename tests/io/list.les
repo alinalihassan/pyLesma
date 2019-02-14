@@ -12,3 +12,9 @@ x[0] = 5.5
 
 y = [2.5,3.5, inf]
 print(y[0])
+
+z = [1,2,3]
+print(z.length())
+z.append(99)
+print(z[3])
+print(z.length())
