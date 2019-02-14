@@ -11,4 +11,4 @@ print(y[5] == 5)
 y[5] = 20
 print(y[5] == 20)
 
-z: tuple[int] = 0..2
+z: tuple<int> = 0..2

@@ -1,4 +1,4 @@
-x: func[int, int] -> int = def (x: int, y: int) -> int
+x: func<int, int> -> int = def (x: int, y: int) -> int
 	if x > y
 		return x + y
 	else

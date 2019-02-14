@@ -8,5 +8,5 @@ a8: float
 a7: double
 a10: bool
 a11: str
-a12: list[int]
-a13: tuple[float]
+a12: list<int>
+a13: tuple<float>

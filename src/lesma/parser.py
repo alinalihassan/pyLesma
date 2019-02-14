@@ -331,28 +331,28 @@ class Parser(object):
         func_ret_type = None
         func_params = OrderedDict()
         param_num = 0
-        if self.current_token.value == LSQUAREBRACKET and token.value in (LIST, TUPLE):
+        if self.current_token.value == LESS_THAN and token.value in (LIST, TUPLE):
             self.next_token()
-            while self.current_token.value != RSQUAREBRACKET:
+            while self.current_token.value != GREATER_THAN:
                 param_type = self.type_spec()
                 func_params[str(param_num)] = param_type
                 param_num += 1
-                if self.current_token.value != RSQUAREBRACKET:
+                if self.current_token.value != GREATER_THAN:
                     self.eat_value(COMMA)
 
-            self.eat_value(RSQUAREBRACKET)
+            self.eat_value(GREATER_THAN)
             type_spec.func_params = func_params
 
-        elif self.current_token.value == LSQUAREBRACKET and token.value == FUNC:
+        elif self.current_token.value == LESS_THAN and token.value == FUNC:
             self.next_token()
-            while self.current_token.value != RSQUAREBRACKET:
+            while self.current_token.value != GREATER_THAN:
                 param_type = self.type_spec()
                 func_params[str(param_num)] = param_type
                 param_num += 1
-                if self.current_token.value != RSQUAREBRACKET:
+                if self.current_token.value != GREATER_THAN:
                     self.eat_value(COMMA)
 
-            self.eat_value(RSQUAREBRACKET)
+            self.eat_value(GREATER_THAN)
             if self.current_token.value == ARROW:
                 self.next_token()
                 func_ret_type = self.type_spec()

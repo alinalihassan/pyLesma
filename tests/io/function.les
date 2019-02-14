@@ -29,7 +29,7 @@ def factorial(n: int = 5) -> int
 print(factorial())
 
 # Function as parameter
-def do_stuff(x: int, callback: func[int] -> int) -> int
+def do_stuff(x: int, callback: func<int> -> int) -> int
     return callback(5)
 
 def demo(x: int) -> int
@@ -38,7 +38,7 @@ def demo(x: int) -> int
 print(do_stuff(2, demo))
 
 # Function as return type
-def func_as_ret() -> func[int] -> int
+def func_as_ret() -> func<int> -> int
 	ret_func = def(y: int) -> int
 		return y + 10
 	return ret_func

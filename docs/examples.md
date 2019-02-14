@@ -33,7 +33,7 @@ things = [1, 2, 3] # List, mutable
 same_things = 0..4 # Same as before, defaults as a list
 other_things = (1.5, 9.5) # Tuple, immutable
 stuff = {'first_name': 'Samus', 'last_name': 'Aran'} # Dictionary
-other_stuff: list[int] = [] # Empty Array of ints
+other_stuff: list<int> = [] # Empty Array of ints
 
 print(things[1 + 1])
 
@@ -122,7 +122,7 @@ else if my_var as int64 is int64
 	print("That works")
 
 # Type Declaration
-type fInt = func[int] -> int
+type fInt = func<int> -> int
 
 def do_stuff(x: int, callback: fInt) -> int
 	x ^= 2

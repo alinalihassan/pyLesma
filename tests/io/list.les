@@ -6,7 +6,7 @@ print(things[2])
 things[2]++
 print(things[2])
 
-x: list[double] = [1.5]
+x: list<double> = [1.5]
 print(x[0])
 x[0] = 5.5
 

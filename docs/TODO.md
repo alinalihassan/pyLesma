@@ -2,6 +2,8 @@
 
 ## Fixes
 - [x] Fix operator overloading going through an infinite loop if used in def function
+- [x] Fix not being able to have user-defined type lists
+- [ ] Fix parser error when using class fields/methods from a list
 - [ ] Fix unicode on windows
 
 ## Improvements
