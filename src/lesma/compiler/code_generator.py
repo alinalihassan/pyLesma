@@ -767,8 +767,13 @@ class CodeGenerator(NodeVisitor):
         return self.load(array_ptr)
 
     def create_array(self, array_type):
-        dyn_array_type = ir.LiteralStructType([type_map[INT], type_map[INT], array_type.as_pointer()])
-        self.define('{}.array'.format(str(array_type)), dyn_array_type)
+        dyn_array_type = self.module.context.get_identified_type('{}.array'.format(str(array_type)))
+        if self.search_scopes('{}.array'.format(str(array_type))) is None:
+            dyn_array_type.name = '{}.array'.format(str(array_type))
+            dyn_array_type.type = CLASS
+            dyn_array_type.set_body(type_map[INT], type_map[INT], array_type.as_pointer())
+            self.define('{}.array'.format(str(array_type)), dyn_array_type)
+
         array = dyn_array_type([self.const(0), self.const(0), self.const(0).inttoptr(array_type.as_pointer())])
         array = self.alloc_and_store(array, dyn_array_type)
         create_dynamic_array_methods(self, array_type)

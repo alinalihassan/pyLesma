@@ -21,10 +21,15 @@ def define_builtins(self):
     # 0: int size
     # 1: int capacity
     # 2: int *data
-    str_struct = ir.LiteralStructType([type_map[INT], type_map[INT], type_map[INT].as_pointer()])
-    self.define('Str', str_struct)
+    str_struct = self.module.context.get_identified_type('i64.array')
+    str_struct.name = 'i64.array'
+    str_struct.type = CLASS
+    str_struct.set_body(type_map[INT], type_map[INT], type_map[INT].as_pointer())
+
+    self.define('str', str_struct)
+    self.define('i64.array', str_struct)
     str_struct_ptr = str_struct.as_pointer()
-    self.define('Str_ptr', str_struct_ptr)
+    self.define('str_ptr', str_struct_ptr)
     type_map[STR] = str_struct
     lint = type_map[INT]
 
