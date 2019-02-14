@@ -215,6 +215,7 @@ def dynamic_array_append(self, dyn_array_ptr, array_type):
     builder.branch(dyn_array_append_exit)
 
     # CLOSE
+    self.define('{}.array.append'.format(str(array_type)), dyn_array_append)
     builder.position_at_end(dyn_array_append_exit)
     builder.ret_void()
 
@@ -362,6 +363,7 @@ def dynamic_array_length(self, dyn_array_ptr, array_type):
     size_ptr = builder.gep(builder.load(array_ptr), [zero_32, zero_32], inbounds=True)
 
     # CLOSE
+    self.define('{}.array.length'.format(str(array_type)), dyn_array_length)
     builder.ret(builder.load(size_ptr))
 
 # TODO: add the following functions for dynamic array
