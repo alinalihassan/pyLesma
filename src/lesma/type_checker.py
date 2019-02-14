@@ -439,7 +439,10 @@ class Preprocessor(NodeVisitor):
             return func.type
 
     def visit_methodcall(self, node):  # TODO: Finish this, make Symbols for Classes and Methods
-        pass
+        # TODO: hardcoded error for tuple append, help pls
+        if isinstance(self.search_scopes(node.obj), CollectionSymbol) and self.search_scopes(node.obj).type.name == TUPLE:
+            error('file={} line={}: Immutable Error: cannot use `{}` method'.format(self.file_name, node.line_num, node.name))
+
         # method_name = node.name
         # method = self.search_scopes("{}.{}".format(self.search_scopes(node.obj).type.name, method_name))
         # for x, param in enumerate(method.parameters.values()):
