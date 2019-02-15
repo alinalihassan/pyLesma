@@ -175,7 +175,7 @@ class Preprocessor(NodeVisitor):
             elif isinstance(value, FuncSymbol):
                 value.name = var_name
                 self.define(var_name, value)
-            elif value.name == FUNC:
+            elif hasattr(value, 'name') and value.name == FUNC:
                 var = self.visit(node.right)
                 if isinstance(var, FuncSymbol):
                     self.define(var_name, var)
