@@ -1,4 +1,5 @@
 for i in 0..11
+    a = i
     print(i)
 
 x = 11
