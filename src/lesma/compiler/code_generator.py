@@ -95,12 +95,10 @@ class CodeGenerator(NodeVisitor):
         return_type = node.return_type
         parameters = node.parameters
         varargs = node.varargs
-        ret_type = type_map[return_type.value]
-        args = [type_map[param.value] for param in parameters.values()]
+        ret_type = self.get_type(return_type)
+        args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
-        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
-            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
         self.define(name, func, 1)
 
@@ -292,7 +290,7 @@ class CodeGenerator(NodeVisitor):
 
         fields = []
         for field in node.fields.values():
-            fields.append(type_map[field.value])
+            fields.append(self.get_type(field))
 
         classdecl = self.module.context.get_identified_type(node.name)
         classdecl.fields = [field for field in node.fields.keys()]
@@ -345,18 +343,17 @@ class CodeGenerator(NodeVisitor):
         else:
             self.store(res, var_name)
 
-    @staticmethod
-    def visit_typedeclaration(node):
-        type_map[node.name] = type_map[node.collection.value]
+    def visit_typedeclaration(self, node):
+        if node.collection.value in type_map:
+            type_map[node.name] = type_map[node.collection.value]
+        else:
+            self.define(node.name, self.search_scopes(node.collection.value))
         return TYPE
 
     def visit_vardecl(self, node):
-        typ = type_map[node.type.value] if node.type.value in type_map else self.search_scopes(node.type.value)
+        typ = self.get_type(node.type)
         if node.type.value == FUNC:
-            if node.type.func_ret_type.value in type_map:
-                func_ret_type = type_map[node.type.func_ret_type.value]
-            else:
-                func_ret_type = self.search_scopes(node.type.func_ret_type.value)
+            func_ret_type = self.get_type(node.type.func_ret_type)
             func_parameters = self.get_args(node.type.func_params)
             func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
             typ = func_ty
@@ -555,7 +552,6 @@ class CodeGenerator(NodeVisitor):
             if isinstance(node.left, VarDecl):
                 var_name = node.left.value.value
                 if node.left.type.value in (LIST, TUPLE):
-                    # TODO: Currently only supporting one type for lists and tuples
                     var_type = type_map[list(node.left.type.func_params.items())[0][1].value]
                     self.alloc_define_store(var, var_name, var.type)
                 else:
@@ -947,8 +943,6 @@ class CodeGenerator(NodeVisitor):
         func_type.parameters = parameters
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
-        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
-            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
         func.linkage = linkage
         self.define(name, func, 1)
