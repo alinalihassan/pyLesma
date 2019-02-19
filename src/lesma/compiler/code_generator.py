@@ -941,7 +941,7 @@ class CodeGenerator(NodeVisitor):
         return typ
 
     def func_decl(self, name, return_type, parameters, parameter_defaults=None, varargs=None, linkage=None):
-        ret_type = type_map[return_type.value]
+        ret_type = self.get_type(return_type)
         args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
