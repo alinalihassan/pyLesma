@@ -45,3 +45,10 @@ def func_as_ret() -> func<int> -> int
 
 fun = func_as_ret()
 print(fun(3))
+
+# List as parameter
+def list_demo(x: list<int>) -> int
+	return 4
+
+basic_list = [1,2,3]
+print(list_demo(basic_list))
