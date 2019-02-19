@@ -9,13 +9,9 @@
 ## Improvements
 - [ ] Improve warning messages
 - [ ] Add indentation related errors
-- [ ] Add docs for mixed arithmetic
-- [ ] Improve docs as much as possible for v0.5
 - [ ] Remove clang as a dependency
-- [ ] Move error messages from source files to typechecker
-- [ ] Add support for functions with same name but different parameters
+- [ ] Add support for functions with same name but different parameters (name mangling)
 - [ ] Fix local - global variable behaviour, currently there's an implicit main func
-- [ ] Use dataclasses and static typing as much as possible in source code
 - [ ] String/Lists are currently unsupported on: input function, operators, etc.
 - [ ] Find a way to use pointers and null for FFI but restrict or disallow it in normal Lesma
 - [x] Allow functions to be used as return types
@@ -36,3 +32,10 @@
 - [ ] Implement autocomplete
 - [ ] Implement go to definition, etc
 
+## Documentation
+- [ ] Add docs for mixed arithmetic
+- [ ] Improve docs as much as possible for v0.5
+
+## Source Code
+- [ ] Use dataclasses and static typing as much as possible
+- [ ] Move error messages from source files to typechecker
