@@ -359,8 +359,9 @@ class CodeGenerator(NodeVisitor):
             typ = func_ty
             self.alloc_and_define(node.value.value, typ)
         elif node.type.value in (LIST, TUPLE):
-            array_type = node.type.func_params['0'].value
-            typ = ir.LiteralStructType([type_map[INT], type_map[INT], type_map[array_type].as_pointer()])
+            array_type = self.get_type(node.type.func_params['0'])
+            self.create_array(array_type)
+            typ = self.search_scopes('{}.array'.format(array_type))
             self.alloc_and_define(node.value.value, typ)
         else:
             self.alloc_and_define(node.value.value, typ)
