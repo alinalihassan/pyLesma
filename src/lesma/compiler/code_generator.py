@@ -905,6 +905,11 @@ class CodeGenerator(NodeVisitor):
                 func_parameters = self.get_args(param.func_params)
                 func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
                 args.append(func_ty)
+            elif param.value == LIST:
+                array_type = self.get_type(param.func_params['0'])
+                self.create_array(array_type)
+                typ = self.search_scopes('{}.array'.format(array_type))
+                args.append(typ)
             else:
                 if param.value in type_map:
                     args.append(type_map[param.value])
@@ -927,6 +932,10 @@ class CodeGenerator(NodeVisitor):
             func_parameters = self.get_args(param.func_params)
             func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
             typ = func_ty
+        elif param.value == LIST:
+            array_type = self.get_type(param.func_params['0'])
+            self.create_array(array_type)
+            typ = self.search_scopes('{}.array'.format(array_type))
         else:
             if param.value in type_map:
                 typ = type_map[param.value]
