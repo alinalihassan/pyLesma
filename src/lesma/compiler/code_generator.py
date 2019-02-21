@@ -105,23 +105,12 @@ class CodeGenerator(NodeVisitor):
     def funcdecl(self, name, node, linkage=None):
         self.func_decl(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
 
-    def funcimpl(self, name, node):
-        self.implement_func_body(name)
-        for i, arg in enumerate(self.current_function.args):
-            arg.name = list(node.parameters.keys())[i]
+    def funcdef(self, name, node, linkage=None, func_exists=False):
+        if func_exists:
+            self.implement_func_body(name)
+        else:
+            self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
 
-            # TODO: a bit hacky, cannot handle pointers atm but we need them for class reference
-            if arg.name == SELF and isinstance(arg.type, ir.PointerType):
-                self.define(arg.name, arg)
-            else:
-                self.alloc_define_store(arg, arg.name, arg.type)
-        if self.current_function.function_type.return_type != type_map[VOID]:
-            self.alloc_and_define(RET_VAR, self.current_function.function_type.return_type)
-        ret = self.visit(node.body)
-        self.end_function(ret)
-
-    def funcdef(self, name, node, linkage=None):
-        self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
 
@@ -302,7 +291,7 @@ class CodeGenerator(NodeVisitor):
             self.funcdecl(method.name, method)
 
         for method in node.methods:
-            self.funcimpl(method.name, method)
+            self.funcdef(method.name, method, func_exists=True)
         classdecl.methods = [self.search_scopes(method.name) for method in node.methods]
 
         self.in_class = False
