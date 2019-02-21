@@ -13,6 +13,7 @@ class Thing
         self.b_thing = b_thing
         print(5)
         print(self.just_demo())
+        self.just_demo()
 
     def another()
         print(self.a_thing)

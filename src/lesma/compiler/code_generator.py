@@ -659,7 +659,6 @@ class CodeGenerator(NodeVisitor):
                 right = cast_ops(self, right, var.type, node)
                 res = self.builder.mul(var, right)
             elif op == FLOORDIV_ASSIGN:
-                # We convert a lot in case that right operand is float
                 temp = cast_ops(self, var, ir.DoubleType(), node)
                 temp_right = cast_ops(self, right, ir.DoubleType(), node)
                 temp = self.builder.fdiv(temp, temp_right)
@@ -984,7 +983,7 @@ class CodeGenerator(NodeVisitor):
         for stat in self.defer_stack[-1]:
             self.visit(stat)
         self.defer_stack.pop()
-        if not returned:
+        if returned is not True:
             self.branch(self.exit_blocks[-1])
         self.position_at_end(self.exit_blocks.pop())
         if self.current_function.function_type.return_type != type_map[VOID]:
