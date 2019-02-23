@@ -1,7 +1,8 @@
 from llvmlite import ir
-from lesma.compiler import type_map, llvm_type_map
-from lesma.grammar import *
+
 import lesma.compiler.llvmlite_custom
+from lesma.compiler import llvm_type_map, type_map
+from lesma.grammar import *
 
 ARRAY_INITIAL_CAPACITY = ir.Constant(type_map[INT], 16)
 

@@ -1,4 +1,5 @@
 import sys
+
 from halo import Halo
 
 

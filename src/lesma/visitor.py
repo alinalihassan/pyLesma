@@ -1,5 +1,6 @@
 from decimal import Decimal
 from enum import Enum
+
 from lesma.ast import Type
 from lesma.compiler import *
 

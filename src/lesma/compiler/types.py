@@ -1,6 +1,7 @@
 from llvmlite import ir
-from lesma.grammar import *
+
 import lesma.compiler.llvmlite_custom
+from lesma.grammar import *
 
 
 class Any:

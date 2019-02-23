@@ -1,22 +1,23 @@
+import os
+import subprocess
 from ctypes import CFUNCTYPE, c_void_p
 from decimal import Decimal
-from time import time
-import llvmlite.binding as llvm
-import os
 from math import inf
-import subprocess
+from time import time
+
+import llvmlite.binding as llvm
 from llvmlite import ir
-from lesma.grammar import *
-from lesma.ast import CollectionAccess, DotAccess, Input, VarDecl, Str
-from lesma.compiler import RET_VAR, type_map, llvm_type_map
-from lesma.compiler.operations import unary_op, binary_op, cast_ops
-from lesma.compiler.builtins import define_builtins
-from lesma.compiler.builtins import create_dynamic_array_methods
-from lesma.compiler.builtins import array_types
-from lesma.type_checker import types_compatible
+
 import lesma.compiler.llvmlite_custom
-from lesma.visitor import NodeVisitor
+from lesma.ast import CollectionAccess, DotAccess, Input, Str, VarDecl
+from lesma.compiler import RET_VAR, llvm_type_map, type_map
+from lesma.compiler.builtins import (array_types, create_dynamic_array_methods,
+                                     define_builtins)
+from lesma.compiler.operations import binary_op, cast_ops, unary_op
+from lesma.grammar import *
+from lesma.type_checker import types_compatible
 from lesma.utils import *
+from lesma.visitor import NodeVisitor
 
 
 class CodeGenerator(NodeVisitor):

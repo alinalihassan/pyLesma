@@ -1,7 +1,8 @@
 from collections import OrderedDict
+
 from lesma.ast import *
-from lesma.grammar import *
 from lesma.compiler.__init__ import type_map
+from lesma.grammar import *
 from lesma.utils import error
 
 

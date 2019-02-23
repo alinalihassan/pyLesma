@@ -1,10 +1,9 @@
 from llvmlite import ir
 
-from lesma.compiler import NUM_TYPES
-from lesma.compiler import type_map, llvm_type_map
+import lesma.compiler.llvmlite_custom
+from lesma.compiler import NUM_TYPES, llvm_type_map, type_map
 from lesma.grammar import *
 from lesma.utils import error
-import lesma.compiler.llvmlite_custom
 
 # TODO: Determine size using a comparison function
 int_types = ('i1', 'i8', 'i16', 'i32', 'i64', 'i128')

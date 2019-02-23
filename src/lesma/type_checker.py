@@ -1,7 +1,10 @@
-from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess, Range
+from lesma.ast import (Collection, CollectionAccess, DotAccess, Range, Var,
+                       VarDecl)
 from lesma.grammar import *
-from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, EnumSymbol, ClassSymbol, VarSymbol, BuiltinTypeSymbol
-from lesma.utils import warning, error
+from lesma.utils import error, warning
+from lesma.visitor import (BuiltinTypeSymbol, ClassSymbol, CollectionSymbol,
+                           EnumSymbol, FuncSymbol, NodeVisitor, StructSymbol,
+                           TypeSymbol, VarSymbol)
 
 
 def flatten(container):

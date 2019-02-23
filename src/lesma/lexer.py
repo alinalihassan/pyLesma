@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from lesma.grammar import *
 from lesma.utils import *
 

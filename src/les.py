@@ -14,13 +14,15 @@ options:
     -d, --debug                 Debug mode
 """
 
+import os
+
+from docopt import docopt
+
+from lesma.compiler.code_generator import CodeGenerator
 from lesma.lexer import Lexer
 from lesma.parser import Parser
 from lesma.type_checker import Preprocessor
-from lesma.compiler.code_generator import CodeGenerator
 from lesma.utils import error
-from docopt import docopt
-import os
 
 
 def _run(arg_list):
