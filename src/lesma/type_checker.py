@@ -71,6 +71,10 @@ class Preprocessor(NodeVisitor):
             elem_type = self.visit(node.iterator)
             if isinstance(elem_type, CollectionSymbol):
                 elem_type = elem_type.item_types
+            elif isinstance(elem_type, tuple):
+                # Ranges return tuples
+                elem_type = elem_type[1]
+
             var_sym = VarSymbol(element.value, elem_type)
             var_sym.val_assigned = True
             self.define(var_sym.name, var_sym)
@@ -211,7 +215,7 @@ class Preprocessor(NodeVisitor):
                     return
             if lookup_var.type is value:
                 return
-            if lookup_var.type is value.type:
+            if hasattr(value, 'type') and lookup_var.type is value.type:
                 return
             if isinstance(value, TypeSymbol):
                 value.accessed = True
