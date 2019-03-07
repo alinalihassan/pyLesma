@@ -278,6 +278,7 @@ def dynamic_array_get(self, dyn_array_ptr, array_type):
     builder.branch(dyn_array_get_exit)
 
     # CLOSE
+    self.define('{}.array.get'.format(str(array_type)), dyn_array_get)
     builder.position_at_end(dyn_array_get_exit)
     builder.ret(builder.load(data_element_ptr))
 
@@ -345,6 +346,7 @@ def dynamic_array_set(self, dyn_array_ptr, array_type):
     builder.branch(dyn_array_set_exit)
 
     # CLOSE
+    self.define('{}.array.set'.format(str(array_type)), dyn_array_set)
     builder.position_at_end(dyn_array_set_exit)
     builder.ret_void()
 
