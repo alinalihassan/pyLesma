@@ -213,7 +213,7 @@ class Vehicle
 		self._color = color
 
 # Inheritance
-class Car(Vehicle)
+class Car: Vehicle
 	def new(year: int, color='green', hatchback=false)
 		self.hatchback = hatchback
 		super.Vehicle(year, color)
