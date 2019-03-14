@@ -40,7 +40,6 @@ class CodeGenerator(NodeVisitor):
         self.loop_test_blocks = []
         self.loop_end_blocks = []
         self.is_break = False
-        self.in_class = False
         llvm.initialize()
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
@@ -133,9 +132,23 @@ class CodeGenerator(NodeVisitor):
         self.branch(self.exit_blocks[-1])
         return True
 
+    def super_method(self, node, obj, parent):
+        method = self.search_scopes(parent.name + '.' + node.name)
+        if method is not None:
+            tmp = self.builder.bitcast(obj, parent.as_pointer())
+            return self.methodcall(node, method, tmp)
+        if method is None and parent.base is not None:
+            return self.super_method(obj, self.search_scopes(parent.base.value))
+        else:
+            error("No method as described")
+
     def visit_methodcall(self, node):
         obj = self.search_scopes(node.obj)
         method = self.search_scopes(obj.type.pointee.name + '.' + node.name)
+        if method is None and obj.type.pointee.base is not None:
+            parent = self.search_scopes(obj.type.pointee.base.value)
+            return self.super_method(node, obj, parent)
+
         return self.methodcall(node, method, obj)
 
     def methodcall(self, node, func, obj):
@@ -275,18 +288,36 @@ class CodeGenerator(NodeVisitor):
         struct.set_body(*[field for field in fields])
         self.define(node.name, struct)
 
+    def get_super_fields(self, classdecl, parent=None):
+        fields = []
+        elements = []
+        if classdecl.base is not None:
+            if parent is None:
+                parent = self.search_scopes(classdecl.base.value)
+
+            if parent.base is not None:
+                new_parent = self.search_scopes(parent.base.value)
+                self.get_super_fields(self, classdecl, new_parent)
+
+            fields += parent.fields
+            elements += parent.elements
+
+        return fields, elements
+
     def visit_classdeclaration(self, node):
-        self.in_class = True
 
         fields = []
         for field in node.fields.values():
             fields.append(self.get_type(field))
 
         classdecl = self.module.context.get_identified_type(node.name)
-        classdecl.fields = [field for field in node.fields.keys()]
+        classdecl.base = node.base
+        classdecl.fields = []
         classdecl.name = node.name
         classdecl.type = CLASS
-        classdecl.set_body(*[field for field in fields])
+        super_fields, super_elements = self.get_super_fields(classdecl)
+        classdecl.fields = super_fields + [field for field in node.fields.keys()]
+        classdecl.set_body(*(super_elements + [field for field in fields]))
         self.define(node.name, classdecl)
         for method in node.methods:
             self.funcdecl(method.name, method)
@@ -295,7 +326,6 @@ class CodeGenerator(NodeVisitor):
             self.funcdef(method.name, method, func_exists=True)
         classdecl.methods = [self.search_scopes(method.name) for method in node.methods]
 
-        self.in_class = False
         self.define(node.name, classdecl)
 
     def visit_incrementassign(self, node):

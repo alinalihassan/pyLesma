@@ -446,7 +446,7 @@ class Preprocessor(NodeVisitor):
             return func.type
 
     def visit_methodcall(self, node):  # TODO: Finish this, make Symbols for Classes and Methods
-        # TODO: hardcoded error for tuple append, help pls
+        # TODO: hardcoded error for tuple methods, thing of a better way to do it
         if isinstance(self.search_scopes(node.obj), CollectionSymbol) and self.search_scopes(node.obj).type.name == TUPLE:
             if node.name in ('set', 'append'):
                 error('file={} line={}: Immutable Error: cannot use `{}` method'.format(self.file_name, node.line_num, node.name))
@@ -481,11 +481,25 @@ class Preprocessor(NodeVisitor):
         sym = EnumSymbol(node.name, node.fields)
         self.define(sym.name, sym)
 
+    def parent_class(self, class_symbol, parent):
+        new_fields = parent.fields
+        new_fields.update(class_symbol.fields)
+        class_symbol.fields = new_fields
+        class_symbol.methods = parent.methods + class_symbol.methods
+
+        if parent.base is not None:
+            self.parent_class(class_symbol, self.search_scopes(parent.base.value))
+
     def visit_classdeclaration(self, node):
         class_methods = [FuncSymbol(method.name, method.return_type, method.parameters, method.body) for method in node.methods]
-        sym = ClassSymbol(node.name, node.fields, class_methods)
+        sym = ClassSymbol(node.name, node.base, node.fields, class_methods)
         for method in class_methods:
             self.define(method.name, method)
+
+        if node.base is not None:
+            parent = self.search_scopes(node.base.value)
+            self.parent_class(sym, self.search_scopes(node.base.value))
+
         self.define(sym.name, sym)
 
     def visit_return(self, node):

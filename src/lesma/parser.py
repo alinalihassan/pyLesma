@@ -14,7 +14,6 @@ class Parser(object):
         self.indent_level = 0
         self.next_token()
         self.user_types = []
-        self.in_class = False
         self.func_args = False
 
     @property
@@ -108,13 +107,13 @@ class Parser(object):
         methods = []
         fields = OrderedDict()
         instance_fields = None
-        self.in_class = True
         self.next_token()
         class_name = self.current_token
         self.user_types.append(class_name.value)
         self.eat_type(NAME)
-        if self.current_token.value == LPAREN:
-            pass  # TODO impliment multiple inheritance
+        if self.current_token.value == COLON:
+            self.eat_value(COLON)
+            base = self.type_spec()
         self.eat_type(NEWLINE)
         self.indent_level += 1
         while self.keep_indent():
@@ -131,7 +130,6 @@ class Parser(object):
             if self.current_token.value == DEF:
                 methods.append(self.method_declaration(class_name))
         self.indent_level -= 1
-        self.in_class = False
         return ClassDeclaration(class_name.value, base, methods, fields, instance_fields)
 
     def variable_declaration(self):

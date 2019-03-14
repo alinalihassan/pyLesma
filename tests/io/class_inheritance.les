@@ -1,0 +1,23 @@
+class DemoClass
+    x: int
+    def new()
+        self.x = 5
+
+    def test()
+        print("Test")
+
+class DemoClass2: DemoClass
+    y: int
+    def new()
+        self.y = 4
+        self.x = 5
+
+    def test2()
+        print("Test2")
+
+
+y = DemoClass2()
+y.test()
+print(y.x)
+print(y.y)
+

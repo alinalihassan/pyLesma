@@ -20,7 +20,8 @@
 - [x] Allow ranges to be used as list expressions
 
 ## Features
-- [ ] Implement Class inheritance
+- [x] Implement Class inheritance
+- [ ] Implement multiple inheritance
 - [ ] Implement Dictionary
 - [ ] Implement 'in' as a boolean result
 - [ ] Implement Closure
