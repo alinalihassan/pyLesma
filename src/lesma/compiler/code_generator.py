@@ -138,7 +138,7 @@ class CodeGenerator(NodeVisitor):
             tmp = self.builder.bitcast(obj, parent.as_pointer())
             return self.methodcall(node, method, tmp)
         if method is None and parent.base is not None:
-            return self.super_method(obj, self.search_scopes(parent.base.value))
+            return self.super_method(node, obj, self.search_scopes(parent.base.value))
         else:
             error("No method as described")
 
@@ -297,7 +297,7 @@ class CodeGenerator(NodeVisitor):
 
             if parent.base is not None:
                 new_parent = self.search_scopes(parent.base.value)
-                self.get_super_fields(self, classdecl, new_parent)
+                self.get_super_fields(classdecl, new_parent)
 
             fields += parent.fields
             elements += parent.elements
