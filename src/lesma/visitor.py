@@ -114,7 +114,8 @@ class FuncSymbol(Symbol):
         self.val_assigned = True
 
     def __str__(self):
-        return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join('{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
+        return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join(
+            '{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
 
     __repr__ = __str__
 
@@ -139,7 +140,8 @@ class BuiltinFuncSymbol(Symbol):
         self.val_assigned = True
 
     def __str__(self):
-        return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join('{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
+        return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join(
+            '{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
 
     __repr__ = __str__
 
