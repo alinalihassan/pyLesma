@@ -1,7 +1,6 @@
 from llvmlite import ir
 
 # Int
-
 Old_IntType = ir.types.IntType
 
 

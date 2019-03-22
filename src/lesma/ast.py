@@ -42,10 +42,10 @@ class Compound(AST):
     def __init__(self):
         self.children = []
 
-    # def __str__(self):
-    # 	return '\n'.join(str(child) for child in self.children)
-    #
-    # __repr__ = __str__
+    def __str__(self):
+        return '\n'.join(str(child) for child in self.children)
+
+    __repr__ = __str__
 
 
 class FuncDecl(AST):

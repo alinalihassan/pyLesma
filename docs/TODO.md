@@ -39,5 +39,6 @@
 - [ ] Improve docs as much as possible for v0.5
 
 ## Source Code
+- [ ] Start migration to C++
 - [ ] Use dataclasses and static typing as much as possible
 - [ ] Move error messages from source files to typechecker

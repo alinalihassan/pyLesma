@@ -40,10 +40,11 @@ class CodeGenerator(NodeVisitor):
         self.loop_test_blocks = []
         self.loop_end_blocks = []
         self.is_break = False
+        self.anon_counter = 0
+
         llvm.initialize()
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
-        self.anon_counter = 0
 
         # for i in range(2):
         #     func.args[i].name = '.argc' if i == 0 else '.argv'
