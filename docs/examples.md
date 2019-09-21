@@ -30,9 +30,10 @@ still_inf = inf - 999999 # Still infinity
 question = 'what\'s going on' # Escaping
 
 things = [1, 2, 3] # List, mutable
+same_things = 0..4 # Same as before, defaults as a list
 other_things = (1.5, 9.5) # Tuple, immutable
 stuff = {'first_name': 'Samus', 'last_name': 'Aran'} # Dictionary
-other_stuff: list[int] = [] # Empty Array of ints
+other_stuff: list<int> = [] # Empty Array of ints
 
 print(things[1 + 1])
 
@@ -121,7 +122,7 @@ else if my_var as int64 is int64
 	print("That works")
 
 # Type Declaration
-type fInt = func[int] -> int
+type fInt = func<int> -> int
 
 def do_stuff(x: int, callback: fInt) -> int
 	x ^= 2
@@ -208,13 +209,13 @@ print(cir.radius)
 class Vehicle
 	# Constructor
 	def new(year: int, color: str)
-		this.year = year
-		this._color = color
+		self.year = year
+		self._color = color
 
 # Inheritance
-class Car(Vehicle)
+class Car: Vehicle
 	def new(year: int, color='green', hatchback=false)
-		this.hatchback = hatchback
+		self.hatchback = hatchback
 		super.Vehicle(year, color)
 
 	def print_year() -> void
@@ -224,4 +225,19 @@ ford = Car(1992)
 
 print(ford.hatchback)
 ford.print_year()
+
+# Generics
+
+# Skip the type and assign a unique generic type for each parameter
+def basicGeneric(a, b)
+	print(a)
+	print(b)
+
+# Using <T> notation the compiler makes sure the types used match if repeated among parameters and/or return type
+def typedGeneric<T>(a: T, b: T) -> T
+	return a
+
+# Types can have constraints, and the constraints can be Traits, Classes, Structs or Enums
+def complexGeneric<T: AdditionTrait>(a: T, b: T) -> T
+	return a + b
 ```

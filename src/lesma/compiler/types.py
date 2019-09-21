@@ -1,6 +1,7 @@
 from llvmlite import ir
-from lesma.grammar import *
+
 import lesma.compiler.llvmlite_custom
+from lesma.grammar import *
 
 
 class Any:
@@ -269,10 +270,3 @@ class Class(Struct):
     @staticmethod
     def type():
         raise NotImplementedError
-
-# def get_type_cls(cls):
-# 	import sys
-# 	import inspect
-# 	for name, obj in inspect.getmembers(sys.modules[__name__]):
-# 		if inspect.isclass(obj) and obj.__name__ == cls:
-# 			return obj()

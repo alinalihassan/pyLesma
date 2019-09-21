@@ -14,13 +14,15 @@ options:
     -d, --debug                 Debug mode
 """
 
+import os
+
+from docopt import docopt
+
+from lesma.compiler.code_generator import CodeGenerator
 from lesma.lexer import Lexer
 from lesma.parser import Parser
 from lesma.type_checker import Preprocessor
-from lesma.compiler.code_generator import CodeGenerator
 from lesma.utils import error
-from docopt import docopt
-import os
 
 
 def _run(arg_list):
@@ -68,7 +70,7 @@ def _compile(arg_list):
 
 
 if __name__ == "__main__":
-    args = docopt(__doc__, version='v0.4.0')
+    args = docopt(__doc__, version='v0.4.1')
 
     if args['compile']:
         _compile(args)

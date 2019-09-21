@@ -1,10 +1,9 @@
 from llvmlite import ir
 
-from lesma.compiler import NUM_TYPES
-from lesma.compiler import type_map, llvm_type_map
+import lesma.compiler.llvmlite_custom
+from lesma.compiler import NUM_TYPES, llvm_type_map, type_map
 from lesma.grammar import *
 from lesma.utils import error
-import lesma.compiler.llvmlite_custom
 
 # TODO: Determine size using a comparison function
 int_types = ('i1', 'i8', 'i16', 'i32', 'i64', 'i128')
@@ -35,7 +34,8 @@ def userdef_binary_str(op, left, right):
 def unary_op(self, node):
     op = node.op
     expr = self.visit(node.expr)
-    if hasFunction(self, userdef_unary_str(op, expr)):
+    if hasFunction(self, userdef_unary_str(op, expr)) and \
+       self.current_function.name != userdef_unary_str(op, expr):
         return self.builder.call(self.module.get_global(userdef_unary_str(op, expr)),
                                  [expr], "unop")
     elif op == MINUS:

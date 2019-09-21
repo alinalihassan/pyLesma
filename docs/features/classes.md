@@ -5,16 +5,18 @@ Classes **require a constructor to be specified**.
 ## Example
 ```py
 class Vehicle
+	year: int
+	color: str
+
 	# Constructor
 	def new(year: int, color: str)
 		this.year = year
-		this._color = color  
-		# Privatising the color field, won't be accessible from outside
+		this.color = color  
 
 # Inheritance
-class Car(Vehicle)
+class Car: Vehicle
 	def new(year: int, color='green', hatchback=false)
-		this.hatchback = hatchback
+		self.hatchback = hatchback
 		super.Vehicle(year, color)
 
 	def print_year() -> void

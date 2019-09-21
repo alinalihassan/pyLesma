@@ -68,21 +68,21 @@ x: bool = true
 ```
 
 ### List
-Lists are mutable by default, are declared using square paranthesis, have dynamic size, start from 0, and the members are accessed using the their index around square paranthesis. The element can be declared between square braces. If the type is omitted, the list will have the type of the elements contained. 
+Lists are mutable by default, are declared using square paranthesis, have dynamic size, start from 0, and the members are accessed using the their index around square paranthesis. The element can be declared between `<>`. If the type is omitted, the list will have the type of the elements contained. 
 
 ```py
 x = [1,2,3,4]
-y: list[double] = [1.5,5.5]
+y: list<double> = [1.5,5.5]
 print(x[2])
 ```
 
 ### Tuple
 Tuples are like lists, but immutable, and declared using round paranthesis.
-The element type can be declared between square braces. If the type is omitted, the list will have the type of the elements contained. 
+The element type can be declared between `<>`. If the type is omitted, the list will have the type of the elements contained. 
 
 ```py
 x = (1,5,20)
-y: tuple[double] = (1.5,5.5)
+y: tuple<double> = (1.5,5.5)
 print(x[0])
 ```
 
@@ -113,10 +113,10 @@ for x in 0..100
 
 ### Func
 Lesma supports first class functions, meaning that variables can be assigned functions, and the type func is meant to annotate the type of the function.
-Parameter types are included between square braces `[]` separated by comma `,`, and the return type with arrow `->`.
+Parameter types are included between `<>` separated by comma `,`, and the return type with arrow `->`.
 
 ```py
-x: func[int, int] -> int = def (x: int, y: int) -> int
+x: func<int, int> -> int = def (x: int, y: int) -> int
 	if x > y
 		return x + y
 	else

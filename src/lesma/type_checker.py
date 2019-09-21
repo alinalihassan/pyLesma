@@ -1,7 +1,10 @@
-from lesma.ast import Collection, Var, VarDecl, DotAccess, CollectionAccess
+from lesma.ast import (Collection, CollectionAccess, DotAccess, Range, Var,
+                       VarDecl)
 from lesma.grammar import *
-from lesma.visitor import TypeSymbol, CollectionSymbol, FuncSymbol, NodeVisitor, StructSymbol, EnumSymbol, ClassSymbol, VarSymbol
-from lesma.utils import warning, error
+from lesma.utils import error, warning
+from lesma.visitor import (BuiltinTypeSymbol, ClassSymbol, CollectionSymbol,
+                           EnumSymbol, FuncSymbol, NodeVisitor, StructSymbol,
+                           TypeSymbol, VarSymbol)
 
 
 def flatten(container):
@@ -68,6 +71,10 @@ class Preprocessor(NodeVisitor):
             elem_type = self.visit(node.iterator)
             if isinstance(elem_type, CollectionSymbol):
                 elem_type = elem_type.item_types
+            elif isinstance(elem_type, tuple):
+                # Ranges return tuples
+                elem_type = elem_type[1]
+
             var_sym = VarSymbol(element.value, elem_type)
             var_sym.val_assigned = True
             self.define(var_sym.name, var_sym)
@@ -131,16 +138,16 @@ class Preprocessor(NodeVisitor):
             var_name = node.left.value.value
             value = self.infer_type(node.left.type)
             value.accessed = True
-            if isinstance(node.right, Collection):
+            if isinstance(node.right, Collection) or isinstance(node.right, Range):
                 _, collection_type = self.visit(node.right)
 
-            if value.name in (TUPLE, LIST) and node.right.type != value.name:
+            if value.name in (TUPLE, LIST) and (not isinstance(node.right, Range) and node.right.type != value.name):
                 error('file={} line={}: Contradicting {}-{} declaration'.format(self.file_name, node.line_num, value.name, node.right.type))
         elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, EnumSymbol, ClassSymbol)):
             var_name = node.left.value
             value = self.search_scopes(node.right.name)
             value.accessed = True
-        elif isinstance(node.right, Collection):
+        elif isinstance(node.right, Collection) or isinstance(node.right, Range):
             var_name = node.left.value
             value, collection_type = self.visit(node.right)
         elif isinstance(node.left, DotAccess):
@@ -175,10 +182,12 @@ class Preprocessor(NodeVisitor):
             elif isinstance(value, FuncSymbol):
                 value.name = var_name
                 self.define(var_name, value)
-            elif value.name == FUNC:
+            elif hasattr(value, 'name') and value.name == FUNC:
                 var = self.visit(node.right)
                 if isinstance(var, FuncSymbol):
                     self.define(var_name, var)
+                elif isinstance(var, BuiltinTypeSymbol):
+                    self.define(var_name, var.func)
                 else:
                     val_info = self.search_scopes(node.right.value)
                     func_sym = FuncSymbol(var_name, val_info.type.return_type, val_info.parameters, val_info.body, val_info.parameter_defaults)
@@ -206,7 +215,7 @@ class Preprocessor(NodeVisitor):
                     return
             if lookup_var.type is value:
                 return
-            if lookup_var.type is value.type:
+            if hasattr(value, 'type') and lookup_var.type is value.type:
                 return
             if isinstance(value, TypeSymbol):
                 value.accessed = True
@@ -280,11 +289,11 @@ class Preprocessor(NodeVisitor):
         left_type = self.infer_type(left)
         right_type = self.infer_type(right)
         any_type = self.search_scopes(ANY)
-        if left_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-            if right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
-                return left_type
-        if right_type is left_type or left_type is any_type or right_type is any_type:
-            return left_type
+
+        if left_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)) and right_type in (self.search_scopes(INT), self.search_scopes(DOUBLE), self.search_scopes(FLOAT)):
+            return self.search_scopes(LIST), left_type
+        elif right_type is left_type or left_type is any_type or right_type is any_type:
+            return self.search_scopes(LIST), left_type
         else:
             error('file={} line={}: Please don\'t do what you just did there ever again. It bad (fix this message)'.format(self.file_name, node.line_num))
 
@@ -308,7 +317,8 @@ class Preprocessor(NodeVisitor):
             error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
 
         if func_type and func_type.name == FUNC:
-            func_type.return_type = self.visit(node.return_type.func_ret_type)
+            func_type.func = FuncSymbol(ANON, self.visit(node.return_type.func_ret_type), node.parameters, node.body, node.parameter_defaults)
+
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, None))
         self.new_scope()
         if node.varargs:
@@ -344,7 +354,8 @@ class Preprocessor(NodeVisitor):
             error('file={} line={}: Cannot redefine a declared function: {}'.format(self.file_name, node.line_num, func_name))
 
         if func_type and func_type.name == FUNC:
-            func_type.return_type = self.visit(node.return_type.func_ret_type)
+            func_type.func = FuncSymbol(ANON, self.visit(node.return_type.func_ret_type), node.parameters, node.body, node.parameter_defaults)
+
         self.define(func_name, FuncSymbol(func_name, func_type, node.parameters, node.body, node.parameter_defaults))
         self.new_scope()
         if node.varargs:
@@ -435,7 +446,11 @@ class Preprocessor(NodeVisitor):
             return func.type
 
     def visit_methodcall(self, node):  # TODO: Finish this, make Symbols for Classes and Methods
-        pass
+        # TODO: hardcoded error for tuple methods, thing of a better way to do it
+        if isinstance(self.search_scopes(node.obj), CollectionSymbol) and self.search_scopes(node.obj).type.name == TUPLE:
+            if node.name in ('set', 'append'):
+                error('file={} line={}: Immutable Error: cannot use `{}` method'.format(self.file_name, node.line_num, node.name))
+
         # method_name = node.name
         # method = self.search_scopes("{}.{}".format(self.search_scopes(node.obj).type.name, method_name))
         # for x, param in enumerate(method.parameters.values()):
@@ -466,11 +481,25 @@ class Preprocessor(NodeVisitor):
         sym = EnumSymbol(node.name, node.fields)
         self.define(sym.name, sym)
 
+    def parent_class(self, class_symbol, parent):
+        new_fields = parent.fields
+        new_fields.update(class_symbol.fields)
+        class_symbol.fields = new_fields
+        class_symbol.methods = parent.methods + class_symbol.methods
+
+        if parent.base is not None:
+            self.parent_class(class_symbol, self.search_scopes(parent.base.value))
+
     def visit_classdeclaration(self, node):
         class_methods = [FuncSymbol(method.name, method.return_type, method.parameters, method.body) for method in node.methods]
-        sym = ClassSymbol(node.name, node.fields, class_methods)
+        sym = ClassSymbol(node.name, node.base, node.fields, class_methods)
         for method in class_methods:
             self.define(method.name, method)
+
+        if node.base is not None:
+            parent = self.search_scopes(node.base.value)
+            self.parent_class(sym, self.search_scopes(node.base.value))
+
         self.define(sym.name, sym)
 
     def visit_return(self, node):

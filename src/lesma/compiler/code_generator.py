@@ -1,22 +1,23 @@
+import os
+import subprocess
 from ctypes import CFUNCTYPE, c_void_p
 from decimal import Decimal
-from time import time
-import llvmlite.binding as llvm
-import os
 from math import inf
-import subprocess
+from time import time
+
+import llvmlite.binding as llvm
 from llvmlite import ir
-from lesma.grammar import *
-from lesma.ast import CollectionAccess, DotAccess, Input, VarDecl, Str
-from lesma.compiler import RET_VAR, type_map, llvm_type_map
-from lesma.compiler.operations import unary_op, binary_op, cast_ops
-from lesma.compiler.builtins import define_builtins
-from lesma.compiler.builtins import create_dynamic_array_methods
-from lesma.compiler.builtins import array_types
-from lesma.type_checker import types_compatible
+
 import lesma.compiler.llvmlite_custom
-from lesma.visitor import NodeVisitor
+from lesma.ast import CollectionAccess, DotAccess, Input, Str, VarDecl
+from lesma.compiler import RET_VAR, type_map
+from lesma.compiler.builtins import (array_types, create_dynamic_array_methods,
+                                     define_builtins)
+from lesma.compiler.operations import binary_op, cast_ops, unary_op
+from lesma.grammar import *
+from lesma.type_checker import types_compatible
 from lesma.utils import *
+from lesma.visitor import NodeVisitor
 
 
 class CodeGenerator(NodeVisitor):
@@ -39,11 +40,11 @@ class CodeGenerator(NodeVisitor):
         self.loop_test_blocks = []
         self.loop_end_blocks = []
         self.is_break = False
-        self.in_class = False
+        self.anon_counter = 0
+
         llvm.initialize()
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
-        self.anon_counter = 0
 
         # for i in range(2):
         #     func.args[i].name = '.argc' if i == 0 else '.argv'
@@ -95,35 +96,22 @@ class CodeGenerator(NodeVisitor):
         return_type = node.return_type
         parameters = node.parameters
         varargs = node.varargs
-        ret_type = type_map[return_type.value]
-        args = [type_map[param.value] for param in parameters.values()]
+        ret_type = self.get_type(return_type)
+        args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
-        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
-            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
         self.define(name, func, 1)
 
     def funcdecl(self, name, node, linkage=None):
         self.func_decl(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
 
-    def funcimpl(self, name, node):
-        self.implement_func_body(name)
-        for i, arg in enumerate(self.current_function.args):
-            arg.name = list(node.parameters.keys())[i]
+    def funcdef(self, name, node, linkage=None, func_exists=False):
+        if func_exists:
+            self.implement_func_body(name)
+        else:
+            self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
 
-            # TODO: a bit hacky, cannot handle pointers atm but we need them for class reference
-            if arg.name == SELF and isinstance(arg.type, ir.PointerType):
-                self.define(arg.name, arg)
-            else:
-                self.alloc_define_store(arg, arg.name, arg.type)
-        if self.current_function.function_type.return_type != type_map[VOID]:
-            self.alloc_and_define(RET_VAR, self.current_function.function_type.return_type)
-        ret = self.visit(node.body)
-        self.end_function(ret)
-
-    def funcdef(self, name, node, linkage=None):
-        self.start_function(name, node.return_type, node.parameters, node.parameter_defaults, node.varargs, linkage)
         for i, arg in enumerate(self.current_function.args):
             arg.name = list(node.parameters.keys())[i]
 
@@ -145,9 +133,23 @@ class CodeGenerator(NodeVisitor):
         self.branch(self.exit_blocks[-1])
         return True
 
+    def super_method(self, node, obj, parent):
+        method = self.search_scopes(parent.name + '.' + node.name)
+        if method is not None:
+            tmp = self.builder.bitcast(obj, parent.as_pointer())
+            return self.methodcall(node, method, tmp)
+        if method is None and parent.base is not None:
+            return self.super_method(node, obj, self.search_scopes(parent.base.value))
+        else:
+            error("No method as described")
+
     def visit_methodcall(self, node):
         obj = self.search_scopes(node.obj)
         method = self.search_scopes(obj.type.pointee.name + '.' + node.name)
+        if method is None and obj.type.pointee.base is not None:
+            parent = self.search_scopes(obj.type.pointee.base.value)
+            return self.super_method(node, obj, parent)
+
         return self.methodcall(node, method, obj)
 
     def methodcall(self, node, func, obj):
@@ -271,7 +273,7 @@ class CodeGenerator(NodeVisitor):
         enum.fields = [field for field in node.fields]
         enum.name = node.name
         enum.type = ENUM
-        enum.set_body([ir.IntType(8, signed=False)])
+        enum.set_body(ir.IntType(8, signed=False))
         self.define(node.name, enum)
 
     def visit_structdeclaration(self, node):
@@ -284,30 +286,47 @@ class CodeGenerator(NodeVisitor):
         struct.defaults = node.defaults
         struct.name = node.name
         struct.type = STRUCT
-        struct.set_body([field for field in fields])
+        struct.set_body(*[field for field in fields])
         self.define(node.name, struct)
 
+    def get_super_fields(self, classdecl, parent=None):
+        fields = []
+        elements = []
+        if classdecl.base is not None:
+            if parent is None:
+                parent = self.search_scopes(classdecl.base.value)
+
+            if parent.base is not None:
+                new_parent = self.search_scopes(parent.base.value)
+                self.get_super_fields(classdecl, new_parent)
+
+            fields += parent.fields
+            elements += parent.elements
+
+        return fields, elements
+
     def visit_classdeclaration(self, node):
-        self.in_class = True
 
         fields = []
         for field in node.fields.values():
-            fields.append(type_map[field.value])
+            fields.append(self.get_type(field))
 
         classdecl = self.module.context.get_identified_type(node.name)
-        classdecl.fields = [field for field in node.fields.keys()]
+        classdecl.base = node.base
+        classdecl.fields = []
         classdecl.name = node.name
         classdecl.type = CLASS
-        classdecl.set_body([field for field in fields])
+        super_fields, super_elements = self.get_super_fields(classdecl)
+        classdecl.fields = super_fields + [field for field in node.fields.keys()]
+        classdecl.set_body(*(super_elements + [field for field in fields]))
         self.define(node.name, classdecl)
         for method in node.methods:
             self.funcdecl(method.name, method)
 
         for method in node.methods:
-            self.funcimpl(method.name, method)
+            self.funcdef(method.name, method, func_exists=True)
         classdecl.methods = [self.search_scopes(method.name) for method in node.methods]
 
-        self.in_class = False
         self.define(node.name, classdecl)
 
     def visit_incrementassign(self, node):
@@ -318,7 +337,7 @@ class CodeGenerator(NodeVisitor):
             var_name = self.search_scopes(node.left.collection.value)
             array_type = str(var_name.type.pointee.elements[-1].pointee)
             key = self.const(node.left.key.value)
-            var = self.call('{}_array_get'.format(array_type), [var_name, key])
+            var = self.call('{}.array.get'.format(array_type), [var_name, key])
             pointee = var.type
         else:
             var_name = node.left.value
@@ -341,29 +360,29 @@ class CodeGenerator(NodeVisitor):
             raise NotImplementedError()
 
         if collection_access:
-            self.call('{}_array_set'.format(array_type), [var_name, key, res])
+            self.call('{}.array.set'.format(array_type), [var_name, key, res])
         else:
             self.store(res, var_name)
 
-    @staticmethod
-    def visit_typedeclaration(node):
-        type_map[node.name] = type_map[node.collection.value]
+    def visit_typedeclaration(self, node):
+        if node.collection.value in type_map:
+            type_map[node.name] = type_map[node.collection.value]
+        else:
+            self.define(node.name, self.search_scopes(node.collection.value))
         return TYPE
 
     def visit_vardecl(self, node):
-        typ = type_map[node.type.value] if node.type.value in type_map else self.search_scopes(node.type.value)
+        typ = self.get_type(node.type)
         if node.type.value == FUNC:
-            if node.type.func_ret_type.value in type_map:
-                func_ret_type = type_map[node.type.func_ret_type.value]
-            else:
-                func_ret_type = self.search_scopes(node.type.func_ret_type.value)
+            func_ret_type = self.get_type(node.type.func_ret_type)
             func_parameters = self.get_args(node.type.func_params)
             func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
             typ = func_ty
             self.alloc_and_define(node.value.value, typ)
         elif node.type.value in (LIST, TUPLE):
-            array_type = node.type.func_params['0'].value
-            typ = ir.LiteralStructType([type_map[INT], type_map[INT], type_map[array_type].as_pointer()])
+            array_type = self.get_type(node.type.func_params['0'])
+            self.create_array(array_type)
+            typ = self.search_scopes('{}.array'.format(array_type))
             self.alloc_and_define(node.value.value, typ)
         else:
             self.alloc_and_define(node.value.value, typ)
@@ -432,11 +451,15 @@ class CodeGenerator(NodeVisitor):
         self.position_at_end(init_block)
         zero = self.const(0)
         one = self.const(1)
+        array_type = None
         if node.iterator.value == RANGE:
-            iterator = self.visit(node.iterator)
+            iterator = self.alloc_and_store(self.visit(node.iterator), type_map[STR])
+            array_type = "i64"
         else:
             iterator = self.search_scopes(node.iterator.value)
-        stop = self.call('i64_array_length', [iterator])
+            array_type = str(iterator.type.pointee.elements[-1].pointee)
+
+        stop = self.call('{}.array.length'.format(array_type), [iterator])
         self.branch(zero_length_block)
 
         self.position_at_end(zero_length_block)
@@ -445,7 +468,7 @@ class CodeGenerator(NodeVisitor):
 
         self.position_at_end(non_zero_length_block)
         varname = node.elements[0].value
-        val = self.call('i64_array_get', [iterator, zero])
+        val = self.call('{}.array.get'.format(array_type), [iterator, zero])
         self.alloc_define_store(val, varname, iterator.type.pointee.elements[2].pointee)
         position = self.alloc_define_store(zero, 'position', type_map[INT])
         self.branch(cond_block)
@@ -455,7 +478,7 @@ class CodeGenerator(NodeVisitor):
         self.cbranch(cond, body_block, end_block)
 
         self.position_at_end(body_block)
-        self.store(self.call('i64_array_get', [iterator, self.load(position)]), varname)
+        self.store(self.call('{}.array.get'.format(array_type), [iterator, self.load(position)]), varname)
         self.store(self.builder.add(one, self.load(position)), position)
         self.visit(node.block)
         if not self.is_break:
@@ -528,9 +551,9 @@ class CodeGenerator(NodeVisitor):
     def visit_range(self, node):
         start = self.visit(node.left)
         stop = self.visit(node.right)
-        array_ptr = self.create_array(INT)
-        self.call('create_range', [array_ptr, start, stop])
-        return array_ptr
+        array_ptr = self.create_array(type_map[INT])
+        self.call('@create_range', [array_ptr, start, stop])
+        return self.load(array_ptr)
 
     def visit_assign(self, node):
         if isinstance(node.right, DotAccess) and self.search_scopes(node.right.obj).type == ENUM or \
@@ -551,7 +574,6 @@ class CodeGenerator(NodeVisitor):
             if isinstance(node.left, VarDecl):
                 var_name = node.left.value.value
                 if node.left.type.value in (LIST, TUPLE):
-                    # TODO: Currently only supporting one type for lists and tuples
                     var_type = type_map[list(node.left.type.func_params.items())[0][1].value]
                     self.alloc_define_store(var, var_name, var.type)
                 else:
@@ -575,7 +597,7 @@ class CodeGenerator(NodeVisitor):
             elif isinstance(node.left, CollectionAccess):
                 right = self.visit(node.right)
                 array_type = str(self.search_scopes(node.left.collection.value).type.pointee.elements[-1].pointee)
-                self.call('{}_array_set'.format(array_type), [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
+                self.call('{}.array.set'.format(array_type), [self.search_scopes(node.left.collection.value), self.const(node.left.key.value), right])
             else:
                 var_name = node.left.value
                 var_value = self.top_scope.get(var_name)
@@ -650,7 +672,7 @@ class CodeGenerator(NodeVisitor):
             var_name = self.search_scopes(node.left.collection.value)
             array_type = str(self.search_scopes(node.left.collection.value).type.pointee.elements[-1].pointee)
             key = self.const(node.left.key.value)
-            var = self.call('{}_array_get'.format(array_type), [var_name, key])
+            var = self.call('{}.array.get'.format(array_type), [var_name, key])
             pointee = var.type
         else:
             var_name = node.left.value
@@ -669,7 +691,6 @@ class CodeGenerator(NodeVisitor):
                 right = cast_ops(self, right, var.type, node)
                 res = self.builder.mul(var, right)
             elif op == FLOORDIV_ASSIGN:
-                # We convert a lot in case that right operand is float
                 temp = cast_ops(self, var, ir.DoubleType(), node)
                 temp_right = cast_ops(self, right, ir.DoubleType(), node)
                 temp = self.builder.fdiv(temp, temp_right)
@@ -727,7 +748,7 @@ class CodeGenerator(NodeVisitor):
             raise NotImplementedError()
 
         if collection_access:
-            self.call('{}_array_set'.format(array_type), [var_name, key, res])
+            self.call('{}.array.set'.format(array_type), [var_name, key, res])
         else:
             self.store(res, var_name)
 
@@ -753,27 +774,37 @@ class CodeGenerator(NodeVisitor):
             raise NotImplementedError
 
     def define_array(self, node, elements):
-        array_type = node.items[0].val_type
+        if hasattr(node.items[0], 'val_type'):
+            array_type = type_map[node.items[0].val_type]
+        else:
+            array_type = self.visit(node.items[0]).type
         array_ptr = self.create_array(array_type)
         for element in elements:
-            self.call('{}_array_append'.format(str(type_map[array_type])), [array_ptr, element])
+            self.call('{}.array.append'.format(str(array_type)), [array_ptr, element])
         return self.load(array_ptr)
 
     def create_array(self, array_type):
-        array_type = str(type_map[array_type])
-        dyn_array_type = ir.LiteralStructType([type_map[INT], type_map[INT], llvm_type_map[array_type].as_pointer()])
-        self.define('{}_Array'.format(array_type), dyn_array_type)
-        array = dyn_array_type([self.const(0), self.const(0), self.const(0).inttoptr(llvm_type_map[array_type].as_pointer())])
+        dyn_array_type = self.module.context.get_identified_type('{}.array'.format(str(array_type)))
+        if self.search_scopes('{}.array'.format(str(array_type))) is None:
+            dyn_array_type.name = '{}.array'.format(str(array_type))
+            dyn_array_type.type = CLASS
+            dyn_array_type.set_body(type_map[INT], type_map[INT], array_type.as_pointer())
+            self.define('{}.array'.format(str(array_type)), dyn_array_type)
+
+        array = dyn_array_type([self.const(0), self.const(0), self.const(0).inttoptr(array_type.as_pointer())])
         array = self.alloc_and_store(array, dyn_array_type)
         create_dynamic_array_methods(self, array_type)
-        self.call('{}_array_init'.format(array_type), [array])
+        self.call('{}.array.init'.format(str(array_type)), [array])
         return array
 
     def define_tuple(self, node, elements):
-        array_type = node.items[0].val_type
+        if hasattr(node.items[0], 'val_type'):
+            array_type = type_map[node.items[0].val_type]
+        else:
+            array_type = self.visit(node.items[0]).type
         array_ptr = self.create_array(array_type)
         for element in elements:
-            self.call('{}_array_append'.format(str(type_map[array_type])), [array_ptr, element])
+            self.call('{}.array.append'.format(str(array_type)), [array_ptr, element])
         return self.load(array_ptr)
 
     def visit_hashmap(self, node):
@@ -783,16 +814,16 @@ class CodeGenerator(NodeVisitor):
         key = self.visit(node.key)
         collection = self.search_scopes(node.collection.value)
         for typ in array_types:
-            if collection.type.pointee == self.search_scopes('{}_Array'.format(typ)):
-                return self.call('{}_array_get'.format(typ), [collection, key])
+            if collection.type.pointee == self.search_scopes('{}.array'.format(typ)):
+                return self.call('{}.array.get'.format(typ), [collection, key])
 
         return self.builder.extract_value(self.load(collection.name), [key])
 
     def visit_str(self, node):
-        array = self.create_array(INT)
+        array = self.create_array(type_map[INT])
         string = node.value.encode('utf-8')
         for char in string:
-            self.call('i64_array_append', [array, self.const(char)])
+            self.call('i64.array.append', [array, self.const(char)])
         return array
 
     def visit_print(self, node):
@@ -803,8 +834,8 @@ class CodeGenerator(NodeVisitor):
             return
         if isinstance(val.type, ir.IntType):
             if val.type.width == 1:
-                array = self.create_array(INT)
-                self.call('bool_to_str', [array, val])
+                array = self.create_array(type_map[INT])
+                self.call('@bool_to_str', [array, val])
                 val = array
             else:
                 if int(str(val.type).split("i")[1]) == 8:
@@ -894,6 +925,11 @@ class CodeGenerator(NodeVisitor):
                 func_parameters = self.get_args(param.func_params)
                 func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
                 args.append(func_ty)
+            elif param.value == LIST:
+                array_type = self.get_type(param.func_params['0'])
+                self.create_array(array_type)
+                typ = self.search_scopes('{}.array'.format(array_type))
+                args.append(typ)
             else:
                 if param.value in type_map:
                     args.append(type_map[param.value])
@@ -906,15 +942,37 @@ class CodeGenerator(NodeVisitor):
 
         return args
 
+    def get_type(self, param):
+        typ = None
+        if param.value == FUNC:
+            if param.func_ret_type.value in type_map:
+                func_ret_type = type_map[param.func_ret_type.value]
+            elif self.search_scopes(param.func_ret_type.value) is not None:
+                func_ret_type = self.search_scopes(param.func_ret_type.value).as_pointer()
+            func_parameters = self.get_args(param.func_params)
+            func_ty = ir.FunctionType(func_ret_type, func_parameters, None).as_pointer()
+            typ = func_ty
+        elif param.value == LIST:
+            array_type = self.get_type(param.func_params['0'])
+            self.create_array(array_type)
+            typ = self.search_scopes('{}.array'.format(array_type))
+        else:
+            if param.value in type_map:
+                typ = type_map[param.value]
+            elif self.search_scopes(param.value) is not None:
+                typ = self.search_scopes(param.value)
+            else:
+                error("Type not recognized: {}".format(param.value))
+
+        return typ
+
     def func_decl(self, name, return_type, parameters, parameter_defaults=None, varargs=None, linkage=None):
-        ret_type = type_map[return_type.value]
+        ret_type = self.get_type(return_type)
         args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
-        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
-            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
         func = ir.Function(self.module, func_type, name)
         func.linkage = linkage
         self.define(name, func, 1)
@@ -938,14 +996,13 @@ class CodeGenerator(NodeVisitor):
         self.block_stack.append(self.builder.block)
         self.new_scope()
         self.defer_stack.append([])
-        ret_type = type_map[return_type.value] if return_type.value in type_map else self.search_scopes(return_type.value)
+        ret_type = self.get_type(return_type)
         args = self.get_args(parameters)
         func_type = ir.FunctionType(ret_type, args, varargs)
         func_type.parameters = parameters
         if parameter_defaults:
             func_type.parameter_defaults = parameter_defaults
-        if hasattr(return_type, 'func_ret_type') and return_type.func_ret_type:
-            func_type.return_type = func_type.return_type(type_map[return_type.func_ret_type.value], [return_type.func_ret_type.value]).as_pointer()
+
         func = ir.Function(self.module, func_type, name)
         func.linkage = linkage
         self.define(name, func, 1)
@@ -958,7 +1015,7 @@ class CodeGenerator(NodeVisitor):
         for stat in self.defer_stack[-1]:
             self.visit(stat)
         self.defer_stack.pop()
-        if not returned:
+        if returned is not True:
             self.branch(self.exit_blocks[-1])
         self.position_at_end(self.exit_blocks.pop())
         if self.current_function.function_type.return_type != type_map[VOID]:
@@ -1100,7 +1157,7 @@ class CodeGenerator(NodeVisitor):
         di_module = self.module.add_debug_info("DICompileUnit", {
             "language": ir.DIToken("DW_LANG_Python"),
             "file": di_file,
-            "producer": "Lesma v0.4.0",
+            "producer": "Lesma v0.4.1",
             "runtimeVersion": 1,
             "isOptimized": optimize,
         }, is_distinct=True)
@@ -1134,8 +1191,6 @@ class CodeGenerator(NodeVisitor):
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
     def compile(self, filename, optimize=True, output=None, emit_llvm=False):
-        spinner = Spinner()
-        spinner.startSpinner("Compiling")
         compile_time = time()
 
         # self.add_debug_info(optimize, filename)
@@ -1149,8 +1204,7 @@ class CodeGenerator(NodeVisitor):
             out.write(prog_str)
 
         with open(os.devnull, "w") as tmpout:
-            subprocess.call('clang {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
-            spinner.stopSpinner()
+            subprocess.call('gcc {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
             successful("compilation done in: %.3f seconds" % (time() - compile_time))
             successful("binary file wrote to " + output)
 
