@@ -1,29 +1,5 @@
 import sys
 
-from halo import Halo
-
-
-class Spinner:
-    def __init__(self):
-        self.spinner = None
-
-    def startSpinner(self, text):
-        newLine = {
-            "interval": 130,
-            "frames": [
-                "[-] {}".format(text),
-                "[\\] {}".format(text),
-                "[|] {}".format(text),
-                "[/] {}".format(text)
-            ]
-        }
-        self.spinner = Halo(text='', spinner=newLine, color="magenta")
-        self.spinner.start()
-
-    def stopSpinner(self):
-        if self.spinner is not None:
-            self.spinner.stop()
-
 
 def error(text):
     print(u'\033[{}m{}\033[0m{}'.format("31;1", "[-] Error: ",

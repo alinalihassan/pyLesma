@@ -1191,8 +1191,6 @@ class CodeGenerator(NodeVisitor):
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
     def compile(self, filename, optimize=True, output=None, emit_llvm=False):
-        spinner = Spinner()
-        spinner.startSpinner("Compiling")
         compile_time = time()
 
         # self.add_debug_info(optimize, filename)
@@ -1206,8 +1204,7 @@ class CodeGenerator(NodeVisitor):
             out.write(prog_str)
 
         with open(os.devnull, "w") as tmpout:
-            subprocess.call('clang {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
-            spinner.stopSpinner()
+            subprocess.call('gcc {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
             successful("compilation done in: %.3f seconds" % (time() - compile_time))
             successful("binary file wrote to " + output)
 
