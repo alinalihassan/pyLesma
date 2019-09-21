@@ -225,4 +225,19 @@ ford = Car(1992)
 
 print(ford.hatchback)
 ford.print_year()
+
+# Generics
+
+# Skip the type and assign a unique generic type for each parameter
+def basicGeneric(a, b)
+	print(a)
+	print(b)
+
+# Using <T> notation the compiler makes sure the types used match if repeated among parameters and/or return type
+def typedGeneric<T>(a: T, b: T) -> T
+	return a
+
+# Types can have constraints, and the constraints can be Traits, Classes, Structs or Enums
+def complexGeneric<T: AdditionTrait>(a: T, b: T) -> T
+	return a + b
 ```
