@@ -498,6 +498,7 @@ class Preprocessor(NodeVisitor):
 
         if node.base is not None:
             parent = self.search_scopes(node.base.value)
+            parent.accessed = True
             self.parent_class(sym, self.search_scopes(node.base.value))
 
         self.define(sym.name, sym)
