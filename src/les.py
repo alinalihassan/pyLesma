@@ -42,6 +42,7 @@ def process_file(les_file) -> CodeGenerator:
 
     return generator
 
+
 def _run(arg_list):
     les_file = arg_list['<file>']
     timer = arg_list['--timer']
