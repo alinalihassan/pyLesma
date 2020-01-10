@@ -211,7 +211,10 @@ def float_ops(self, op, left, right, node):
             res = self.builder.fmul(self.builder.load(temp), left)
             self.builder.store(res, temp)
         return self.builder.load(temp)
-    elif op in (EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
+    elif op in (NOT_EQUALS):
+        cmp_res = self.builder.fcmp_unordered(op, left, right, 'cmptmp')
+        return self.builder.uitofp(cmp_res, type_map[BOOL], 'booltmp')
+    elif op in (EQUALS, LESS_THAN, LESS_THAN_OR_EQUAL_TO, GREATER_THAN, GREATER_THAN_OR_EQUAL_TO):
         cmp_res = self.builder.fcmp_ordered(op, left, right, 'cmptmp')
         return self.builder.uitofp(cmp_res, type_map[BOOL], 'booltmp')
     else:
