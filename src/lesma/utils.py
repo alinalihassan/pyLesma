@@ -1,23 +1,23 @@
 import sys
 
 
-def error(text):
+def error(text: str) -> None:
     print(u'\033[{}m{}\033[0m{}'.format("31;1", "[-] Error: ",
           asciiToUnicode(text)), file=sys.stderr)
     sys.exit(1)
 
 
-def warning(text):
+def warning(text: str) -> None:
     print(u'\033[{}m{}\033[0m{}'.format("33;1", "[!] Warning: ",
           asciiToUnicode(text)), file=sys.stderr)
 
 
-def successful(text):
+def successful(text: str) -> None:
     print(u'\033[{}m{}\033[0m{}'.format("32;1", "[+] Success: ",
           asciiToUnicode(text)), file=sys.stderr)
 
 
-def asciiToUnicode(text):
+def asciiToUnicode(text: str) -> str:
     finalStr = ""
     i = 0
     while i < len(text):

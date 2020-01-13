@@ -1,7 +1,7 @@
 from llvmlite import ir
 
 # Int
-Old_IntType = ir.types.IntType
+Old_IntType: ir.Type = ir.types.IntType
 
 
 class _IntType(Old_IntType):
@@ -9,7 +9,7 @@ class _IntType(Old_IntType):
     The type for integers.
     """
     null = '0'
-    _instance_cache = {}
+    _instance_cache: dict = {}
     signed = True
 
     def __new__(cls, bits, signed=True):

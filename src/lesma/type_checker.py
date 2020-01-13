@@ -32,7 +32,7 @@ def types_compatible(left_type, right_type):
 
 
 class Preprocessor(NodeVisitor):
-    def __init__(self, file_name=None):
+    def __init__(self, file_name: str):
         super().__init__()
         self.file_name = file_name
         self.return_flag = False

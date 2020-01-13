@@ -18,3 +18,7 @@ dist/
 les\.dist/
 
 les\.build/
+
+.mypy_cache/
+
+test.les

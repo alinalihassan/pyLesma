@@ -1,13 +1,14 @@
 from collections import OrderedDict
 
 from lesma.ast import *
-from lesma.compiler.__init__ import type_map
+from lesma.compiler.base import type_map
 from lesma.grammar import *
 from lesma.utils import error
+from lesma.lexer import Lexer
 
 
 class Parser(object):
-    def __init__(self, lexer):
+    def __init__(self, lexer: Lexer):
         self.lexer = lexer
         self.file_name = lexer.file_name
         self.current_token = None
@@ -798,7 +799,7 @@ class Parser(object):
             node = BinOp(node, token.value, self.term(), self.line_num)
         return node
 
-    def parse(self):
+    def parse(self) -> Program:
         node = self.program()
         if self.current_token.type != EOF:
             raise SyntaxError('Unexpected end of program')

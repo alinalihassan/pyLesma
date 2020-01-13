@@ -4,6 +4,7 @@ from ctypes import CFUNCTYPE, c_void_p
 from decimal import Decimal
 from math import inf
 from time import time
+from typing import Optional
 
 import llvmlite.binding as llvm
 from llvmlite import ir
@@ -21,7 +22,7 @@ from lesma.visitor import NodeVisitor
 
 
 class CodeGenerator(NodeVisitor):
-    def __init__(self, file_name):
+    def __init__(self, file_name: str):
         super().__init__()
         self.file_name = file_name
         self.module = ir.Module()
@@ -1149,7 +1150,7 @@ class CodeGenerator(NodeVisitor):
     def generate_code(self, node):
         return self.visit(node)
 
-    def add_debug_info(self, optimize, filename):
+    def add_debug_info(self, optimize: bool, filename: str):
         di_file = self.module.add_debug_info("DIFile", {
             "filename": os.path.basename(os.path.abspath(filename)),
             "directory": os.path.dirname(os.path.abspath(filename)),
@@ -1165,7 +1166,7 @@ class CodeGenerator(NodeVisitor):
         self.module.name = os.path.basename(os.path.abspath(filename))
         self.module.add_named_metadata('llvm.dbg.cu', [di_file, di_module])
 
-    def evaluate(self, optimize=True, ir_dump=False, timer=False):
+    def evaluate(self, optimize: bool, ir_dump: bool, timer: bool) -> None:
         if ir_dump and not optimize:
             for func in self.module.functions:
                 if func.name == "main":
@@ -1190,7 +1191,7 @@ class CodeGenerator(NodeVisitor):
             if timer:
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
-    def compile(self, filename, optimize=True, output=None, emit_llvm=False):
+    def compile(self, filename: str, optimize: bool, output: Optional[str], emit_llvm: bool) -> None:
         compile_time = time()
 
         # self.add_debug_info(optimize, filename)
