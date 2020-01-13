@@ -8,6 +8,16 @@ class AST(object):
     __repr__ = __str__
 
 
+class Compound(AST):
+    def __init__(self):
+        self.children = []
+
+    def __str__(self) -> str:
+        return '\n'.join(str(child) for child in self.children)
+
+    __repr__ = __str__
+
+
 class Program(AST):
     def __init__(self, block: Compound):
         self.block = block
@@ -34,16 +44,6 @@ class Var(AST):
 
     def __str__(self) -> str:
         return ' '.join(str(value) for key, value in sorted(self.__dict__.items()) if not key.startswith("__") and key != 'read_only' and key != 'line_num')
-
-    __repr__ = __str__
-
-
-class Compound(AST):
-    def __init__(self):
-        self.children = []
-
-    def __str__(self) -> str:
-        return '\n'.join(str(child) for child in self.children)
 
     __repr__ = __str__
 

@@ -12,7 +12,8 @@ jobs:
           command: |
               pip install --user -r requirements.txt
               sudo pip install pytest
-              sudo pip install pycodestyle 
+              sudo pip install pycodestyle
+              sudo pip install mypy
       - run:
           name: Run Tests
           command: |
@@ -24,4 +25,4 @@ jobs:
       - run:
           name: Run MyPy Linter
           command: |
-            mypy --config-file mypy.ini
+            mypy --config-file .config/mypy.ini src/*
