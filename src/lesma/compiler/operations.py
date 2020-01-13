@@ -1,7 +1,7 @@
 from llvmlite import ir
 
 import lesma.compiler.llvmlite_custom
-from lesma.compiler import NUM_TYPES, llvm_type_map, type_map
+from lesma.compiler.base import NUM_TYPES, llvm_type_map, type_map
 from lesma.grammar import *
 from lesma.utils import error
 

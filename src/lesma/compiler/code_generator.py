@@ -11,7 +11,7 @@ from llvmlite import ir
 
 import lesma.compiler.llvmlite_custom
 from lesma.ast import CollectionAccess, DotAccess, Input, Str, VarDecl
-from lesma.compiler import RET_VAR, type_map
+from lesma.compiler.base import RET_VAR, type_map
 from lesma.compiler.builtins import (array_types, create_dynamic_array_methods,
                                      define_builtins)
 from lesma.compiler.operations import binary_op, cast_ops, unary_op

@@ -24,7 +24,7 @@ class Token(object):
 
 
 class Lexer(object):
-    def __init__(self: Lexer, text: str, file_name: str):
+    def __init__(self, text: str, file_name: str):
         self.text = self.sanitize_text(text)
         self.file_name = file_name
         self.pos = 0
