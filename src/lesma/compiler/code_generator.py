@@ -51,7 +51,7 @@ class CodeGenerator(NodeVisitor):
         #     func.args[i].name = '.argc' if i == 0 else '.argv'
         #     self.alloc_define_store(func.args[i], func.args[i].name[1:], func.args[i].type)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.module)
 
     def visit_program(self, node):

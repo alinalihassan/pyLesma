@@ -12,7 +12,7 @@ class Token(object):
         self.line_num = line_num
         self.indent_level = indent_level
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'Token(type={type}, value={value}, line_num={line_num}, indent_level={indent_level})'.format(
             type=self.type,
             value=repr(self.value),

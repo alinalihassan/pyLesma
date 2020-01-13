@@ -20,7 +20,7 @@ class BuiltinTypeSymbol(Symbol):
     def type(self):
         return self.llvm_type.type()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     __repr__ = __str__
@@ -60,7 +60,7 @@ class VarSymbol(Symbol):
         self.val_assigned = False
         self.read_only = read_only
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type}>'.format(name=self.name, type=self.type)
 
     __repr__ = __str__
@@ -73,7 +73,7 @@ class EnumSymbol(Symbol):
         self.accessed = False
         self.val_assigned = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ENUM
 
 
@@ -113,7 +113,7 @@ class FuncSymbol(Symbol):
         self.accessed = False
         self.val_assigned = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join(
             '{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
 
@@ -125,7 +125,7 @@ class TypeSymbol(Symbol):
         super().__init__(name, types)
         self.accessed = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type}>'.format(name=self.name, type=self.type)
 
     __repr__ = __str__
@@ -139,7 +139,7 @@ class BuiltinFuncSymbol(Symbol):
         self.accessed = False
         self.val_assigned = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join(
             '{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
 

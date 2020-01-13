@@ -25,6 +25,7 @@ from lesma.type_checker import Preprocessor
 from lesma.utils import error
 from typing import Dict, Any, Union
 
+
 def process_file(les_file: str) -> CodeGenerator:
     if not os.path.isfile(les_file):
         error(les_file + " is not a valid file")
