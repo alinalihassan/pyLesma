@@ -30,9 +30,9 @@ class Lexer(object):
         self.file_name = file_name
         self.pos = 0
         self.current_char: Optional[str] = self.text[self.pos]
-        self.char_type: Optional[str]
+        self.char_type: Optional[str] = None
         self.word = ''
-        self.word_type: Optional[str]
+        self.word_type: Optional[str] = None
         self._line_num = 1
         self._indent_level = 0
         self.current_token: Token

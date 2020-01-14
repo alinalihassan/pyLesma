@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Optional
 
 from lesma.ast import *
 from lesma.compiler.base import type_map
@@ -11,7 +12,7 @@ class Parser(object):
     def __init__(self, lexer: Lexer):
         self.lexer = lexer
         self.file_name = lexer.file_name
-        self.current_token: Token
+        self.current_token: Optional[Token] = None
         self.indent_level = 0
         self.next_token()
         self.user_types = []
