@@ -1,5 +1,6 @@
-from lesma.ast import (Collection, CollectionAccess, DotAccess, Range, Var,
-                       VarDecl)
+from typing import Iterator, Union, List, Tuple, Any
+
+from lesma.ast import Collection, CollectionAccess, DotAccess, Range, Var, VarDecl, AST
 from lesma.grammar import *
 from lesma.utils import error, warning
 from lesma.visitor import (BuiltinTypeSymbol, ClassSymbol, CollectionSymbol,
@@ -7,7 +8,7 @@ from lesma.visitor import (BuiltinTypeSymbol, ClassSymbol, CollectionSymbol,
                            TypeSymbol, VarSymbol)
 
 
-def flatten(container):
+def flatten(container: Union[List[Any], Tuple[Any, ...]]) -> Iterator[list]:
     for i in container:
         if isinstance(i, (list, tuple)):
             for j in flatten(i):
@@ -18,14 +19,14 @@ def flatten(container):
 
 
 # TODO: Please improve me in a less hacky way
-def types_compatible(left_type, right_type):
-    left_type = str(left_type)
-    right_type = str(right_type)
+def types_compatible(left_type: AST, right_type: AST) -> bool:
+    l_type = str(left_type)
+    r_type = str(right_type)
     int_type = ('i8', 'i16', 'i32', 'i64', 'int8', 'int16', 'int32', 'int64', 'int')
     float_type = ('float', 'double')
     num_type = int_type + float_type
-    if (left_type == right_type) or \
-       (left_type in num_type and right_type in num_type):
+    if (l_type == r_type) or \
+       (l_type in num_type and r_type in num_type):
         return True
 
     return False
@@ -37,7 +38,7 @@ class Preprocessor(NodeVisitor):
         self.file_name = file_name
         self.return_flag = False
 
-    def check(self, node):
+    def check(self, node) -> BuiltinTypeSymbol:
         res = self.visit(node)
         if self.unvisited_symbols:
             sym_list = []

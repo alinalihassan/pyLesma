@@ -4,21 +4,21 @@ from lesma.ast import *
 from lesma.compiler.base import type_map
 from lesma.grammar import *
 from lesma.utils import error
-from lesma.lexer import Lexer
+from lesma.lexer import Lexer, Token
 
 
 class Parser(object):
     def __init__(self, lexer: Lexer):
         self.lexer = lexer
         self.file_name = lexer.file_name
-        self.current_token = None
+        self.current_token: Token
         self.indent_level = 0
         self.next_token()
         self.user_types = []
         self.func_args = False
 
     @property
-    def line_num(self):
+    def line_num(self) -> int:
         return self.current_token.line_num
 
     def next_token(self):

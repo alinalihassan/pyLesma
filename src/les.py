@@ -15,15 +15,14 @@ options:
 """
 
 import os
+from typing import Dict, Any
 
 from docopt import docopt
-
 from lesma.compiler.code_generator import CodeGenerator
 from lesma.lexer import Lexer
 from lesma.parser import Parser
 from lesma.type_checker import Preprocessor
 from lesma.utils import error
-from typing import Dict, Any, Union
 
 
 def process_file(les_file: str) -> CodeGenerator:
