@@ -1205,7 +1205,7 @@ class CodeGenerator(NodeVisitor):
             out.write(prog_str)
 
         with open(os.devnull, "w") as tmpout:
-            subprocess.call('gcc {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
+            subprocess.call('clang {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
             successful("compilation done in: %.3f seconds" % (time() - compile_time))
             successful("binary file wrote to " + output)
 
