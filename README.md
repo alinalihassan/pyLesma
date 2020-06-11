@@ -1,5 +1,6 @@
 <p align="center">
-<img src="docs/img/logo.png" height="180px" alt="Lesma Programming Language" title="Lesma Programming Language">
+<img src="docs/img/logo.svg" height="180px" alt="Lesma Programming Language" title="Lesma Programming Language">
+<br><b style="font-size: 24px;">Lesma</b>
 </p>
 
 ___
@@ -8,7 +9,7 @@ ___
 [![CircleCI](https://circleci.com/gh/hassanalinali/Lesma/tree/master.svg?style=shield)](https://circleci.com/gh/hassanalinali/Lesma/tree/master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/90fcc06be70d4dd98f54f1bb2713d70c)](https://www.codacy.com/app/hassanalinali/Lesma?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hassanalinali/Lesma&amp;utm_campaign=Badge_Grade)
 
-**Lesma** is a compiled, statically typed, imperative and object-oriented programming language with a focus on expressiveness, elegancy, and simplicity, while not sacrificing on performance. The compiler is written in Python using LLVM as a backend.
+**Lesma** is a compiled, statically typed, imperative and object-oriented programming language with a focus on expressiveness, elegancy, and simplicity, while not sacrificing on performance. 
 
 ## Features
 - **it's fast**, because it should be so, together with LLVM's state of the art optimizations, but it won't ever oblige you to make an extra effort from your side just for the sake of performance
