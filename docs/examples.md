@@ -195,17 +195,16 @@ enum Color
 x: Colors = Color.GREEN
 print(x == Color.GREEN)
 
-# Structs
-struct Circle
+# Classes
+class Circle
 	radius: int
 	x: int
 	y: int = 4
 
-cir: Circle = Circle(radius=5, x=2)
+cir: Circle = Circle(radius=5, x=2) # Built-in constructor if not defined
 
 print(cir.radius)
 
-# Classes
 class Vehicle
 	# Constructor
 	def new(year: int, color: str)
@@ -237,7 +236,7 @@ def basicGeneric(a, b)
 def typedGeneric<T>(a: T, b: T) -> T
 	return a
 
-# Types can have constraints, and the constraints can be Traits, Classes, Structs or Enums
+# Types can have constraints, and the constraints can be Traits, Classes or Enums
 def complexGeneric<T: AdditionTrait>(a: T, b: T) -> T
 	return a + b
 ```

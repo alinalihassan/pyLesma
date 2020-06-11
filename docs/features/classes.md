@@ -1,9 +1,18 @@
 **Classes** are objects that bundle fields and methods to provide additional functionality that you can further use as a type for any variable, which can then be further expanded using operator overloading and other type-specific behaviour. Classes members can be accessed using a dot `.`.
 
-Classes **require a constructor to be specified**.
+If a Class constructor is not provided, a built-in constructor is then created, for which all the fields of a class are required arguments on initialization unless a default is provided.
 
 ## Example
 ```py
+class Circle
+	radius: int
+	x: int
+	y: int = 4
+
+cir: Circle = Circle(radius=5, x=2)
+
+print(cir.radius)
+
 class Vehicle
 	year: int
 	color: str

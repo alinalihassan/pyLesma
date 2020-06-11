@@ -4,7 +4,7 @@ from lesma.ast import Collection, CollectionAccess, DotAccess, Range, Var, VarDe
 from lesma.grammar import *
 from lesma.utils import error, warning
 from lesma.visitor import (BuiltinTypeSymbol, ClassSymbol, CollectionSymbol,
-                           EnumSymbol, FuncSymbol, NodeVisitor, StructSymbol,
+                           EnumSymbol, FuncSymbol, NodeVisitor,
                            TypeSymbol, VarSymbol)
 
 
@@ -144,7 +144,7 @@ class Preprocessor(NodeVisitor):
 
             if value.name in (TUPLE, LIST) and (not isinstance(node.right, Range) and node.right.type != value.name):
                 error('file={} line={}: Contradicting {}-{} declaration'.format(self.file_name, node.line_num, value.name, node.right.type))
-        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (StructSymbol, EnumSymbol, ClassSymbol)):
+        elif hasattr(node.right, 'name') and isinstance(self.search_scopes(node.right.name), (EnumSymbol, ClassSymbol)):
             var_name = node.left.value
             value = self.search_scopes(node.right.name)
             value.accessed = True
@@ -267,7 +267,7 @@ class Preprocessor(NodeVisitor):
     def visit_binop(self, node):
         if node.op == CAST or node.op in (IS, IS_NOT):
             self.visit(node.left)
-            if node.right.value not in TYPES and not isinstance(self.search_scopes(node.right.value), (EnumSymbol, ClassSymbol, StructSymbol)):
+            if node.right.value not in TYPES and not isinstance(self.search_scopes(node.right.value), (EnumSymbol, ClassSymbol)):
                 error('file={} line={}: type expected for operation {}, got {} : {}'.format(self.file_name, node.line_num, node.op, node.left, node.right))
             return self.infer_type(self.visit(node.right))
         else:
@@ -418,7 +418,7 @@ class Preprocessor(NodeVisitor):
         func = self.search_scopes(func_name)
         parameters = None
         parameter_defaults = None
-        if isinstance(func, (StructSymbol, ClassSymbol, EnumSymbol)):
+        if isinstance(func, (ClassSymbol, EnumSymbol)):
             parameters = func.fields
             parameter_defaults = func.fields
         else:
@@ -473,10 +473,6 @@ class Preprocessor(NodeVisitor):
         # else:
         #     method.accessed = True
         #     return method.return_type
-
-    def visit_structdeclaration(self, node):
-        sym = StructSymbol(node.name, node.fields)
-        self.define(sym.name, sym)
 
     def visit_enumdeclaration(self, node):
         sym = EnumSymbol(node.name, node.fields)

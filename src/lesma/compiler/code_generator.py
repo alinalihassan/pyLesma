@@ -208,9 +208,7 @@ class CodeGenerator(NodeVisitor):
             name = name.name
         elif isinstance(func_type, ir.IdentifiedStructType):
             typ = self.search_scopes(node.name)
-            if typ.type == STRUCT:
-                return self.struct_assign(node)
-            elif typ.type == CLASS:
+            if typ.type == CLASS:
                 return self.class_assign(node)
             error("Unexpected Identified Struct Type")
         else:
@@ -276,19 +274,6 @@ class CodeGenerator(NodeVisitor):
         enum.type = ENUM
         enum.set_body(ir.IntType(8, signed=False))
         self.define(node.name, enum)
-
-    def visit_structdeclaration(self, node):
-        fields = []
-        for field in node.fields.values():
-            fields.append(type_map[field.value])
-
-        struct = self.module.context.get_identified_type(node.name)
-        struct.fields = [field for field in node.fields.keys()]
-        struct.defaults = node.defaults
-        struct.name = node.name
-        struct.type = STRUCT
-        struct.set_body(*[field for field in fields])
-        self.define(node.name, struct)
 
     def get_super_fields(self, classdecl, parent=None):
         fields = []
@@ -661,32 +646,6 @@ class CodeGenerator(NodeVisitor):
                     self.file_name, node.line_num, ','.join(fields.symmetric_difference(set(class_type.fields)))))
 
         return _class
-
-    def struct_assign(self, node):
-        struct_type = self.search_scopes(node.name)
-        struct = self.builder.alloca(struct_type)
-
-        fields = set()
-        for index, field in struct_type.defaults.items():
-            val = self.visit(field)
-            pos = struct_type.fields.index(index)
-            fields.add(index)
-            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
-            self.builder.store(val, elem)
-
-        for index, field in enumerate(node.named_arguments.values()):
-            val = self.visit(field)
-            pos = struct_type.fields.index(list(node.named_arguments.keys())[index])
-            fields.add((list(node.named_arguments.keys())[index]))
-            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
-            self.builder.store(val, elem)
-
-        if len(fields) < len(struct_type.fields):
-            error('file={} line={} Syntax Error: struct declaration doesn\'t initialize all fields ({})'.format(
-                self.file_name, node.line_num, ','.join(fields.symmetric_difference(set(struct_type.fields)))))
-
-        struct.name = node.name
-        return struct
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)

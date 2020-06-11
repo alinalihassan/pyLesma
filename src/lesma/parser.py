@@ -83,27 +83,6 @@ class Parser(object):
         self.indent_level -= 1
         return EnumDeclaration(name.value, fields, self.line_num)
 
-    def struct_declaration(self):
-        self.eat_value(STRUCT)
-        name = self.next_token()
-        self.user_types.append(name.value)
-        self.eat_type(NEWLINE)
-        self.indent_level += 1
-        fields = OrderedDict()
-        defaults = {}
-        while self.current_token.indent_level > name.indent_level:
-            field = self.next_token().value
-            self.eat_value(COLON)
-            field_type = self.type_spec()
-            fields[field] = field_type
-            if self.current_token.value == ASSIGN:
-                self.eat_value(ASSIGN)
-                defaults[field] = self.expr()
-
-            self.eat_type(NEWLINE)
-        self.indent_level -= 1
-        return StructDeclaration(name.value, fields, defaults, self.line_num)
-
     def class_declaration(self):
         base = None
         methods = []
@@ -434,9 +413,7 @@ class Parser(object):
         elif self.current_token.value == TYPE:
             node = self.type_declaration()
         elif self.current_token.type == LTYPE:
-            if self.current_token.value == STRUCT:
-                node = self.struct_declaration()
-            elif self.current_token.value == CLASS:
+            if self.current_token.value == CLASS:
                 node = self.class_declaration()
             elif self.current_token.value == ENUM:
                 node = self.enum_declaration()

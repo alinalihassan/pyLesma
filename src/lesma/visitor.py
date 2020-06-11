@@ -44,7 +44,6 @@ FLOAT_BUILTIN = BuiltinTypeSymbol(FLOAT, Float)
 COMPLEX_BUILTIN = BuiltinTypeSymbol(COMPLEX, Complex)
 BOOL_BUILTIN = BuiltinTypeSymbol(BOOL, Bool)
 STR_BUILTIN = BuiltinTypeSymbol(STR, Str)
-STRUCT_BUILTIN = BuiltinTypeSymbol(STRUCT, Str)
 LIST_BUILTIN = BuiltinTypeSymbol(LIST, List)
 TUPLE_BUILTIN = BuiltinTypeSymbol(TUPLE, Tuple)
 DICT_BUILTIN = BuiltinTypeSymbol(DICT, Dict)
@@ -75,15 +74,6 @@ class EnumSymbol(Symbol):
 
     def __str__(self) -> str:
         return ENUM
-
-
-class StructSymbol(Symbol):
-    def __init__(self, name, fields):
-        super().__init__(name)
-        self.fields = fields
-        self.accessed = False
-        self.val_assigned = False
-
 
 class ClassSymbol(Symbol):
     def __init__(self, name, base, fields, methods):
@@ -170,7 +160,6 @@ class NodeVisitor(object):
         self.define(COMPLEX, COMPLEX_BUILTIN)
         self.define(BOOL, BOOL_BUILTIN)
         self.define(STR, STR_BUILTIN)
-        self.define(STRUCT, STRUCT_BUILTIN)
         self.define(LIST, LIST_BUILTIN)
         self.define(TUPLE, TUPLE_BUILTIN)
         self.define(DICT, DICT_BUILTIN)
@@ -253,8 +242,6 @@ class NodeVisitor(object):
             return self.search_scopes(COMPLEX)
         if isinstance(value, str):
             return self.search_scopes(STR)
-        if isinstance(value, StructSymbol):
-            return self.search_scopes(STRUCT)
         if isinstance(value, EnumSymbol):
             return self.search_scopes(ENUM)
         if isinstance(value, ClassSymbol):

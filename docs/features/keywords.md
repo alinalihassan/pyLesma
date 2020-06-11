@@ -4,7 +4,7 @@ For reference, here are all the keywords categorized by type.
 
 |   |   |   |   | 
 |---|---|---|---|
-| struct | class | if | else | 
+| class | if | else | 
 | for | while | switch | case |
 | default | def | const | break |
 | continue | pass | type | extern | 

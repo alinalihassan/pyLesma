@@ -118,14 +118,6 @@ class EnumDeclaration(AST):
         self.line_num = line_num
 
 
-class StructDeclaration(AST):
-    def __init__(self, name, fields, defaults, line_num):
-        self.name = name
-        self.fields = fields
-        self.line_num = line_num
-        self.defaults = defaults
-
-
 class ClassDeclaration(AST):
     def __init__(self, name, base=None, methods=None, fields=None, defaults=None, instance_fields=None):
         self.name = name

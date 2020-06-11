@@ -15,7 +15,6 @@ nav:
     - Syntax: features/syntax.md
     - Keywords: features/keywords.md
     - Flow Control: features/flow_control.md
-    - Structs: features/structs.md
     - Classes: features/classes.md
     - Enums: features/enums.md
     - Types: features/types.md

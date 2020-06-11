@@ -241,16 +241,6 @@ class Enum(Collection):
         raise NotImplementedError
 
 
-class Struct(Collection):
-    def __init__(self) -> None:
-        super().__init__()
-        self.name = STRUCT
-
-    @staticmethod
-    def type() -> ir.Type:
-        raise NotImplementedError
-
-
 class Func(Any):
     def __init__(self) -> None:
         super().__init__()
@@ -261,7 +251,7 @@ class Func(Any):
         return ir.FunctionType
 
 
-class Class(Struct):
+class Class:
     def __init__(self) -> None:
         super().__init__()
         self.name = CLASS
