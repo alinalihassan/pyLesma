@@ -4,11 +4,11 @@ For reference, here are all the keywords categorized by type.
 
 |   |   |   |   | 
 |---|---|---|---|
-| class | if | else | 
+| class | if | else | self |
 | for | while | switch | case |
 | default | def | const | break |
 | continue | pass | type | extern | 
-| operator | fallthrough | defer | self |
+| operator | fallthrough | defer |
 
 ## Constant keywords
 

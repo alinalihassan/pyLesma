@@ -33,8 +33,10 @@ theme:
   font:
     text: 'Noto Sans'
     code: 'Roboto Mono'
-  logo:
-    icon: 'book'
+  icon:
+    logo: material/book
+  features:
+    - instant
 
 markdown_extensions:
   - admonition
