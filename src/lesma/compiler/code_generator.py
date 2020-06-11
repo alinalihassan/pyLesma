@@ -305,16 +305,29 @@ class CodeGenerator(NodeVisitor):
             elements += parent.elements
 
         return fields, elements
+    
+    def get_super_defaults(self, classdecl, parent=None):
+        defaults = {}
+        if classdecl.base is not None:
+            if parent is None:
+                parent = self.search_scopes(classdecl.base.value)
+
+            if parent.base is not None:
+                new_parent = self.search_scopes(parent.base.value)
+                self.get_super_defaults(classdecl, new_parent)
+
+            defaults = {**defaults, **parent.defaults}
+
+        return defaults
 
     def visit_classdeclaration(self, node):
-
         fields = []
         for field in node.fields.values():
             fields.append(self.get_type(field))
 
         classdecl = self.module.context.get_identified_type(node.name)
         classdecl.base = node.base
-        classdecl.fields = []
+        classdecl.defaults = {**self.get_super_defaults(classdecl), **node.defaults}
         classdecl.name = node.name
         classdecl.type = CLASS
         super_fields, super_elements = self.get_super_fields(classdecl)
@@ -619,10 +632,33 @@ class CodeGenerator(NodeVisitor):
     def class_assign(self, node):
         class_type = self.search_scopes(node.name)
         _class = self.builder.alloca(class_type)
+        found = False
 
         for func in class_type.methods:
             if func.name.split(".")[-1] == 'new':
+                found = True
                 self.methodcall(node, func, _class)
+
+        # Create a builtin constructor which assigns all the uninitialized 
+        if not found:
+            fields = set()
+            for index, field in class_type.defaults.items():
+                val = self.visit(field)
+                pos = class_type.fields.index(index)
+                fields.add(index)
+                elem = self.builder.gep(_class, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
+                self.builder.store(val, elem)
+
+            for index, field in enumerate(node.named_arguments.values()):
+                val = self.visit(field)
+                pos = class_type.fields.index(list(node.named_arguments.keys())[index])
+                fields.add((list(node.named_arguments.keys())[index]))
+                elem = self.builder.gep(_class, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
+                self.builder.store(val, elem)
+
+            if len(fields) < len(class_type.fields):
+                error('file={} line={} Syntax Error: class declaration doesn\'t initialize all fields ({})'.format(
+                    self.file_name, node.line_num, ','.join(fields.symmetric_difference(set(class_type.fields)))))
 
         return _class
 

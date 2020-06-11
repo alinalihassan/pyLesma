@@ -108,6 +108,7 @@ class Parser(object):
         base = None
         methods = []
         fields = OrderedDict()
+        defaults = {}
         instance_fields = None
         self.next_token()
         class_name = self.current_token
@@ -128,11 +129,15 @@ class Parser(object):
                 self.eat_value(COLON)
                 field_type = self.type_spec()
                 fields[field] = field_type
+                if self.current_token.value == ASSIGN:
+                    self.eat_value(ASSIGN)
+                    defaults[field] = self.expr()
+
                 self.eat_type(NEWLINE)
             if self.current_token.value == DEF:
                 methods.append(self.method_declaration(class_name))
         self.indent_level -= 1
-        return ClassDeclaration(class_name.value, base, methods, fields, instance_fields)
+        return ClassDeclaration(class_name.value, base, methods, fields, defaults, instance_fields)
 
     def variable_declaration(self):
         var_node = Var(self.current_token.value, self.line_num)

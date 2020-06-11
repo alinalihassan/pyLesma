@@ -127,11 +127,12 @@ class StructDeclaration(AST):
 
 
 class ClassDeclaration(AST):
-    def __init__(self, name, base=None, methods=None, fields=None, instance_fields=None):
+    def __init__(self, name, base=None, methods=None, fields=None, defaults=None, instance_fields=None):
         self.name = name
         self.base = base
         self.methods = methods
         self.fields = fields
+        self.defaults = defaults
         self.instance_fields = instance_fields
 
 
