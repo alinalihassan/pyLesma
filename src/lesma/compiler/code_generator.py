@@ -290,7 +290,7 @@ class CodeGenerator(NodeVisitor):
             elements += parent.elements
 
         return fields, elements
-    
+
     def get_super_defaults(self, classdecl, parent=None):
         defaults = {}
         if classdecl.base is not None:
@@ -624,7 +624,7 @@ class CodeGenerator(NodeVisitor):
                 found = True
                 self.methodcall(node, func, _class)
 
-        # Create a builtin constructor which assigns all the uninitialized 
+        # Create a builtin constructor which assigns all the uninitialized
         if not found:
             fields = set()
             for index, field in class_type.defaults.items():

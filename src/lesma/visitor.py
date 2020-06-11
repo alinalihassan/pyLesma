@@ -75,6 +75,7 @@ class EnumSymbol(Symbol):
     def __str__(self) -> str:
         return ENUM
 
+
 class ClassSymbol(Symbol):
     def __init__(self, name, base, fields, methods):
         super().__init__(name)
