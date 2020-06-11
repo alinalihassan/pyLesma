@@ -22,7 +22,7 @@ jobs:
           name: Run Linter
           command: |
             pycodestyle --config=.config/pycodestyle.ini src/*
-      - run:
-          name: Run MyPy Linter
-          command: |
-            mypy --config-file .config/mypy.ini src/*
+      # - run:
+      #     name: Run MyPy Linter
+      #     command: |
+      #       mypy --config-file .config/mypy.ini src/*
