@@ -4,12 +4,11 @@
 </p>
 
 ___
-[![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-0.4.1-brightgreen.svg)](https://github.com/hassanalinali/Lesma/blob/master/LICENSE.md)
-[![CircleCI](https://circleci.com/gh/hassanalinali/Lesma/tree/master.svg?style=shield)](https://circleci.com/gh/hassanalinali/Lesma/tree/master)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/90fcc06be70d4dd98f54f1bb2713d70c)](https://www.codacy.com/app/hassanalinali/Lesma?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hassanalinali/Lesma&amp;utm_campaign=Badge_Grade)
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.4.1-brightgreen.svg)](https://github.com/alinalihassan/Lesma/blob/master/LICENSE.md)
+[![Build](https://img.shields.io/github/workflow/status/alinalihassan/Lesma/Build%20and%20Test)](https://github.com/alinalihassan/Lesma/actions/workflows/build.yaml)
 
-**Lesma** is a compiled, statically typed, imperative and object-oriented programming language with a focus on expressiveness, elegancy, and simplicity, while not sacrificing on performance. 
+**Lesma** is a compiled, statically typed, imperative and object-oriented programming language with a focus on expressiveness, elegancy, and simplicity, while not sacrificing on performance.
 
 ## Features
 - **it's fast**, because it should be so, together with LLVM's state of the art optimizations, but it won't ever oblige you to make an extra effort from your side just for the sake of performance
@@ -24,7 +23,7 @@ ___
 - Lua
 
 ## Installing
-You can pick up the latest release in [**Releases**](https://github.com/hassanalinali/Lesma/releases) and start using it. Lesma is currently being tested and provides binaries only for Unix. Compatibility between operating systems and architectures is not hard to achieve, but simply not a priority at the moment. 
+You can pick up the latest release in [**Releases**](https://github.com/alinalihassan/Lesma/releases) and start using it. Lesma is currently being tested and provides binaries only for Unix. Compatibility between operating systems and architectures is not hard to achieve, but simply not a priority at the moment. 
 
 Windows is also supported but you need to do additional work if you want to compile Lesma code (need to install clang, but this is not properly tested at the moment) and there are issues with Unicode characters, but all the tests pass and everything else seems to work.
 
@@ -32,8 +31,8 @@ In the case that your platform is not oficially supported, you need to build it 
 
 ## Documentation
 
-- [Language Documentation](https://hassanalinali.github.io/Lesma)
-- [Lesma code samples](https://hassanalinali.github.io/Lesma/examples/)
+- [Language Documentation](https://alinalihassan.github.io/Lesma)
+- [Lesma code samples](https://alinalihassan.github.io/Lesma/examples/)
 
 ## Build
 
@@ -41,7 +40,7 @@ In order to build Lesma, you need to have at least [Python 3.5](https://www.pyth
 
 Clone the repo:
 ```bash
-git clone https://github.com/hassanalinali/Lesma
+git clone https://github.com/alinalihassan/Lesma
 ```
 
 Install the requirements
