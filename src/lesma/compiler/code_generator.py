@@ -4,13 +4,14 @@ from ctypes import CFUNCTYPE, c_void_p
 from decimal import Decimal
 from math import inf
 from time import time
+from typing import Optional
 
 import llvmlite.binding as llvm
 from llvmlite import ir
 
 import lesma.compiler.llvmlite_custom
 from lesma.ast import CollectionAccess, DotAccess, Input, Str, VarDecl
-from lesma.compiler import RET_VAR, type_map
+from lesma.compiler.base import RET_VAR, type_map
 from lesma.compiler.builtins import (array_types, create_dynamic_array_methods,
                                      define_builtins)
 from lesma.compiler.operations import binary_op, cast_ops, unary_op
@@ -21,7 +22,7 @@ from lesma.visitor import NodeVisitor
 
 
 class CodeGenerator(NodeVisitor):
-    def __init__(self, file_name):
+    def __init__(self, file_name: str):
         super().__init__()
         self.file_name = file_name
         self.module = ir.Module()
@@ -50,7 +51,7 @@ class CodeGenerator(NodeVisitor):
         #     func.args[i].name = '.argc' if i == 0 else '.argv'
         #     self.alloc_define_store(func.args[i], func.args[i].name[1:], func.args[i].type)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.module)
 
     def visit_program(self, node):
@@ -207,9 +208,7 @@ class CodeGenerator(NodeVisitor):
             name = name.name
         elif isinstance(func_type, ir.IdentifiedStructType):
             typ = self.search_scopes(node.name)
-            if typ.type == STRUCT:
-                return self.struct_assign(node)
-            elif typ.type == CLASS:
+            if typ.type == CLASS:
                 return self.class_assign(node)
             error("Unexpected Identified Struct Type")
         else:
@@ -276,19 +275,6 @@ class CodeGenerator(NodeVisitor):
         enum.set_body(ir.IntType(8, signed=False))
         self.define(node.name, enum)
 
-    def visit_structdeclaration(self, node):
-        fields = []
-        for field in node.fields.values():
-            fields.append(type_map[field.value])
-
-        struct = self.module.context.get_identified_type(node.name)
-        struct.fields = [field for field in node.fields.keys()]
-        struct.defaults = node.defaults
-        struct.name = node.name
-        struct.type = STRUCT
-        struct.set_body(*[field for field in fields])
-        self.define(node.name, struct)
-
     def get_super_fields(self, classdecl, parent=None):
         fields = []
         elements = []
@@ -305,15 +291,28 @@ class CodeGenerator(NodeVisitor):
 
         return fields, elements
 
-    def visit_classdeclaration(self, node):
+    def get_super_defaults(self, classdecl, parent=None):
+        defaults = {}
+        if classdecl.base is not None:
+            if parent is None:
+                parent = self.search_scopes(classdecl.base.value)
 
+            if parent.base is not None:
+                new_parent = self.search_scopes(parent.base.value)
+                self.get_super_defaults(classdecl, new_parent)
+
+            defaults = {**defaults, **parent.defaults}
+
+        return defaults
+
+    def visit_classdeclaration(self, node):
         fields = []
         for field in node.fields.values():
             fields.append(self.get_type(field))
 
         classdecl = self.module.context.get_identified_type(node.name)
         classdecl.base = node.base
-        classdecl.fields = []
+        classdecl.defaults = {**self.get_super_defaults(classdecl), **node.defaults}
         classdecl.name = node.name
         classdecl.type = CLASS
         super_fields, super_elements = self.get_super_fields(classdecl)
@@ -618,38 +617,35 @@ class CodeGenerator(NodeVisitor):
     def class_assign(self, node):
         class_type = self.search_scopes(node.name)
         _class = self.builder.alloca(class_type)
+        found = False
 
         for func in class_type.methods:
             if func.name.split(".")[-1] == 'new':
+                found = True
                 self.methodcall(node, func, _class)
 
+        # Create a builtin constructor which assigns all the uninitialized
+        if not found:
+            fields = set()
+            for index, field in class_type.defaults.items():
+                val = self.visit(field)
+                pos = class_type.fields.index(index)
+                fields.add(index)
+                elem = self.builder.gep(_class, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
+                self.builder.store(val, elem)
+
+            for index, field in enumerate(node.named_arguments.values()):
+                val = self.visit(field)
+                pos = class_type.fields.index(list(node.named_arguments.keys())[index])
+                fields.add((list(node.named_arguments.keys())[index]))
+                elem = self.builder.gep(_class, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
+                self.builder.store(val, elem)
+
+            if len(fields) < len(class_type.fields):
+                error('file={} line={} Syntax Error: class declaration doesn\'t initialize all fields ({})'.format(
+                    self.file_name, node.line_num, ','.join(fields.symmetric_difference(set(class_type.fields)))))
+
         return _class
-
-    def struct_assign(self, node):
-        struct_type = self.search_scopes(node.name)
-        struct = self.builder.alloca(struct_type)
-
-        fields = set()
-        for index, field in struct_type.defaults.items():
-            val = self.visit(field)
-            pos = struct_type.fields.index(index)
-            fields.add(index)
-            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
-            self.builder.store(val, elem)
-
-        for index, field in enumerate(node.named_arguments.values()):
-            val = self.visit(field)
-            pos = struct_type.fields.index(list(node.named_arguments.keys())[index])
-            fields.add((list(node.named_arguments.keys())[index]))
-            elem = self.builder.gep(struct, [self.const(0, width=INT32), self.const(pos, width=INT32)], inbounds=True)
-            self.builder.store(val, elem)
-
-        if len(fields) < len(struct_type.fields):
-            error('file={} line={} Syntax Error: struct declaration doesn\'t initialize all fields ({})'.format(
-                self.file_name, node.line_num, ','.join(fields.symmetric_difference(set(struct_type.fields)))))
-
-        struct.name = node.name
-        return struct
 
     def visit_dotaccess(self, node):
         obj = self.search_scopes(node.obj)
@@ -1149,7 +1145,7 @@ class CodeGenerator(NodeVisitor):
     def generate_code(self, node):
         return self.visit(node)
 
-    def add_debug_info(self, optimize, filename):
+    def add_debug_info(self, optimize: bool, filename: str):
         di_file = self.module.add_debug_info("DIFile", {
             "filename": os.path.basename(os.path.abspath(filename)),
             "directory": os.path.dirname(os.path.abspath(filename)),
@@ -1165,7 +1161,7 @@ class CodeGenerator(NodeVisitor):
         self.module.name = os.path.basename(os.path.abspath(filename))
         self.module.add_named_metadata('llvm.dbg.cu', [di_file, di_module])
 
-    def evaluate(self, optimize=True, ir_dump=False, timer=False):
+    def evaluate(self, optimize: bool, ir_dump: bool, timer: bool) -> None:
         if ir_dump and not optimize:
             for func in self.module.functions:
                 if func.name == "main":
@@ -1190,7 +1186,7 @@ class CodeGenerator(NodeVisitor):
             if timer:
                 print('\nExecuted in {:f} sec'.format(end_time - start_time))
 
-    def compile(self, filename, optimize=True, output=None, emit_llvm=False):
+    def compile(self, filename: str, optimize: bool, output: Optional[str], emit_llvm: bool) -> None:
         compile_time = time()
 
         # self.add_debug_info(optimize, filename)
@@ -1204,7 +1200,7 @@ class CodeGenerator(NodeVisitor):
             out.write(prog_str)
 
         with open(os.devnull, "w") as tmpout:
-            subprocess.call('gcc {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
+            subprocess.call('clang {0}.ll -O3 -o {0}'.format(output).split(" "), stdout=tmpout, stderr=tmpout)
             successful("compilation done in: %.3f seconds" % (time() - compile_time))
             successful("binary file wrote to " + output)
 

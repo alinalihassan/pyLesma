@@ -1,18 +1,19 @@
 from decimal import Decimal
+from typing import Optional, Any, Iterator
 
 from lesma.grammar import *
 from lesma.utils import *
 
 
 class Token(object):
-    def __init__(self, token_type, value, line_num, indent_level, value_type=None):
+    def __init__(self, token_type: str, value: str, line_num: int, indent_level: int, value_type: str = None):
         self.type = token_type
         self.value = value
         self.value_type = value_type
         self.line_num = line_num
         self.indent_level = indent_level
 
-    def __str__(self):
+    def __str__(self) -> str:
         return 'Token(type={type}, value={value}, line_num={line_num}, indent_level={indent_level})'.format(
             type=self.type,
             value=repr(self.value),
@@ -24,19 +25,19 @@ class Token(object):
 
 
 class Lexer(object):
-    def __init__(self, text, file_name=None):
+    def __init__(self, text: str, file_name: str):
         self.text = self.sanitize_text(text)
         self.file_name = file_name
         self.pos = 0
-        self.current_char = self.text[self.pos]
-        self.char_type = None
+        self.current_char: Optional[str] = self.text[self.pos]
+        self.char_type: Optional[str] = None
         self.word = ''
-        self.word_type = None
+        self.word_type: Optional[str] = None
         self._line_num = 1
         self._indent_level = 0
-        self.current_token = None
+        self.current_token: Token
 
-    def next_char(self):
+    def next_char(self) -> None:
         self.pos += 1
         if self.pos > len(self.text) - 1:
             self.current_char = None
@@ -46,7 +47,7 @@ class Lexer(object):
             self.char_type = self.get_type(self.current_char)
 
     @staticmethod
-    def sanitize_text(text):
+    def sanitize_text(text: str) -> str:
         if len(text) == 0:
             error('empty input')
         elif text[-1] != '\n':
@@ -54,23 +55,24 @@ class Lexer(object):
 
         return text
 
-    def reset_word(self):
+    def reset_word(self) -> str:
         old_word = self.word
         self.word = ''
         self.word_type = None
         return old_word
 
-    def peek(self, num):
+    def peek(self, num: int) -> Optional[str]:
         peek_pos = self.pos + num
         if peek_pos > len(self.text) - 1:
             return None
 
         return self.text[peek_pos]
 
-    def preview_token(self, num=1):
+    # noinspection PyUnboundLocalVariable
+    def preview_token(self, num: int = 1) -> Token:
         if num < 1:
-            raise ValueError('num argument must be 1 or greater')
-        next_token = None
+            raise ValueError('Preview argument must be 1 or greater')
+        next_token: Token
         current_pos = self.pos
         current_char = self.current_char
         current_char_type = self.char_type
@@ -89,7 +91,7 @@ class Lexer(object):
         self._indent_level = current_indent_level
         return next_token
 
-    def skip_whitespace(self):
+    def skip_whitespace(self) -> None:
         shouldIndent = False
         if self.peek(-1) == '\n':
             shouldIndent = True
@@ -107,7 +109,7 @@ class Lexer(object):
             error('file={} line={}: Indentation is locked to 4 spaces, found {} instead'.format(
                 self.file_name, self.line_num, spaces))
 
-    def skip_comment(self):
+    def skip_comment(self) -> Optional[Token]:
         while self.current_char != '\n':
             self.next_char()
             if self.current_char is None:
@@ -116,30 +118,32 @@ class Lexer(object):
         if self.current_char == '#':
             self.skip_comment()
 
-    def increment_line_num(self):
+        return None
+
+    def increment_line_num(self) -> None:
         self._line_num += 1
 
     @property
-    def line_num(self):
+    def line_num(self) -> int:
         return self._line_num
 
     @property
-    def indent_level(self):
+    def indent_level(self) -> int:
         return self._indent_level
 
-    def reset_indent_level(self):
+    def reset_indent_level(self) -> int:
         self._indent_level = 0
         return self._indent_level
 
-    def decriment_indent_level(self):
+    def decriment_indent_level(self) -> int:
         self._indent_level -= 1
         return self._indent_level
 
-    def increment_indent_level(self):
+    def increment_indent_level(self) -> int:
         self._indent_level += 1
         return self._indent_level
 
-    def eat_newline(self):
+    def eat_newline(self) -> Token:
         self.reset_word()
         token = Token(NEWLINE, '\n', self.line_num, self.indent_level)
         self.reset_indent_level()
@@ -147,17 +151,17 @@ class Lexer(object):
         self.next_char()
         return token
 
-    def skip_indent(self):
+    def skip_indent(self) -> None:
         while self.current_char is not None and self.current_char == '\t':
             self.reset_word()
             self.increment_indent_level()
             self.next_char()
 
-    def eof(self):
+    def eof(self) -> Token:
         return Token(EOF, EOF, self.line_num, self.indent_level)
 
     @staticmethod
-    def get_type(char):
+    def get_type(char: str) -> str:
         if char.isspace():
             return WHITESPACE
         elif char == '#':
@@ -171,7 +175,7 @@ class Lexer(object):
 
         return ALPHANUMERIC
 
-    def get_next_token(self):
+    def get_next_token(self) -> Token:
         if self.current_char is None:
             return self.eof()
 
@@ -274,7 +278,7 @@ class Lexer(object):
                         error("Unexpected number parsing")
 
                 self.next_char()
-            value = self.reset_word()
+            value: Any = self.reset_word()
             if '.' in value:
                 value = Decimal(value)
                 value_type = DOUBLE
@@ -294,7 +298,7 @@ class Lexer(object):
 
         raise SyntaxError('Unknown character')
 
-    def analyze(self):
+    def analyze(self) -> Iterator[Token]:
         token = self.get_next_token()
         while token.type != EOF:
             yield token
@@ -302,8 +306,8 @@ class Lexer(object):
         yield token
 
     @staticmethod
-    def utf8ToAscii(string):
-        unicode = "{}".format(string.encode("unicode_escape"))
+    def utf8ToAscii(string: str) -> str:
+        unicode = "{!r}".format(string.encode("unicode_escape"))
         unicode = unicode[2:len(unicode) - 1]
 
         return unicode

@@ -1,4 +1,4 @@
-struct Circle
+class Circle
 	radius: int
 	x: int
 	y: int = 99

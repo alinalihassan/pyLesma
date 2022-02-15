@@ -1,2 +1,2 @@
-llvmlite==0.28.0
+llvmlite==0.38.0
 docopt==0.6.2

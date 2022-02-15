@@ -2,17 +2,27 @@ from lesma.grammar import *
 
 
 class AST(object):
-    def __str__(self):
+    def __str__(self) -> str:
         return '(' + ' '.join(str(value) for key, value in sorted(self.__dict__.items()) if not key.startswith("__") and key != 'read_only' and key != 'line_num' and value is not None) + ')'
 
     __repr__ = __str__
 
 
+class Compound(AST):
+    def __init__(self):
+        self.children = []
+
+    def __str__(self) -> str:
+        return '\n'.join(str(child) for child in self.children)
+
+    __repr__ = __str__
+
+
 class Program(AST):
-    def __init__(self, block):
+    def __init__(self, block: Compound):
         self.block = block
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '\n'.join(str(child) for child in self.block.children)
 
     __repr__ = __str__
@@ -32,18 +42,8 @@ class Var(AST):
         self.read_only = read_only
         self.line_num = line_num
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ' '.join(str(value) for key, value in sorted(self.__dict__.items()) if not key.startswith("__") and key != 'read_only' and key != 'line_num')
-
-    __repr__ = __str__
-
-
-class Compound(AST):
-    def __init__(self):
-        self.children = []
-
-    def __str__(self):
-        return '\n'.join(str(child) for child in self.children)
 
     __repr__ = __str__
 
@@ -58,7 +58,7 @@ class FuncDecl(AST):
         self.body = body
         self.line_num = line_num
 
-    # def __str__(self):
+    # def __str__(self) -> str:
     # 	return '<{name}:{type} ({params})>'.format(name=self.name, type=self.return_type.value, params=', '.join('{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
     #
     # __repr__ = __str__
@@ -82,7 +82,7 @@ class AnonymousFunc(AST):
         self.body = body
         self.line_num = line_num
 
-    # def __str__(self):
+    # def __str__(self) -> str:
     # 	return '<Anonymous:{type} ({params})>'.format(type=self.return_type.value, params=', '.join('{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
     #
     # __repr__ = __str__
@@ -118,20 +118,13 @@ class EnumDeclaration(AST):
         self.line_num = line_num
 
 
-class StructDeclaration(AST):
-    def __init__(self, name, fields, defaults, line_num):
-        self.name = name
-        self.fields = fields
-        self.line_num = line_num
-        self.defaults = defaults
-
-
 class ClassDeclaration(AST):
-    def __init__(self, name, base=None, methods=None, fields=None, instance_fields=None):
+    def __init__(self, name, base=None, methods=None, fields=None, defaults=None, instance_fields=None):
         self.name = name
         self.base = base
         self.methods = methods
         self.fields = fields
+        self.defaults = defaults
         self.instance_fields = instance_fields
 
 
@@ -191,7 +184,7 @@ class LoopBlock(AST):
     def __init__(self):
         self.children = []
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '\n'.join(str(child) for child in self.children)
 
     __repr__ = __str__
@@ -215,7 +208,7 @@ class Break(AST):
     def __init__(self, line_num):
         self.line_num = line_num
 
-    def __str__(self):
+    def __str__(self) -> str:
         return BREAK
 
     __repr__ = __str__
@@ -225,7 +218,7 @@ class Fallthrough(AST):
     def __init__(self, line_num):
         self.line_num = line_num
 
-    def __str__(self):
+    def __str__(self) -> str:
         return FALLTHROUGH
 
     __repr__ = __str__
@@ -235,7 +228,7 @@ class Continue(AST):
     def __init__(self, line_num):
         self.line_num = line_num
 
-    def __str__(self):
+    def __str__(self) -> str:
         return CONTINUE
 
     __repr__ = __str__
@@ -245,7 +238,7 @@ class Pass(AST):
     def __init__(self, line_num):
         self.line_num = line_num
 
-    def __str__(self):
+    def __str__(self) -> str:
         return CONTINUE
 
     __repr__ = __str__
@@ -256,7 +249,7 @@ class Defer(AST):
         self.line_num = line_num
         self.statement = statement
 
-    def __str__(self):
+    def __str__(self) -> str:
         return DEFER
 
     __repr__ = __str__

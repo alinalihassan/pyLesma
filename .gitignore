@@ -18,3 +18,9 @@ dist/
 les\.dist/
 
 les\.build/
+
+.mypy_cache/
+
+test.les
+.DS_Store
+venv/

@@ -1,5 +1,6 @@
 <p align="center">
-<img src="img/logo.png" height="180px" alt="Lesma Programming Language" title="Lesma Programming Language">
+<img src="img/logo.svg" style="height: 180px" alt="Lesma Programming Language" title="Lesma Programming Language">
+<br><b style="font-size: 24px;">Lesma</b>
 </p>
 
 ___

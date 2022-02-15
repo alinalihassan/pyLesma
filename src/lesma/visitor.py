@@ -2,7 +2,7 @@ from decimal import Decimal
 from enum import Enum
 
 from lesma.ast import Type
-from lesma.compiler import *
+from lesma.compiler.base import *
 
 
 class Symbol(object):
@@ -20,7 +20,7 @@ class BuiltinTypeSymbol(Symbol):
     def type(self):
         return self.llvm_type.type()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     __repr__ = __str__
@@ -44,7 +44,6 @@ FLOAT_BUILTIN = BuiltinTypeSymbol(FLOAT, Float)
 COMPLEX_BUILTIN = BuiltinTypeSymbol(COMPLEX, Complex)
 BOOL_BUILTIN = BuiltinTypeSymbol(BOOL, Bool)
 STR_BUILTIN = BuiltinTypeSymbol(STR, Str)
-STRUCT_BUILTIN = BuiltinTypeSymbol(STRUCT, Str)
 LIST_BUILTIN = BuiltinTypeSymbol(LIST, List)
 TUPLE_BUILTIN = BuiltinTypeSymbol(TUPLE, Tuple)
 DICT_BUILTIN = BuiltinTypeSymbol(DICT, Dict)
@@ -60,7 +59,7 @@ class VarSymbol(Symbol):
         self.val_assigned = False
         self.read_only = read_only
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type}>'.format(name=self.name, type=self.type)
 
     __repr__ = __str__
@@ -73,16 +72,8 @@ class EnumSymbol(Symbol):
         self.accessed = False
         self.val_assigned = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return ENUM
-
-
-class StructSymbol(Symbol):
-    def __init__(self, name, fields):
-        super().__init__(name)
-        self.fields = fields
-        self.accessed = False
-        self.val_assigned = False
 
 
 class ClassSymbol(Symbol):
@@ -113,7 +104,7 @@ class FuncSymbol(Symbol):
         self.accessed = False
         self.val_assigned = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join(
             '{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
 
@@ -125,7 +116,7 @@ class TypeSymbol(Symbol):
         super().__init__(name, types)
         self.accessed = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type}>'.format(name=self.name, type=self.type)
 
     __repr__ = __str__
@@ -139,7 +130,7 @@ class BuiltinFuncSymbol(Symbol):
         self.accessed = False
         self.val_assigned = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '<{name}:{type} ({params})>'.format(name=self.name, type=self.type, params=', '.join(
             '{}:{}'.format(key, value.value) for key, value in self.parameters.items()))
 
@@ -170,7 +161,6 @@ class NodeVisitor(object):
         self.define(COMPLEX, COMPLEX_BUILTIN)
         self.define(BOOL, BOOL_BUILTIN)
         self.define(STR, STR_BUILTIN)
-        self.define(STRUCT, STRUCT_BUILTIN)
         self.define(LIST, LIST_BUILTIN)
         self.define(TUPLE, TUPLE_BUILTIN)
         self.define(DICT, DICT_BUILTIN)
@@ -253,8 +243,6 @@ class NodeVisitor(object):
             return self.search_scopes(COMPLEX)
         if isinstance(value, str):
             return self.search_scopes(STR)
-        if isinstance(value, StructSymbol):
-            return self.search_scopes(STRUCT)
         if isinstance(value, EnumSymbol):
             return self.search_scopes(ENUM)
         if isinstance(value, ClassSymbol):

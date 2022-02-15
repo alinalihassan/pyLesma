@@ -6,6 +6,7 @@
 - [ ] Fix parser error when using class fields/methods from a list
 - [ ] Fix unicode on windows
 - [ ] Fix type comparing `is` with lists and str
+- [x] Unordered comparison for not equal floating point comparison
 
 ## Improvements
 - [ ] Improve warning messages

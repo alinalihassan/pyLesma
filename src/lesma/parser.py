@@ -1,23 +1,25 @@
 from collections import OrderedDict
+from typing import Optional
 
 from lesma.ast import *
-from lesma.compiler.__init__ import type_map
+from lesma.compiler.base import type_map
 from lesma.grammar import *
 from lesma.utils import error
+from lesma.lexer import Lexer, Token
 
 
 class Parser(object):
-    def __init__(self, lexer):
+    def __init__(self, lexer: Lexer):
         self.lexer = lexer
         self.file_name = lexer.file_name
-        self.current_token = None
+        self.current_token: Optional[Token] = None
         self.indent_level = 0
         self.next_token()
         self.user_types = []
         self.func_args = False
 
     @property
-    def line_num(self):
+    def line_num(self) -> int:
         return self.current_token.line_num
 
     def next_token(self):
@@ -81,31 +83,11 @@ class Parser(object):
         self.indent_level -= 1
         return EnumDeclaration(name.value, fields, self.line_num)
 
-    def struct_declaration(self):
-        self.eat_value(STRUCT)
-        name = self.next_token()
-        self.user_types.append(name.value)
-        self.eat_type(NEWLINE)
-        self.indent_level += 1
-        fields = OrderedDict()
-        defaults = {}
-        while self.current_token.indent_level > name.indent_level:
-            field = self.next_token().value
-            self.eat_value(COLON)
-            field_type = self.type_spec()
-            fields[field] = field_type
-            if self.current_token.value == ASSIGN:
-                self.eat_value(ASSIGN)
-                defaults[field] = self.expr()
-
-            self.eat_type(NEWLINE)
-        self.indent_level -= 1
-        return StructDeclaration(name.value, fields, defaults, self.line_num)
-
     def class_declaration(self):
         base = None
         methods = []
         fields = OrderedDict()
+        defaults = {}
         instance_fields = None
         self.next_token()
         class_name = self.current_token
@@ -126,11 +108,15 @@ class Parser(object):
                 self.eat_value(COLON)
                 field_type = self.type_spec()
                 fields[field] = field_type
+                if self.current_token.value == ASSIGN:
+                    self.eat_value(ASSIGN)
+                    defaults[field] = self.expr()
+
                 self.eat_type(NEWLINE)
             if self.current_token.value == DEF:
                 methods.append(self.method_declaration(class_name))
         self.indent_level -= 1
-        return ClassDeclaration(class_name.value, base, methods, fields, instance_fields)
+        return ClassDeclaration(class_name.value, base, methods, fields, defaults, instance_fields)
 
     def variable_declaration(self):
         var_node = Var(self.current_token.value, self.line_num)
@@ -427,9 +413,7 @@ class Parser(object):
         elif self.current_token.value == TYPE:
             node = self.type_declaration()
         elif self.current_token.type == LTYPE:
-            if self.current_token.value == STRUCT:
-                node = self.struct_declaration()
-            elif self.current_token.value == CLASS:
+            if self.current_token.value == CLASS:
                 node = self.class_declaration()
             elif self.current_token.value == ENUM:
                 node = self.enum_declaration()
@@ -798,7 +782,7 @@ class Parser(object):
             node = BinOp(node, token.value, self.term(), self.line_num)
         return node
 
-    def parse(self):
+    def parse(self) -> Program:
         node = self.program()
         if self.current_token.type != EOF:
             raise SyntaxError('Unexpected end of program')

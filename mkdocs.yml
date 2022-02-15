@@ -1,12 +1,12 @@
 site_name: Lesma Documentation
 site_description: 'Lesma Documentation'
-site_url: 'https://hassanalinali.github.io/Lesma/'
+site_url: 'https://alinalihassan.github.io/Lesma/'
 site_author: 'Alin Ali Hassan'
 
-repo_name: 'hassanalinali/Lesma'
-repo_url: 'https://github.com/hassanalinali/Lesma'
+repo_name: 'alinalihassan/Lesma'
+repo_url: 'https://github.com/alinalihassan/Lesma'
 
-copyright: 'Copyright &copy; 2019 Alin Ali Hassan'
+copyright: 'Copyright &copy; 2022 Alin Ali Hassan'
 
 nav:
   - Lesma: index.md
@@ -15,7 +15,6 @@ nav:
     - Syntax: features/syntax.md
     - Keywords: features/keywords.md
     - Flow Control: features/flow_control.md
-    - Structs: features/structs.md
     - Classes: features/classes.md
     - Enums: features/enums.md
     - Types: features/types.md
@@ -34,8 +33,10 @@ theme:
   font:
     text: 'Noto Sans'
     code: 'Roboto Mono'
-  logo:
-    icon: 'book'
+  icon:
+    logo: material/book
+  features:
+    - instant
 
 markdown_extensions:
   - admonition
