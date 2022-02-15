@@ -48,5 +48,5 @@ jobs:
 
     - name: Deploy MkDocs
       run: |
-        python -m pip install mkdocs
+        python -m pip install mkdocs mkdocs-material
         mkdocs gh-deploy
