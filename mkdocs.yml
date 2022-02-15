@@ -3,10 +3,10 @@ site_description: 'Lesma Documentation'
 site_url: 'https://hassanalinali.github.io/Lesma/'
 site_author: 'Alin Ali Hassan'
 
-repo_name: 'hassanalinali/Lesma'
-repo_url: 'https://github.com/hassanalinali/Lesma'
+repo_name: 'alinalihassan/Lesma'
+repo_url: 'https://github.com/alinalihassan/Lesma'
 
-copyright: 'Copyright &copy; 2019 Alin Ali Hassan'
+copyright: 'Copyright &copy; 2022 Alin Ali Hassan'
 
 nav:
   - Lesma: index.md
