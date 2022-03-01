@@ -27,7 +27,7 @@ You can pick up the latest release in [**Releases**](https://github.com/alinalih
 
 Windows is also supported but you need to do additional work if you want to compile Lesma code (need to install clang, but this is not properly tested at the moment) and there are issues with Unicode characters, but all the tests pass and everything else seems to work.
 
-In the case that your platform is not oficially supported, you need to build it on your own.
+In the case that your platform is not officially supported, you need to build it on your own.
 
 ## Documentation
 
@@ -36,7 +36,7 @@ In the case that your platform is not oficially supported, you need to build it 
 
 ## Build
 
-In order to build Lesma, you need to have at least [Python 3.5](https://www.python.org/) installed. It's currently tested only on Linux. It makes use of clang to compile the resulting object file currently, so you need it installed, but only running a file doesn't require clang.
+In order to build Lesma, you need to have at least [Python 3.5](https://www.python.org/) installed and LLVM 11.x.x. It's currently tested only on Linux/Mac. It requires Clang to be installed locally to use AOT compilation (compiling to binary), but for JIT compilation (running a file) it doesn't.
 
 Clone the repo:
 ```bash
