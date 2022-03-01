@@ -5,8 +5,8 @@
 
 ___
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.4.1-brightgreen.svg)](https://github.com/alinalihassan/Lesma/blob/master/LICENSE.md)
-[![Build](https://img.shields.io/github/workflow/status/alinalihassan/Lesma/Build%20and%20Test)](https://github.com/alinalihassan/Lesma/actions/workflows/build.yaml)
+[![Version](https://img.shields.io/badge/version-0.4.1-brightgreen.svg)](https://github.com/alinalihassan/pyLesma/blob/master/LICENSE.md)
+[![Build](https://img.shields.io/github/workflow/status/alinalihassan/pyLesma/Build%20and%20Test)](https://github.com/alinalihassan/pyLesma/actions/workflows/build.yaml)
 
 **Lesma** is a compiled, statically typed, imperative and object-oriented programming language with a focus on expressiveness, elegancy, and simplicity, while not sacrificing on performance.
 
@@ -23,24 +23,24 @@ ___
 - Lua
 
 ## Installing
-You can pick up the latest release in [**Releases**](https://github.com/alinalihassan/Lesma/releases) and start using it. Lesma is currently being tested and provides binaries only for Unix. Compatibility between operating systems and architectures is not hard to achieve, but simply not a priority at the moment. 
+You can pick up the latest release in [**Releases**](https://github.com/alinalihassan/pyLesma/releases) and start using it. Lesma is currently being tested and provides binaries only for Unix. Compatibility between operating systems and architectures is not hard to achieve, but simply not a priority at the moment. 
 
 Windows is also supported but you need to do additional work if you want to compile Lesma code (need to install clang, but this is not properly tested at the moment) and there are issues with Unicode characters, but all the tests pass and everything else seems to work.
 
-In the case that your platform is not oficially supported, you need to build it on your own.
+In the case that your platform is not officially supported, you need to build it on your own.
 
 ## Documentation
 
-- [Language Documentation](https://alinalihassan.github.io/Lesma)
-- [Lesma code samples](https://alinalihassan.github.io/Lesma/examples/)
+- [Language Documentation](https://alinalihassan.github.io/pyLesma)
+- [Lesma code samples](https://alinalihassan.github.io/pyLesma/examples/)
 
 ## Build
 
-In order to build Lesma, you need to have at least [Python 3.5](https://www.python.org/) installed. It's currently tested only on Linux. It makes use of clang to compile the resulting object file currently, so you need it installed, but only running a file doesn't require clang.
+In order to build Lesma, you need to have at least [Python 3.5](https://www.python.org/) installed and LLVM 11.x.x. It's currently tested only on Linux/Mac. It requires Clang to be installed locally to use AOT compilation (compiling to binary), but for JIT compilation (running a file) it doesn't.
 
 Clone the repo:
 ```bash
-git clone https://github.com/alinalihassan/Lesma
+git clone https://github.com/alinalihassan/pyLesma
 ```
 
 Install the requirements
