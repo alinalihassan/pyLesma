@@ -10,6 +10,10 @@ ___
 
 **Lesma** is a compiled, statically typed, imperative and object-oriented programming language with a focus on expressiveness, elegancy, and simplicity, while not sacrificing on performance.
 
+## 🚧 Compiler being rewritten
+
+The compiler is being rewritten in C++ over [**here**](https://github.com/alinalihassan/Lesma), and the language reference revisited. This code base is no longer maintained, and you should head over the new repository if you're interested in following the developments or even contribute, head over there. For anyone else interested in starting their own language in Python, feel free to fork this repository.
+
 ## Features
 - **it's fast**, because it should be so, together with LLVM's state of the art optimizations, but it won't ever oblige you to make an extra effort from your side just for the sake of performance
 - **it's compiled** both AOT and JIT, so you can finally decide if you just want to run it or compile it and distribute your project without dependencies, and because binary size also matters, a Hello World example would be around 8kb
